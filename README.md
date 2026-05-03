@@ -26,13 +26,14 @@ A CLI and open discovery layer for skills, subagents, and hooks across **GitHub 
 
 ## Overview
 
-AI Stack Kit allows you to:
-- 📦 **Package** IDE skills (Cursor skills, rules, hooks) as reusable components
-- 🔄 **Distribute** skills via GitHub, npm, custom registries, or local files
-- 🎯 **Apply** skills to multiple IDEs (Cursor, VSCode, and more)
-- 🔒 **Version** and lock dependencies like package managers
-- 🚀 **Share** configurations across teams via `spec.yaml`
-- 🌐 **Explore** curated catalogs in the browser ([Skill browser on GitHub Pages](https://deb-adarsh.github.io/ai-stack-kit/)) and **`catalog refresh`** to merge new listings into `spec.yaml` safely
+AI Stack Kit lets you:
+
+- 📦 **Assemble** **skills**, **subagents**, and **hooks** in **`spec.yaml`**—portable, versioned modules you can sync and apply as reusable intelligence.
+- 🔄 **Pull** modules from **GitHub**, **npm**, registries, or **local** paths using **`sources.config.yaml`**.
+- 🎯 **Apply** the same portable manifests through **client adapters** (**Cursor**, **Copilot** / VS Code settings, **Claude**, …)—output paths follow **`client.type`**, not copy-paste sprawl.
+- 🔒 **Version** and lock dependencies like you would with package managers.
+- 🚀 **Share** a single **`spec.yaml`** across machines and teammates.
+- 🌐 **Browse** curated default catalogs in the **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** and use **`catalog refresh`** to append new upstream listings into **`modules:`** without rewriting your whole file.
 
 **Contributors welcome.** The shared **default catalog** is **[`templates/sources.config.yaml`](./templates/sources.config.yaml)**—the same file **`aistack init`** copies for new projects and that powers the hosted Skill browser. Open a PR to add **public, well-maintained** skill trees (GitHub or npm), or improve code and docs. See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for how to add sources and validate locally.
 
