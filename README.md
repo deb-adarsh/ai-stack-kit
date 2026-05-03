@@ -10,9 +10,11 @@ A CLI and open discovery layer for skills, subagents, and hooks across **GitHub 
 
 ## Why this exists
 
-IDE and agent **skills are scattered**: Microsoft, Anthropic, Google, community bundles, internal repos—**N independent sources** and no realistic way to **track every upstream** by hand. There is still **no universal skill registry** (nothing like npm where “the ecosystem” and “your stack” meet in one searchable, expandable place). Teams either copy-paste READMEs or lock themselves to a single vendor’s picker.
+**Skills are everywhere; there’s still no “npm for IDE skills.”** Great packs live across vendor repos, community trees, and tarballs—too many sources to track by hand, and no single place where **discovery** and **your stack** meet.
 
-**AI Stack Kit solves that fragmentation.** You **declare catalogs** in **`sources.config.yaml`**, **pin what you use** in **`spec.yaml`**, and let the tool **resolve, fetch, and apply**—with caching and refresh semantics so listings don’t go stale in silence. The **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** is an **open-source, rebuildable index** over those upstream trees—not a walled marketplace, but a **practical stand-in** for the universal registry we’re still missing. It is **automatically rebuilt on a cron schedule** (**weekly, Mondays 06:00 UTC**) so it **re-syncs from the configured default sources** without anyone maintaining a hand-curated index. To add catalogs for all users, follow **[CONTRIBUTING.md](./CONTRIBUTING.md)**. The project stays **fully open source**—fork and adapt as you like.
+**AI Stack Kit is the glue:** **`sources.config.yaml`** names the catalogs you trust, **`spec.yaml`** pins what you actually use, and the CLI **resolves, fetches, and applies** (with sane caching). The **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** is an **open, auto-rebuilt directory** over those upstreams—**weekly, Mondays 06:00 UTC**—so listings stay fresh **without** a hand-maintained index.
+
+**Help grow the default catalog for everyone:** open a PR that extends **`templates/sources.config.yaml`** (see **[CONTRIBUTING.md](./CONTRIBUTING.md)**).
 
 ---
 
