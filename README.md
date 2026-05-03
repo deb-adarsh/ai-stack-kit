@@ -12,7 +12,7 @@ A CLI and open discovery layer for skills, subagents, and hooks across **GitHub 
 
 IDE and agent **skills are scattered**: Microsoft, Anthropic, Google, community bundles, internal repos—**N independent sources** and no realistic way to **track every upstream** by hand. There is still **no universal skill registry** (nothing like npm where “the ecosystem” and “your stack” meet in one searchable, expandable place). Teams either copy-paste READMEs or lock themselves to a single vendor’s picker.
 
-**AI Stack Kit solves that fragmentation.** You **declare catalogs** in **`sources.config.yaml`**, **pin what you use** in **`spec.yaml`**, and let the tool **resolve, fetch, and apply**—with caching and refresh semantics so listings don’t go stale in silence. The **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** is an **open-source, rebuildable index** over those same upstream trees: not a walled marketplace, but the **practical substitute** for the central registry that doesn’t exist yet—**automatically reconciled** against configured sources whenever **[`.github/workflows/build-github.yml`](./.github/workflows/build-github.yml)** runs (including the weekly cron). Fork it, extend sources, self-host: it stays **fully open source**.
+**AI Stack Kit solves that fragmentation.** You **declare catalogs** in **`sources.config.yaml`**, **pin what you use** in **`spec.yaml`**, and let the tool **resolve, fetch, and apply**—with caching and refresh semantics so listings don’t go stale in silence. The **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** is an **open-source, rebuildable index** over those upstream trees—not a walled marketplace, but a **practical stand-in** for the universal registry we’re still missing. It is **automatically rebuilt on a cron schedule** (**weekly, Mondays 06:00 UTC**) so it **re-syncs from the configured default sources** without anyone maintaining a hand-curated index. To add catalogs for all users, follow **[CONTRIBUTING.md](./CONTRIBUTING.md)**. The project stays **fully open source**—fork and adapt as you like.
 
 ---
 
@@ -31,6 +31,8 @@ AI Stack Kit allows you to:
 - 🔒 **Version** and lock dependencies like package managers
 - 🚀 **Share** configurations across teams via `spec.yaml`
 - 🌐 **Explore** curated catalogs in the browser ([Skill browser on GitHub Pages](https://deb-adarsh.github.io/ai-stack-kit/)) and **`catalog refresh`** to merge new listings into `spec.yaml` safely
+
+**Contributors welcome.** The shared **default catalog** is **[`templates/sources.config.yaml`](./templates/sources.config.yaml)**—the same file **`aistack init`** copies for new projects and that powers the hosted Skill browser. Open a PR to add **public, well-maintained** skill trees (GitHub or npm), or improve code and docs. See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for how to add sources and validate locally.
 
 ---
 
@@ -62,7 +64,7 @@ Browse the default catalogs in the browser (search, ecosystem filters, copy **`n
 
 **[https://deb-adarsh.github.io/ai-stack-kit/](https://deb-adarsh.github.io/ai-stack-kit/)**
 
-The listing is rebuilt from **[`templates/sources.config.yaml`](./templates/sources.config.yaml)** on every deploy. **[`.github/workflows/build-github.yml`](./.github/workflows/build-github.yml)** runs on pushes to `main`, **manual dispatch**, and on a **weekly schedule (Monday 06:00 UTC)** so the site picks up **new upstream skill folders** without someone hand-editing JSON—no extra maintainers required for that refresh. Your **local** project still uses **`sources.config.yaml`** and cache TTL; fork this repo or adjust the workflow if you want a different catalog set for Pages.
+The listing tracks **`templates/sources.config.yaml`** (the default catalog). Hosting rebuilds on **every push to `main`**, on-demand via Actions, and on a **weekly cron (Monday 06:00 UTC)** so listings stay in sync with those upstream sources—no hand-maintained index file. Your **local** project still uses its own **`sources.config.yaml`** and cache TTL; extend the shared baseline via **[CONTRIBUTING.md](./CONTRIBUTING.md)** (fork if you want a different Pages catalog).
 
 ---
 
@@ -290,6 +292,8 @@ aistack clean                  # Clean cache
 ### 📚 Architecture
 
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)**: Single architecture reference — diagrams, dependency rules, **actual** repository layout, interface shapes, pipeline flows, configuration examples, extension points, CLI reference, and ops concerns (performance, security, errors).
+
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)**: How to contribute—including extending the **default catalog** (`templates/sources.config.yaml`) for the CLI and Skill browser.
 
 - **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)**: Quick reference guide
   - Core concepts
