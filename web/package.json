@@ -1,6 +1,7 @@
 {
   "name": "ai-stack-kit-web",
   "private": true,
+  "description": "Static skill browser (React + Vite only). CLI lives in the repo root; never add ai-stack-kit as a dependency here.",
   "type": "module",
   "scripts": {
     "dev": "vite",
