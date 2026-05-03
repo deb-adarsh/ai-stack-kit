@@ -6,7 +6,7 @@
 #   organization/user, repository, workflow filename **`push-npm-registry.yml`** must match exactly (case-sensitive).
 # Requires npm CLI ≥ 11.5.1 and Node ≥ 22.14 — https://docs.npmjs.com/trusted-publishers
 # Optional: after verifying OIDC publishes, restrict package Settings → Publishing access (tokens) per npm docs.
-name: Push CLI to npm registry
+name: Push CLI to NPM registry
 
 on:
   push:
