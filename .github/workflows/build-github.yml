@@ -1,13 +1,22 @@
 # Skill browser UI lives in ./web (self-contained package.json + lockfile).
 # Deploy output is ./web/dist (Vite `build.outDir`, relative to web/).
 #
-# Repo root: compile TS + generate web/public/catalog.json. Then build only what's inside web/.
+# Repo root: compile TS + generate web/public/catalog.json from configured sources (templates/sources.config.yaml
+# in CI via build-catalog). Then build only what's inside web/.
+#
+# Triggers:
+# - push to main: rebuild catalog from upstream GitHub sources, build web, deploy Pages.
+# - schedule / workflow_dispatch: same pipeline — refresh listings without pushing code (each run is a clean checkout;
+#   catalog is regenerated via GitHub API; no reliance on local .cache).
 name: Deploy Web App to GitHub Pages
 
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
+  schedule:
+    # Weekly Monday 06:00 UTC — adjust cadence/time as needed (cron is UTC).
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
