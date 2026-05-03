@@ -2,7 +2,7 @@
 # Repo package.json stays `@deb-adarsh/ai-stack-kit` for GitHub Packages — name is rewritten only in CI for this job.
 #
 # Add repo secret: NPM_TOKEN — npm profile → Access Tokens → Granular ("Automation") or Classic ("Automation") with publish rights for your account (unscoped publishes use the linked user).
-name: Push CLI to npm registry
+name: Push CLI to NPM registry
 
 on:
   push:
