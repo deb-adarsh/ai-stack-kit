@@ -39,41 +39,69 @@ aistack sync
 
 ## Example `spec.yaml`
 
+Ai Stack Kit reads **`client.type`** to decide which **client adapter** runs at apply time (`cursor`, `copilot`, `claude`, `vscode`, …). You normally declare **one** primary client per project; change `type` when you target a different editor or assistant surface.
+
+Catalog discovery uses optional **`sources.config.yaml`** in the project root (not shown here). **`hooks`** at the bottom are **lifecycle shell steps** (pre/post install/apply), not the same thing as **`moduleType: hook`** AI modules in `modules:`.
+
 ```yaml
 version: "1.0"
 
-ide:
-  type: cursor
+project:
+  name: my-ai-setup
+  description: Declarative skills and agents for your toolchain
+
+# Pick the client that receives generated files (examples below — keep one active block).
+client:
+  type: cursor                    # also: copilot | claude | vscode | ...
   features:
     - skills
     - rules
     - hooks
+  # adapter:
+  #   mergeStrategy: merge
 
-sources:
-  - type: github
-    name: official
-    repository: aistack/skills
-    auth: ${GITHUB_TOKEN}
+# Optional defaults (paths expand ~)
+settings:
+  cacheDir: ~/.aistack/cache
+  lockFile: .aistack/lock.yaml
 
 skills:
-  # From GitHub
-  - source: github:official
-    name: canvas
+  - name: canvas
     version: ^2.0.0
-  
-  # From npm
-  - source: npm:@aistack
-    name: figma-agent
-    version: latest
-  
-  # From local directory
-  - source: local:workspace
-    name: my-custom-skill
-    path: ./skills/my-skill
+    source: github
+    sourceConfig:
+      owner: your-org
+      repo: skills
+      path: canvas
+      branch: main
 
+  - name: figma-agent
+    version: latest
+    source: npm
+    sourceConfig:
+      package: "@your-scope/skills-bundle"
+      path: skills # subdirectory inside the package (when applicable)
+
+  - name: my-custom-skill
+    source: local
+    sourceConfig:
+      localPath: ./skills/my-custom-skill
+
+# Same row shape as skills; use moduleType for subagents / hook manifests.
+modules:
+  - name: code-reviewer
+    moduleType: subagent
+    version: latest
+    source: github
+    sourceConfig:
+      owner: your-org
+      repo: agents
+      path: code-reviewer
+
+# Lifecycle commands (optional), not AI hook modules
 hooks:
   postApply:
-    - echo "Skills applied successfully!"
+    - echo "Ai Stack Kit apply finished."
 ```
 
 ---
