@@ -43,6 +43,11 @@ async function getDynamicRegistry(cwd: string): Promise<RegistryProvider | null>
   return registry;
 }
 
+/** Drop cached registry so the next lookup rebuilds providers (e.g. after clearing catalog cache on disk). */
+export function invalidateDynamicRegistryCache(): void {
+  dynamicRegistryCache = null;
+}
+
 const KNOWN_MODULE_TYPES: AIModuleType[] = ['skill', 'subagent', 'hook'];
 
 /** Parse CLI `--type` / config values (throws with `code: INVALID_MODULE_TYPE`). */

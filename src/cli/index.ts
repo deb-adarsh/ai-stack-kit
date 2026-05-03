@@ -5,6 +5,7 @@
  * - aistack init              Initialize new project
  * - aistack skill|subagent|hook  search / add / info (type-specific)
  * - aistack add|search|info   Legacy aliases (all types or --type)
+ * - aistack catalog refresh    Diff catalogs vs spec; optional YAML-safe append under modules:
  * - aistack remove            Remove a module from spec.yaml
  * - aistack install / apply / sync
  * - aistack list              List modules in spec.yaml
@@ -36,6 +37,7 @@ import {
   parseModuleTypeCli,
   ensureDefaultSourcesConfig,
 } from './commands.js';
+import { runCatalogRefresh } from './catalog-refresh.js';
 import { flattenSpecModules } from '../types/spec.js';
 import { DEFAULT_MODULE_TYPE, type AIModuleType } from '../types/ai-module.js';
 import { detectProjectSignals } from './project-detection.js';
@@ -183,6 +185,7 @@ export function createCLI(): Command {
   registerUpdateCommand(program);
   registerValidateCommand(program);
   registerCleanCommand(program);
+  registerCatalogCommands(program);
 
   return program;
 }
@@ -556,6 +559,39 @@ function registerCleanCommand(program: Command) {
   });
 }
 
+function registerCatalogCommands(program: Command) {
+  const catalog = program.command('catalog').description('Compare configured skill sources with spec.yaml');
+
+  catalog
+    .command('refresh')
+    .description(
+      'List catalog modules missing from spec.yaml; with --write, append rows under modules (additive YAML merge)'
+    )
+    .option('--write', 'Append modules to spec.yaml (creates modules: if missing; backs up first)')
+    .option('-y, --yes', 'With --write: non-interactive — append first --max new catalog names')
+    .option(
+      '--refresh-sources',
+      'Delete local GitHub catalog listing cache (.cache/.../github-catalog) then re-fetch from API'
+    )
+    .option('--max <n>', 'With --write -y: max modules to append in one run (default: 500)', '500')
+    .option('--json', 'Machine-readable output')
+    .action(async (options) => {
+      try {
+        const max = Math.max(1, parseInt(String(options.max), 10) || 500);
+        await runCatalogRefresh({
+          cwd: process.cwd(),
+          write: Boolean(options.write),
+          yes: Boolean(options.yes),
+          refreshSources: Boolean(options.refreshSources),
+          max,
+          json: Boolean(options.json),
+        });
+      } catch (e) {
+        handleError(e);
+      }
+    });
+}
+
 /**
  * COMMAND: aistack search
  *
@@ -872,6 +908,15 @@ function handleError(error: any) {
     console.log(chalk.gray(error.message));
   } else if (error.code === 'MODULE_NOT_FOUND') {
     console.error(chalk.red('\n✗ Not found in catalog'));
+    console.log(chalk.gray(error.message));
+  } else if (error.code === 'SPEC_MODULES_NOT_SEQUENCE') {
+    console.error(chalk.red('\n✗ Cannot append to spec.yaml'));
+    console.log(chalk.gray(error.message));
+  } else if (error.code === 'SPEC_PARSE_ERROR') {
+    console.error(chalk.red('\n✗ Invalid YAML'));
+    console.log(chalk.gray(error.message));
+  } else if (error.code === 'SPEC_APPEND_VALIDATION_FAILED') {
+    console.error(chalk.red('\n✗ Append rolled back'));
     console.log(chalk.gray(error.message));
   } else {
     console.error(chalk.red('\n✗ Error:'), error.message);

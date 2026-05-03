@@ -1,8 +1,24 @@
 # AI Stack Kit
 
-A CLI tool for managing IDE skills, subagents, and configurations across multiple sources and IDEs.
+**Declare your IDE skills once—pull from anywhere, apply everywhere.**
+
+A CLI and open discovery layer for skills, subagents, and hooks across **GitHub trees**, **npm**, registries, and local paths—without juggling a bookmark folder full of unrelated repos.
 
 > Think: **npm** for IDE configurations + **Terraform** for declarative setup + **kubectl** for CLI UX
+
+---
+
+## Why this exists
+
+IDE and agent **skills are scattered**: Microsoft, Anthropic, Google, community bundles, internal repos—**N independent sources** and no realistic way to **track every upstream** by hand. There is still **no universal skill registry** (nothing like npm where “the ecosystem” and “your stack” meet in one searchable, expandable place). Teams either copy-paste READMEs or lock themselves to a single vendor’s picker.
+
+**AI Stack Kit solves that fragmentation.** You **declare catalogs** in **`sources.config.yaml`**, **pin what you use** in **`spec.yaml`**, and let the tool **resolve, fetch, and apply**—with caching and refresh semantics so listings don’t go stale in silence. The **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** is an **open-source, rebuildable index** over those same upstream trees: not a walled marketplace, but the **practical substitute** for the central registry that doesn’t exist yet—**automatically reconciled** against configured sources whenever **[`.github/workflows/build-github.yml`](./.github/workflows/build-github.yml)** runs (including the weekly cron). Fork it, extend sources, self-host: it stays **fully open source**.
+
+---
+
+## The CLI: what you get
+
+**One habit loop:** **`search`** → **`add`** (or **`catalog refresh`** to merge new upstream names safely into **`modules:`**) → **`sync`**—and your IDE picks up files from the **adapter** you chose (**Cursor**, **Copilot**, **Claude**, …). **`aistack`** / **`ai-stack`** / **`npx ai-stack-kit`** all speak the same idea: **declarative spec**, **package-manager muscle**, **no manual tarball archaeology**. Same portable skill folders; different output paths—**you write intent, the CLI does the plumbing.**
 
 ---
 
@@ -14,6 +30,7 @@ AI Stack Kit allows you to:
 - 🎯 **Apply** skills to multiple IDEs (Cursor, VSCode, and more)
 - 🔒 **Version** and lock dependencies like package managers
 - 🚀 **Share** configurations across teams via `spec.yaml`
+- 🌐 **Explore** curated catalogs in the browser ([Skill browser on GitHub Pages](https://deb-adarsh.github.io/ai-stack-kit/)) and **`catalog refresh`** to merge new listings into `spec.yaml` safely
 
 ---
 
@@ -38,6 +55,14 @@ aistack sync
 Fresh **`init`** drops a **`sources.config.yaml`** next to `spec.yaml` with curated GitHub catalogs ([Copilot awesome-copilot](https://github.com/github/awesome-copilot), [Anthropic skills](https://github.com/anthropics/skills/tree/main/skills), [Composio awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills), [Antigravity bundle](https://github.com/sickn33/antigravity-awesome-skills)). Override or trim sources anytime.
 
 Skill packs from those trees are mostly **portable**: the same folder layout works across **Cursor**, **Copilot**, and **Claude** outputs — `client.type` in `spec.yaml` picks where files land. For a large curated index that is **README-only** (not a tree the CLI can crawl), see [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills).
+
+### Skill browser (GitHub Pages)
+
+Browse the default catalogs in the browser (search, ecosystem filters, copy **`npx ai-stack-kit`** lines):
+
+**[https://deb-adarsh.github.io/ai-stack-kit/](https://deb-adarsh.github.io/ai-stack-kit/)**
+
+The listing is rebuilt from **[`templates/sources.config.yaml`](./templates/sources.config.yaml)** on every deploy. **[`.github/workflows/build-github.yml`](./.github/workflows/build-github.yml)** runs on pushes to `main`, **manual dispatch**, and on a **weekly schedule (Monday 06:00 UTC)** so the site picks up **new upstream skill folders** without someone hand-editing JSON—no extra maintainers required for that refresh. Your **local** project still uses **`sources.config.yaml`** and cache TTL; fork this repo or adjust the workflow if you want a different catalog set for Pages.
 
 ---
 
@@ -152,23 +177,22 @@ hooks:
 ```
 ai-stack-kit/
 ├── src/
-│   ├── cli/              # CLI commands and UI
-│   ├── core/             # Engine, parser, resolver
+│   ├── cli/              # CLI commands (including catalog refresh)
+│   ├── pipeline/         # spec load, apply
 │   ├── sources/          # GitHub, npm, registry, local
-│   ├── registry/         # Registry management
-│   ├── adapters/         # Cursor, VSCode adapters
-│   ├── storage/          # Cache and state management
-│   ├── utils/            # Shared utilities
-│   └── types/            # TypeScript types
-├── config/
-│   ├── default.yaml      # Default configuration
-│   └── schema.json       # spec.yaml JSON schema
+│   ├── registry/         # Dynamic catalogs from sources.config.yaml
+│   ├── client-adapters/   # Cursor, Copilot, Claude outputs
+│   └── types/
+├── web/                  # Skill browser (Vite + React; static `dist/` for Pages)
+├── scripts/
+│   └── build-catalog.mjs # Builds web/public/catalog.json for the browser
 ├── templates/
-│   └── spec.yaml         # Template spec file
-└── tests/
-    ├── unit/
-    ├── integration/
-    └── fixtures/
+│   ├── spec.yaml
+│   └── sources.config.yaml  # Default catalogs (also used by CI for Pages)
+├── .github/workflows/
+│   └── build-github.yml  # Build catalog + web → GitHub Pages (incl. weekly cron)
+├── config/
+└── ...
 ```
 
 ---
@@ -205,6 +229,10 @@ Run commands at different stages:
 - Checksum verification
 - Offline mode support
 
+### 6. Skill browser & catalog refresh
+- **Hosted UI**: minimal skill browser with filters and copy-paste **`npx`** commands ([live demo](https://deb-adarsh.github.io/ai-stack-kit/)); rebuilt automatically when CI runs (including **weekly Monday 06:00 UTC**).
+- **`aistack catalog refresh`**: compare configured catalogs with `spec.yaml` and **append** missing modules under `modules:` using a YAML-safe merge (new rows default to **`enabled: false`**; backs up `spec.yaml` first).
+
 ---
 
 ## Commands
@@ -225,6 +253,12 @@ aistack update [name]           # Update modules (placeholder / bump in spec)
 aistack search <query>          # Search catalogs
 aistack info <name>             # Show catalog metadata for a module
 aistack list                    # List modules declared in spec.yaml
+
+# Catalog vs spec (additive YAML merge — preserves comments better than full rewrite)
+aistack catalog refresh              # List catalog modules not yet in spec.yaml
+aistack catalog refresh --write      # Interactive: append selected rows under modules:
+aistack catalog refresh --write -y --max 50   # Non-interactive batch (disabled by default)
+aistack catalog refresh --refresh-sources       # Clear GitHub listing cache, then refresh
 
 # Typed catalogs (preferred): skill | subagent | hook
 aistack skill search <query>    # Search skills only
@@ -309,6 +343,12 @@ npm test
 # Run CLI locally
 npm link
 aistack --help
+
+# Skill browser: TS build + catalog JSON + Vite dev
+npm run dev:web
+
+# Static web/dist (+ catalog) for hosting / parity with CI
+npm run build:web
 ```
 
 ### Testing
