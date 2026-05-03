@@ -1,8 +1,13 @@
-# Pushes the CLI to registry.npmjs.org as the unscoped package `ai-stack-kit`.
-# Repo package.json stays `@deb-adarsh/ai-stack-kit` for GitHub Packages — name is rewritten only in CI for this job.
+# Pushes the CLI to registry.npmjs.org as the unscoped public package `ai-stack-kit`.
+# Repo package.json stays `@deb-adarsh/ai-stack-kit` for GitHub Packages — CI rewrites `name` only for this job.
 #
-# Add repo secret: NPM_TOKEN — npm profile → Access Tokens → Granular ("Automation") or Classic ("Automation") with publish rights for your account (unscoped publishes use the linked user).
-name: Push CLI to NPM registry
+# Repo secret NPM_TOKEN — use a Granular Access Token with publish permission and
+# "bypass two-factor authentication" for automation so CI never prompts for OTP (avoids EOTP).
+# See: https://docs.npmjs.com/creating-and-viewing-access-tokens
+#      https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages
+# Optional later: after the package exists on npm, switch to Trusted Publishers + OIDC and revoke NPM_TOKEN:
+# https://docs.npmjs.com/trusted-publishers
+name: Push CLI to npm registry
 
 on:
   push:
@@ -42,7 +47,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if [ -z "${NODE_AUTH_TOKEN}" ]; then
-            echo "Skipping npm registry push — add repo secret NPM_TOKEN (npm Automation token with publish permission)."
+            echo "Skipping npm registry push — add repo secret NPM_TOKEN (granular token, publish + bypass 2FA for automation)."
             exit 0
           fi
 

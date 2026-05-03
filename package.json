@@ -1,13 +1,13 @@
 {
   "name": "@deb-adarsh/ai-stack-kit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI Stack Kit — CLI for managing IDE skills and configurations",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "ai-stack-kit": "./dist/cli/index.js",
-    "aistack": "./dist/cli/index.js",
-    "ai-stack": "./dist/cli/index.js"
+    "ai-stack-kit": "dist/cli/index.js",
+    "aistack": "dist/cli/index.js",
+    "ai-stack": "dist/cli/index.js"
   },
   "files": [
     "dist",
