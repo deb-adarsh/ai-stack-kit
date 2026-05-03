@@ -39,7 +39,7 @@ Easiest install from the **npm registry** (no GitHub token): **[npm package `ai-
 | **npm registry** ([npmjs.com](https://www.npmjs.com/package/ai-stack-kit)) | `npm install -g ai-stack-kit` |
 | **GitHub registry** ([GitHub Packages](https://docs.github.com/packages/learn-github-packages/introduction-to-github-packages), PAT — [`@deb-adarsh`](https://github.com/deb-adarsh)) | `npm install -g @deb-adarsh/ai-stack-kit` — see **[GitHub Packages](#github-packages)** below |
 
-The CLI is **one build**, published as the **unscoped** package **`ai-stack-kit`** on the **npm registry** and as **`@deb-adarsh/ai-stack-kit`** on the **GitHub registry**. **`aistack`** / **`ai-stack`** / **`ai-stack-kit`** are the same — pick whichever install row matches where you pull packages from.
+The CLI is **one build**, published as the **unscoped** package **`ai-stack-kit`** on the **npm registry** and as **`@deb-adarsh/ai-stack-kit`** on the **GitHub registry**. **`aistack`** / **`ai-stack`** / **`ai-stack-kit`** are the same binaries — pick whichever install row matches where you pull packages from.
 
 ### Try it
 
@@ -81,8 +81,8 @@ Install with **`npm install -g ai-stack-kit`** (**npm registry**) or **`npm inst
 
 ```bash
 # Install (examples — pick one)
-# npm install -g ai-stack-kit                   # npm registry (unscoped)
-# npm install -g @deb-adarsh/ai-stack-kit         # GitHub registry (+ ~/.npmrc)
+# npm install -g ai-stack-kit                   # NPM registry
+# npm install -g @deb-adarsh/ai-stack-kit       # GitHub registry (+ ~/.npmrc)
 
 # Initialize a new project (creates spec.yaml + default sources.config.yaml when missing)
 aistack init

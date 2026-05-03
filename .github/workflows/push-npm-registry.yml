@@ -1,14 +1,11 @@
-# Pushes the CLI to registry.npmjs.org as the unscoped public package `ai-stack-kit`.
-# Repo package.json stays `@deb-adarsh/ai-stack-kit` for GitHub Packages — CI rewrites `name` only for this job.
+# Pushes the CLI to registry.npmjs.org as the unscoped public package **`ai-stack-kit`**.
+# Repo **`package.json`** stays **`@deb-adarsh/ai-stack-kit`** for GitHub Packages — CI rewrites `name` only for this job.
 #
-# Repo secret NPM_TOKEN — use a Granular Access Token with publish permission and
-# "bypass two-factor authentication" for automation so CI never prompts for OTP (avoids EOTP).
-# If publish succeeds with whoami but returns E403 Forbidden, the token cannot publish THIS package —
-# granular scopes often omit unscoped names; grant Publish on **ai-stack-kit** or **All packages**.
-# See: https://docs.npmjs.com/creating-and-viewing-access-tokens
-#      https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages
-# Optional later: after the package exists on npm, switch to Trusted Publishers + OIDC and revoke NPM_TOKEN:
-# https://docs.npmjs.com/trusted-publishers
+# Authentication: Trusted publishing (OIDC) — no **`NPM_TOKEN`**.
+# npm → package **`ai-stack-kit`** → Settings → Trusted Publisher → GitHub Actions:
+#   organization/user, repository, workflow filename **`push-npm-registry.yml`** must match exactly (case-sensitive).
+# Requires npm CLI ≥ 11.5.1 and Node ≥ 22.14 — https://docs.npmjs.com/trusted-publishers
+# Optional: after verifying OIDC publishes, restrict package Settings → Publishing access (tokens) per npm docs.
 name: Push CLI to npm registry
 
 on:
@@ -24,10 +21,13 @@ on:
 
 permissions:
   contents: read
+  id-token: write # OIDC for npm Trusted Publishers
 
 jobs:
   push:
     runs-on: ubuntu-latest
+    # Trusted Publisher on npm is wired to this upstream repo; forks cannot publish as you.
+    if: github.repository == 'deb-adarsh/ai-stack-kit'
 
     steps:
       - name: Checkout
@@ -36,23 +36,19 @@ jobs:
       - name: Setup Node.js for npm registry
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22.14"
           registry-url: "https://registry.npmjs.org"
           cache: npm
           cache-dependency-path: package-lock.json
 
+      - name: Install npm CLI for trusted publishing
+        run: npm install -g npm@^11.5.1
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Push to npm registry (ai-stack-kit)
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Push to npm registry (ai-stack-kit, OIDC)
         run: |
-          if [ -z "${NODE_AUTH_TOKEN}" ]; then
-            echo "Skipping npm registry push — add repo secret NPM_TOKEN (granular token, publish + bypass 2FA for automation)."
-            exit 0
-          fi
-
           NPMJS_PKG="ai-stack-kit"
           VER="$(node -p "require('./package.json').version")"
           REG="https://registry.npmjs.org"
@@ -69,10 +65,5 @@ jobs:
           npm pkg set "name=${NPMJS_PKG}"
           npm pkg delete publishConfig 2>/dev/null || true
 
-          # Explicit registry auth (avoids relying on setup-node timing vs publish-only env)
-          npm config set "//registry.npmjs.org/:_authToken" "${NODE_AUTH_TOKEN}"
-
-          echo "Publishing as npm user:"
-          npm whoami --registry="${REG}"
-
+          echo "Publishing via Trusted Publishers (OIDC) → ${NPMJS_PKG}@${VER}"
           npm publish --access public --registry="${REG}"
