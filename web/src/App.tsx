@@ -189,7 +189,12 @@ export default function App() {
         </select>
       </div>
 
-      <p className="filters-label">Ecosystem — Microsoft ↔ GitHub org + Azure; Google ↔ Cloud repo + Antigravity</p>
+      <p className="filters-label filters-label-eco">
+        <span className="filters-label-full">
+          Ecosystem — Microsoft ↔ GitHub org + Azure; Google ↔ Cloud repo + Antigravity
+        </span>
+        <span className="filters-label-short">Ecosystem</span>
+      </p>
       <div className="pills">
         {families.map((f) => (
           <button
@@ -204,7 +209,10 @@ export default function App() {
         ))}
       </div>
 
-      <p className="filters-label">Publisher — GitHub organization / maintainer</p>
+      <p className="filters-label filters-label-pub">
+        <span className="filters-label-full">Publisher — GitHub organization / maintainer</span>
+        <span className="filters-label-short">Publisher</span>
+      </p>
       <div className="pills">
         {catalog.publishers.map((p) => (
           <button key={p} type="button" className="pill" data-on={pubPick.has(p)} onClick={() => togglePub(p)}>

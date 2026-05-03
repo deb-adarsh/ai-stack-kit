@@ -28,6 +28,11 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: var(--font);
@@ -35,6 +40,11 @@ body {
   color: var(--text);
   line-height: 1.5;
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  overflow-x: hidden;
 }
 
 a {
@@ -47,9 +57,12 @@ a:hover {
 
 .shell {
   width: 100%;
-  max-width: min(1540px, 100vw - 2.5rem);
+  max-width: 1540px;
   margin: 0 auto;
-  padding: 2.5rem clamp(1rem, 4vw, 2.25rem) 4rem;
+  /* Avoid 100vw + padding horizontal scroll; tight gutters on phones */
+  padding: clamp(1.25rem, 4vw, 2.5rem) clamp(0.75rem, 4vw, 2.25rem) clamp(2.5rem, 6vw, 4rem);
+  padding-left: max(clamp(0.75rem, 4vw, 2.25rem), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(0.75rem, 4vw, 2.25rem), env(safe-area-inset-right, 0px));
 }
 
 .hero {
@@ -82,21 +95,28 @@ a:hover {
   font-weight: 600;
 }
 
+.hero-lead code,
+.note code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  align-items: center;
+  align-items: stretch;
   margin-bottom: 1.25rem;
 }
 
 .search {
   flex: 1 1 220px;
-  min-width: 180px;
+  min-width: 0;
 }
 
 .search input {
   width: 100%;
+  max-width: 100%;
   padding: 0.65rem 0.85rem;
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -105,14 +125,37 @@ a:hover {
   font: inherit;
 }
 
+@media (max-width: 560px) {
+  .search input {
+    min-height: 44px;
+  }
+}
+
 .select-client {
-  padding: 0.6rem 0.75rem;
+  padding: 0.65rem 0.75rem;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   font: inherit;
-  min-width: 10rem;
+  min-width: min(100%, 10rem);
+  max-width: 100%;
+}
+
+@media (max-width: 560px) {
+  .toolbar {
+    flex-direction: column;
+  }
+
+  .search {
+    flex: none;
+    width: 100%;
+  }
+
+  .select-client {
+    width: 100%;
+    min-height: 44px;
+  }
 }
 
 .filters-label {
@@ -122,6 +165,29 @@ a:hover {
   color: var(--muted);
   width: 100%;
   margin: 0.25rem 0 0;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.filters-label-short {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .filters-label-full {
+    display: none;
+  }
+
+  .filters-label-short {
+    display: inline;
+  }
+}
+
+@media (max-width: 480px) {
+  .filters-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+  }
 }
 
 .pills {
@@ -144,6 +210,16 @@ a:hover {
   font-size: 0.8rem;
   cursor: pointer;
   font-family: inherit;
+  touch-action: manipulation;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .pill {
+    padding: 0.5rem 0.85rem;
+    min-height: 44px;
+    font-size: 0.85rem;
+  }
 }
 
 .pill[data-on='true'] {
@@ -155,6 +231,8 @@ a:hover {
   font-size: 0.85rem;
   color: var(--muted);
   margin-bottom: 1rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .list {
@@ -167,6 +245,11 @@ a:hover {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.85rem;
+}
+
+/* Grid/flex children default min-width:auto — prevents shrinking below long URLs/commands */
+.list-grid > .card {
+  min-width: 0;
 }
 
 @media (min-width: 880px) {
@@ -202,6 +285,8 @@ a:hover {
 .skill-name {
   font-weight: 600;
   font-size: 1.05rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .publisher {
@@ -210,12 +295,20 @@ a:hover {
   line-height: 1.35;
   text-align: right;
   max-width: min(100%, 42ch);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
+  .card-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
   .publisher {
     text-align: left;
-    max-width: none;
+    max-width: 100%;
   }
 }
 
@@ -223,26 +316,45 @@ a:hover {
   margin: 0.45rem 0 0.65rem;
   font-size: 0.92rem;
   color: color-mix(in srgb, var(--text) 88%, var(--muted));
+  overflow-wrap: anywhere;
 }
 
 .cmd-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  align-items: center;
+  align-items: stretch;
   margin-top: 0.5rem;
 }
 
 .cmd {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.76rem;
+  font-size: clamp(0.68rem, 2.8vw, 0.76rem);
   padding: 0.45rem 0.55rem;
   border-radius: 6px;
   background: var(--bg);
   border: 1px solid var(--border);
   flex: 1 1 min(100%, 200px);
+  min-width: 0;
   overflow-x: auto;
   white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 680px) {
+  .cmd-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cmd {
+    flex: none;
+    width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    overflow-x: visible;
+  }
 }
 
 .card-link {
@@ -263,10 +375,20 @@ a:hover {
   font-size: 0.8rem;
   cursor: pointer;
   font-family: inherit;
+  touch-action: manipulation;
+  flex-shrink: 0;
 }
 
 .copy:hover {
   border-color: var(--accent);
+}
+
+@media (max-width: 680px) {
+  .copy {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.55rem 0.85rem;
+  }
 }
 
 .clients {
@@ -294,6 +416,12 @@ a:hover {
   border-top: 1px solid var(--border);
   font-size: 0.85rem;
   color: var(--muted);
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+}
+
+.note a {
+  overflow-wrap: anywhere;
 }
 
 .err {
@@ -302,4 +430,19 @@ a:hover {
   border-radius: 8px;
   background: color-mix(in srgb, #f97316 12%, var(--surface));
   color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 420px) {
+  .hero h1 {
+    font-size: clamp(1.5rem, 8vw, 2rem);
+  }
+
+  .hero-lead {
+    font-size: 0.98rem;
+  }
+
+  .card {
+    padding: 1rem 0.9rem;
+  }
 }
