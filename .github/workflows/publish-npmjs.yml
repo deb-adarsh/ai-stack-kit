@@ -1,0 +1,65 @@
+# Publishes the CLI to npmjs.com as the unscoped package `ai-stack-kit`.
+# Repo package.json stays `@deb-adarsh/ai-stack-kit` for GitHub Packages — name is rewritten only in CI for this publish.
+#
+# Add repo secret: NPM_TOKEN — npm profile → Access Tokens → Granular ("Automation") or Classic ("Automation") with publish rights for your account (unscoped publishes use the linked user).
+name: Publish CLI to npmjs.com
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "src/**"
+      - "templates/**"
+      - "tsconfig.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js for npmjs
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish to npmjs (unscoped ai-stack-kit)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "Skipping npmjs publish — add repo secret NPM_TOKEN (npm Automation token with publish permission)."
+            exit 0
+          fi
+
+          NPMJS_PKG="ai-stack-kit"
+          VER="$(node -p "require('./package.json').version")"
+          REG="https://registry.npmjs.org"
+
+          set +e
+          npm view "${NPMJS_PKG}@${VER}" version --registry="${REG}" >/dev/null 2>&1
+          HAS_RC=$?
+          set -e
+          if [ "$HAS_RC" -eq 0 ]; then
+            echo "Skip publish — ${NPMJS_PKG}@${VER} already exists on npmjs."
+            exit 0
+          fi
+
+          npm pkg set "name=${NPMJS_PKG}"
+          npm pkg delete publishConfig 2>/dev/null || true
+
+          npm publish --access public --registry="${REG}"

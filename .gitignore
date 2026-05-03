@@ -64,3 +64,6 @@ tests/fixtures/**/.aistack/cache/
 
 # Ephemeral CLI smoke tests (safe to delete)
 .e2e-sandbox/
+
+# Maintainer-only local notes (never commit)
+private.md

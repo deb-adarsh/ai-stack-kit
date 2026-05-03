@@ -967,6 +967,13 @@ async function promptSkillConfig(_schema: unknown): Promise<Record<string, unkno
 async function quickInit(client: { type: string }): Promise<void> {
   const adaptersSupported = new Set(['cursor', 'copilot', 'claude']);
   const clientType = adaptersSupported.has(client.type) ? client.type : 'cursor';
+  if (clientType !== client.type) {
+    console.log(
+      chalk.gray(
+        `Note: init --yes chose client.type "${clientType}" (detected "${client.type}" has no built-in adapter — use interactive init to pick copilot, claude, or cursor).`
+      )
+    );
+  }
   await createSpecFile({
     project: {
       projectName: 'my-ide-setup',

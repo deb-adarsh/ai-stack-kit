@@ -1,26 +1,64 @@
 # AI Stack Kit
 
-**Declare your IDE skills once—pull from anywhere, apply everywhere.**
+**Install AI skills, subagents, and hooks like npm packages — across Cursor, Claude, and Copilot.**
 
-A CLI and open discovery layer for skills, subagents, and hooks across **GitHub trees**, **npm**, registries, and local paths—without juggling a bookmark folder full of unrelated repos.
+A CLI to **discover, install, and apply AI capabilities** from GitHub, npm, and registries into your IDE—using a simple declarative spec.
 
-> Think: **npm** for IDE configurations + **Terraform** for declarative setup + **kubectl** for CLI UX
+> Think: npm for AI skills + Terraform for setup + kubectl for CLI UX
 
 ---
 
 ## Why this exists
 
-**Skills are everywhere; there’s still no “npm for IDE skills.”** Great packs live across vendor repos, community trees, and tarballs—too many sources to track by hand, and no single place where **discovery** and **your stack** meet.
+AI skills are scattered across GitHub repos, npm packages, and community lists.
 
-**AI Stack Kit is the glue:** **`sources.config.yaml`** names the catalogs you trust, **`spec.yaml`** pins what you actually use, and the CLI **resolves, fetches, and applies** (with sane caching). The **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** is an **open, auto-rebuilt directory** over those upstreams—**weekly, Mondays 06:00 UTC**—so listings stay fresh **without** a hand-maintained index.
+There’s no single way to:
+- discover them
+- install them
+- keep them in sync across IDEs
 
-**Help grow the default catalog for everyone:** open a PR that extends **`templates/sources.config.yaml`** (see **[CONTRIBUTING.md](./CONTRIBUTING.md)**).
+**AI Stack Kit solves this with:**
+- `sources.config.yaml` → where to fetch from  
+- `spec.yaml` → what you use  
+- CLI → resolves, installs, and applies everything
+
+**Hosted discovery stays fresh:** the **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** isn’t a frozen index — it **rebuilds its catalog from upstream GitHub/npm trees** listed in the repo’s shared **`templates/sources.config.yaml`** whenever **`main`** changes and on a **weekly** cadence, so new skills in those sources show up without hand-maintaining a registry file. Your own project still uses **local** **`sources.config.yaml`** + **`aistack catalog refresh`** to merge names into **`spec.yaml`** (see **[Skill browser](#skill-browser-github-pages)** below).
+
+Stop copy-pasting AI prompts between repos. Install them like packages.
 
 ---
 
-## The CLI: what you get
+## ⚡ 10-second demo
 
-**One habit loop:** **`search`** → **`add`** (or **`catalog refresh`** to merge new upstream names safely into **`modules:`**) → **`sync`**—and your IDE picks up files from the **adapter** you chose (**Cursor**, **Copilot**, **Claude**, …). **`aistack`** / **`ai-stack`** / **`npx ai-stack-kit`** all speak the same idea: **declarative spec**, **package-manager muscle**, **no manual tarball archaeology**. Same portable skill folders; different output paths—**you write intent, the CLI does the plumbing.**
+### Install the CLI
+
+Easiest install from the **npm registry** (no GitHub token): **[npm package `ai-stack-kit`](https://www.npmjs.com/package/ai-stack-kit)**
+
+| Registry | Install command |
+|----------|-------------------|
+| **npm registry** ([npmjs.com](https://www.npmjs.com/package/ai-stack-kit)) | `npm install -g ai-stack-kit` |
+| **GitHub registry** ([GitHub Packages](https://docs.github.com/packages/learn-github-packages/introduction-to-github-packages), PAT — [`@deb-adarsh`](https://github.com/deb-adarsh)) | `npm install -g @deb-adarsh/ai-stack-kit` — see **[GitHub Packages](#github-packages)** below |
+
+The CLI is **one build**, published as the **unscoped** package **`ai-stack-kit`** on the **npm registry** and as **`@deb-adarsh/ai-stack-kit`** on the **GitHub registry**. **`aistack`** / **`ai-stack`** / **`ai-stack-kit`** are the same — pick whichever install row matches where you pull packages from.
+
+### Try it
+
+```bash
+npm install -g ai-stack-kit
+
+aistack init
+aistack search react
+aistack skill add react-ui-expert   # or: aistack add react-ui-expert
+aistack sync
+```
+
+---
+
+## The workflow
+
+search → add → sync
+
+**One habit loop:** **`search`** → **`add`** (or **`catalog refresh`** to merge new upstream names safely into **`modules:`**) → **`sync`**—and your IDE picks up files from the **adapter** you chose (**Cursor**, **Copilot**, **Claude**, …). **`aistack`** / **`ai-stack`** / **`npx ai-stack-kit`**, or **`npx @deb-adarsh/ai-stack-kit`** (GitHub registry + `.npmrc`) — same CLI behavior.
 
 ---
 
@@ -33,19 +71,18 @@ AI Stack Kit lets you:
 - 🎯 **Apply** the same portable manifests through **client adapters** (**Cursor**, **Copilot** / VS Code settings, **Claude**, …)—output paths follow **`client.type`**, not copy-paste sprawl.
 - 🔒 **Version** and lock dependencies like you would with package managers.
 - 🚀 **Share** a single **`spec.yaml`** across machines and teammates.
-- 🌐 **Browse** curated default catalogs in the **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** and use **`catalog refresh`** to append new upstream listings into **`modules:`** without rewriting your whole file.
-
-**Contributors welcome.** The shared **default catalog** is **[`templates/sources.config.yaml`](./templates/sources.config.yaml)**—the same file **`aistack init`** copies for new projects and that powers the hosted Skill browser. Open a PR to add **public, well-maintained** skill trees (GitHub or npm), or improve code and docs. See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for how to add sources and validate locally.
+- 🌐 **Browse** the **[Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)** (listings **sync from upstream** via **`templates/sources.config.yaml`** — see **[Why this exists](#why-this-exists)**) and use **`catalog refresh`** to append new upstream names into **`modules:`** without rewriting your whole file.
 
 ---
 
 ## Quick Start
 
-After `npm install -g ai-stack-kit`, run **`aistack`** or **`ai-stack`** (both invoke the same CLI).
+Install with **`npm install -g ai-stack-kit`** (**npm registry**) or **`npm install -g @deb-adarsh/ai-stack-kit`** (**GitHub registry** — see **[GitHub Packages](#github-packages)**), or **`npm link`** from a clone — see **⚡ 10-second demo**.
 
 ```bash
-# Install AI Stack Kit (CLI commands: aistack or ai-stack)
-npm install -g ai-stack-kit
+# Install (examples — pick one)
+# npm install -g ai-stack-kit                   # npm registry (unscoped)
+# npm install -g @deb-adarsh/ai-stack-kit         # GitHub registry (+ ~/.npmrc)
 
 # Initialize a new project (creates spec.yaml + default sources.config.yaml when missing)
 aistack init
@@ -57,23 +94,38 @@ vim spec.yaml
 aistack sync
 ```
 
+### GitHub Packages
+
+GitHub’s npm registry (**`npm.pkg.github.com`**) expects authentication even for public packages. Use a PAT with **`read:packages`** (classic) or fine‑grained **Packages** read.
+
+```ini
+@deb-adarsh:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_PAT
+```
+
+Then **`npm install -g @deb-adarsh/ai-stack-kit`**. **npm registry** installs (**`ai-stack-kit`**, unscoped) need **no** `.npmrc` for public packages.
+
 Fresh **`init`** drops a **`sources.config.yaml`** next to `spec.yaml` with curated GitHub catalogs ([Copilot awesome-copilot](https://github.com/github/awesome-copilot), [Anthropic skills](https://github.com/anthropics/skills/tree/main/skills), [Composio awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills), [Antigravity bundle](https://github.com/sickn33/antigravity-awesome-skills)). Override or trim sources anytime.
+
+**`init` client hint (optional):** the CLI peeks under your home directory only to **pre-select** the client list — **`sync` always follows `spec.yaml` → `client.type`**. Order of detection: **`~/.cursor`** → Cursor; **`~/.claude`** → Claude; **`~/.copilot`** or **`~/.vscode`** → GitHub Copilot (`copilot`); then IntelliJ paths. You can override in the prompt.
 
 Skill packs from those trees are mostly **portable**: the same folder layout works across **Cursor**, **Copilot**, and **Claude** outputs — `client.type` in `spec.yaml` picks where files land. For a large curated index that is **README-only** (not a tree the CLI can crawl), see [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills).
 
 ### Skill browser (GitHub Pages)
 
-Browse the default catalogs in the browser (search, ecosystem filters, copy **`npx ai-stack-kit`** lines):
+Browse and filter the default catalogs; copy-paste commands use **`npx github:deb-adarsh/ai-stack-kit`** (no GitHub Packages PAT):
 
 **[https://deb-adarsh.github.io/ai-stack-kit/](https://deb-adarsh.github.io/ai-stack-kit/)**
 
-The listing tracks **`templates/sources.config.yaml`** (the default catalog). Hosting rebuilds on **every push to `main`**, on-demand via Actions, and on a **weekly cron (Monday 06:00 UTC)** so listings stay in sync with those upstream sources—no hand-maintained index file. Your **local** project still uses its own **`sources.config.yaml`** and cache TTL; extend the shared baseline via **[CONTRIBUTING.md](./CONTRIBUTING.md)** (fork if you want a different Pages catalog).
+The UI reflects **`templates/sources.config.yaml`**: each deploy **re-queries those upstream skill trees** (GitHub Contents API / npm layouts), regenerates **`catalog.json`**, and publishes — so the demo tracks **upstream repos**, not a manually edited skill list. Your project’s **`sources.config.yaml`** and cache stay **separate**; use **`aistack catalog refresh`** locally to pull newly discovered IDs into **`spec.yaml`**. To propose another **public** upstream for the shared template, see **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
 
 ---
 
 ## Example `spec.yaml`
 
-AI Stack Kit reads **`client.type`** to decide which **client adapter** runs at apply time (`cursor`, `copilot`, `claude`, `vscode`, …). You normally declare **one** primary client per project; change `type` when you target a different editor or assistant surface.
+AI Stack Kit reads **`client.type`** to decide which **client adapter** runs at apply time. **Built-in adapters:** **`cursor`**, **`copilot`**, **`claude`**. Use **`copilot`** for VS Code + GitHub Copilot outputs. Other **`client.type`** values only work with a custom adapter.
+
+You normally declare **one** primary client per project; change **`type`** when you target a different editor or assistant surface.
 
 Catalog discovery uses **`sources.config.yaml`** in the project root (`aistack init` seeds a default — see Quick Start). **`hooks`** at the bottom are **lifecycle shell steps** (pre/post install/apply), not the same thing as **`moduleType: hook`** AI modules in `modules:`.
 
@@ -141,6 +193,14 @@ hooks:
 
 ---
 
+## Who is this for?
+
+- Developers using AI tools like Cursor, Claude, or Copilot
+- Teams that want consistent AI setups across projects
+- Builders creating reusable AI skills, agents, or workflows
+
+---
+
 ## Architecture
 
 ### High-Level Design
@@ -195,8 +255,7 @@ ai-stack-kit/
 ├── templates/
 │   ├── spec.yaml
 │   └── sources.config.yaml  # Default catalogs (also used by CI for Pages)
-├── .github/workflows/
-│   └── build-github.yml  # Build catalog + web → GitHub Pages (incl. weekly cron)
+├── .github/workflows/    # CI (e.g. Skill browser deploy)
 ├── config/
 └── ...
 ```
@@ -252,7 +311,7 @@ Run commands at different stages:
 - Offline mode support
 
 ### 6. Skill browser & catalog refresh
-- **Hosted UI**: minimal skill browser with filters and copy-paste **`npx`** commands ([live demo](https://deb-adarsh.github.io/ai-stack-kit/)); rebuilt automatically when CI runs (including **weekly Monday 06:00 UTC**).
+- **Hosted UI**: filters and copy-paste CLI commands ([live demo](https://deb-adarsh.github.io/ai-stack-kit/)).
 - **`aistack catalog refresh`**: compare configured catalogs with `spec.yaml` and **append** missing modules under `modules:` using a YAML-safe merge (new rows default to **`enabled: false`**; backs up `spec.yaml` first).
 
 ---
@@ -354,7 +413,7 @@ aistack clean                  # Clean cache
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/ai-stack-kit.git
+git clone https://github.com/deb-adarsh/ai-stack-kit.git
 cd ai-stack-kit
 
 # Install dependencies
@@ -375,22 +434,6 @@ npm run dev:web
 
 # Static web/dist (+ catalog) for hosting / parity with CI
 npm run build:web
-```
-
-### Testing
-
-```bash
-# Unit tests
-npm run test:unit
-
-# Integration tests
-npm run test:integration
-
-# E2E tests
-npm run test:e2e
-
-# Coverage
-npm run test:coverage
 ```
 
 ---
@@ -501,7 +544,7 @@ Licensed under the **Apache License 2.0**. See [LICENSE](./LICENSE).
 ## Support
 
 - 📖 Documentation: see `/ARCHITECTURE.md` and `/QUICK_REFERENCE.md` in this repo
-- 🐛 Issues: [GitHub Issues](https://github.com/your-org/ai-stack-kit/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/deb-adarsh/ai-stack-kit/issues)
 - ✉️ Maintainer: [debadarsh7@gmail.com](mailto:debadarsh7@gmail.com)
 
 ---

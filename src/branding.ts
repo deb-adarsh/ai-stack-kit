@@ -1,11 +1,17 @@
 /** Display name for docs and user-facing strings. */
 export const PRODUCT_NAME = 'AI Stack Kit';
 
-/** Primary CLI binary (`npm install -g ai-stack-kit` → `aistack`). */
+/** Primary CLI binary (globals named below ship from scoped npm package). */
 export const CLI_COMMAND = 'aistack';
 
-/** Published npm package name (see package.json `name`). */
-export const NPM_PACKAGE_NAME = 'ai-stack-kit';
+/** Canonical scoped id on npm.pkg.github.com (must match GitHub repo owner). */
+export const NPM_PACKAGE_NAME = '@deb-adarsh/ai-stack-kit';
+
+/** Unscoped package id on https://registry.npmjs.org/ (same repo tarball as GitHub Packages). */
+export const NPMJS_PACKAGE_NAME = 'ai-stack-kit';
+
+/** Default GitHub `owner` in scaffolded skill rows (`owner/repo/path`). Matches repo owner for GH Packages scope. */
+export const DEFAULT_SKILL_REPO_OWNER = 'deb-adarsh';
 
 /** Project-local workspace directory (skills, manifests, adapter artifacts). */
 export const WORKSPACE_DOTDIR = '.aistack';

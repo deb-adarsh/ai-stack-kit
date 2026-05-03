@@ -27,6 +27,9 @@ function skillFamily(s: Skill): string {
   return s.publisherFamily ?? s.publisherLabel;
 }
 
+/** Public repo shorthand — works with `npx` without GitHub Packages PAT (see README). */
+const CLI_NPX_SPEC = 'github:deb-adarsh/ai-stack-kit';
+
 function metaLine(s: Skill): string {
   const parts: string[] = [skillFamily(s)];
   const ch = s.publisherChannel;
@@ -37,11 +40,11 @@ function metaLine(s: Skill): string {
 }
 
 function npxAdd(id: string) {
-  return `npx ai-stack-kit@latest add "${id}"`;
+  return `npx ${CLI_NPX_SPEC} skill add "${id}"`;
 }
 
 function npxSync() {
-  return `npx ai-stack-kit@latest sync`;
+  return `npx ${CLI_NPX_SPEC} sync`;
 }
 
 async function loadCatalog(): Promise<Catalog> {

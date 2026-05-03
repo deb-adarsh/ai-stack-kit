@@ -6,7 +6,7 @@
 
 import { existsSync } from 'fs';
 import { promises as fs } from 'fs';
-import { NPM_PACKAGE_NAME, WORKSPACE_DOTDIR } from '../branding.js';
+import { DEFAULT_SKILL_REPO_OWNER, WORKSPACE_DOTDIR } from '../branding.js';
 import { SpecFile, type ClientInstallScope } from '../types/spec.js';
 import type { Skill } from '../types/skill.js';
 import * as yaml from 'js-yaml';
@@ -446,7 +446,7 @@ export async function createSpecFile(data: {
       version: 'latest',
       source: 'github' as any,
       sourceConfig: {
-        owner: NPM_PACKAGE_NAME,
+        owner: DEFAULT_SKILL_REPO_OWNER,
         repo: 'skills',
         path: name,
       },

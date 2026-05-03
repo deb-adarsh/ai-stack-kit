@@ -85,19 +85,41 @@ npm run build:catalog
 
 ---
 
+## Version (`package.json`)
+
+If your PR changes anything that **ships in the published package**—see **`files`** in [`package.json`](./package.json) (**`dist/`** from `src/`, **`templates/`**, packaged **`README.md`**)—**bump `version`** in **`package.json`** using **[semver](https://semver.org/)** (e.g. patch for fixes or catalog tweaks, minor for additive behavior, major for breaking CLI contract).
+
+Docs-only edits **outside** that tarball (e.g. **CONTRIBUTING**, repo markdown not listed under **`files`**) do **not** require a version bump unless maintainers batch them into a release anyway.
+
+---
+
 ## PR checklist (catalog changes)
 
 - [ ] Updated [`templates/sources.config.yaml`](./templates/sources.config.yaml).
 - [ ] Updated [`examples/sources.config.yaml`](./examples/sources.config.yaml) to match.
+- [ ] Bumped **`version`** in [`package.json`](./package.json) if this ships changed **`templates/`** defaults (semver).
 - [ ] Ran **`npm run build && npm run build:catalog`** successfully.
 - [ ] Short PR description: upstream URL, why it’s valuable, license/public note.
 - [ ] (If needed) **`publisherLabel`** / ecosystem mapping for the Skill browser.
 
 ---
 
+## PR checklist (CLI / adapters / `src/`)
+
+- [ ] **`npm run build`** passes (and **`npm test`** where relevant).
+- [ ] Bumped **`version`** in [`package.json`](./package.json) when this PR changes shipped behavior or packaged assets (semver — see **Version** above).
+
+---
+
 ## Local-only sources (not for default catalog)
 
 Users can point **`sources.config.yaml`** at **private** repos or internal mirrors—that does **not** belong in the shared template unless project maintainers explicitly agree. Default catalog PRs should bias toward **broadly useful public upstreams**.
+
+---
+
+## Maintainer releases (local only)
+
+Put CI/registry runbooks (secrets names, manual publish commands, dual-scope rationale) in a **`private.md`** at the repo root. **`private.md` is gitignored** — keep it off forks’ PR history.
 
 ---
 

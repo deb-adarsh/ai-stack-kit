@@ -46,7 +46,7 @@ export class AdapterFactory {
     const matches = this.adapters.filter((a) => a.supports(clientType));
     if (!matches.length) {
       throw new Error(
-        `No ClientAdapter for client type "${clientType}". Register one: factory.register(new MyAdapter()).`
+        `No ClientAdapter for client type "${clientType}". Built-in types: cursor, copilot, claude. For VS Code with GitHub Copilot use copilot. Custom clients: AdapterFactory.register(new MyAdapter()) before apply.`
       );
     }
     return matches[matches.length - 1]!;

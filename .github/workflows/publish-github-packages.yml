@@ -1,0 +1,55 @@
+# Publishes the root CLI package to GitHub Packages (npm registry).
+# Package scope (@OWNER) must match github.repository_owner. Consumers authenticate once via PAT — see README.
+name: Publish CLI to GitHub Packages
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "src/**"
+      - "templates/**"
+      - "tsconfig.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js for npm.pkg.github.com
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@${{ github.repository_owner }}"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish if version not already on registry
+        run: |
+          PKG="$(node -p "require('./package.json').name")"
+          VER="$(node -p "require('./package.json').version")"
+          REG="https://npm.pkg.github.com"
+          set +e
+          npm view "${PKG}@${VER}" version --registry="${REG}" >/dev/null 2>&1
+          HAS_RC=$?
+          set -e
+          if [ "$HAS_RC" -eq 0 ]; then
+            echo "Skip publish — ${PKG}@${VER} already exists on GitHub Packages."
+            exit 0
+          fi
+          npm publish --registry="${REG}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
