@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-05-03T00:00:00.000Z",
+  "count": 1,
+  "publisherFamilies": ["Anthropic"],
+  "publishers": ["Anthropic"],
+  "skills": [
+    {
+      "id": "anthropic-skills--canvas-design",
+      "skillFolder": "canvas-design",
+      "description": "Sample row — run npm run build:catalog for full data.",
+      "catalogId": "anthropic-skills",
+      "publisherId": "anthropics",
+      "publisherLabel": "Anthropic",
+      "publisherFamily": "Anthropic",
+      "publisherChannel": "Anthropic reference",
+      "repo": "anthropics/skills",
+      "supportedClients": ["cursor", "copilot", "claude"],
+      "moduleType": "skill",
+      "githubBrowse": "https://github.com/anthropics/skills/tree/main/skills/canvas-design"
+    }
+  ]
+}

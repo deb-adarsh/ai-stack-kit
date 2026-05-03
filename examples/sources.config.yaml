@@ -31,3 +31,15 @@ sources:
     repo: sickn33/antigravity-awesome-skills
     path: skills
     branch: main
+
+  - type: github
+    id: microsoft-azure-skills
+    repo: microsoft/azure-skills
+    path: skills
+    branch: main
+
+  - type: github
+    id: google-skills-cloud
+    repo: google/skills
+    path: skills/cloud
+    branch: main

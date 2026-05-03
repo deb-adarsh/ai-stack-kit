@@ -5,11 +5,15 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
+    "ai-stack-kit": "./dist/cli/index.js",
     "aistack": "./dist/cli/index.js",
     "ai-stack": "./dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc",
+    "build:catalog": "node scripts/build-catalog.mjs",
+    "dev:web": "npm run build && npm run build:catalog && npm run dev --prefix web",
+    "build:web": "npm run build && npm run build:catalog && npm run build --prefix web",
     "dev": "tsc --watch",
     "start": "node dist/cli/index.js",
     "test": "jest",

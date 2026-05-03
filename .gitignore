@@ -5,6 +5,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Generated skill browser catalog (regenerate with npm run build:catalog)
+web/public/catalog.json
+
 # Build outputs
 dist/
 build/

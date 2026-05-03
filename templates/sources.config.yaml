@@ -46,3 +46,17 @@ sources:
     repo: sickn33/antigravity-awesome-skills
     path: skills
     branch: main
+
+  # Microsoft Azure agent skills — https://github.com/microsoft/azure-skills/tree/main/skills
+  - type: github
+    id: microsoft-azure-skills
+    repo: microsoft/azure-skills
+    path: skills
+    branch: main
+
+  # Google Cloud skills subtree — https://github.com/google/skills/tree/main/skills/cloud
+  - type: github
+    id: google-skills-cloud
+    repo: google/skills
+    path: skills/cloud
+    branch: main
