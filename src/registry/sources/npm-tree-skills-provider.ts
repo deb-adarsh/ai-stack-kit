@@ -16,6 +16,7 @@ import type { RegistryEntryJson } from '../discovery/local-json-registry.js';
 import { parseRegistryEntryJson } from '../discovery/local-json-registry.js';
 import type { AIModuleType } from '../../types/ai-module.js';
 import { DEFAULT_MODULE_TYPE } from '../../types/ai-module.js';
+import { DEFAULT_RELATIVE_CACHE_DIR } from '../../branding.js';
 
 interface NpmPackageDoc {
   name: string;
@@ -280,7 +281,7 @@ export function npmCatalogCacheFilePath(
   resolvedVersion: string,
   skillsPath: string
 ): string {
-  const root = cacheDir?.trim() || '.cache/spec-engine';
+  const root = cacheDir?.trim() || DEFAULT_RELATIVE_CACHE_DIR;
   const h = createHash('sha256')
     .update(`${packageName}\0${resolvedVersion}\0${skillsPath}`)
     .digest('hex')

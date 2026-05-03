@@ -5,6 +5,7 @@
  * Error recovery: per-skill try/catch (continue by default); optional rollback of installs on adapter failure.
  */
 
+import { WORKSPACE_DOTDIR } from '../branding.js';
 import { rm } from 'node:fs/promises';
 import * as path from 'node:path';
 import type { SpecFile } from '../types/spec.js';
@@ -83,7 +84,7 @@ function defaultInstallRoot(projectRoot: string, spec: SpecFile): string {
     const base = expandHome(fromSpec);
     return path.join(base, 'skills');
   }
-  return path.join(projectRoot, '.spec-engine', 'skills');
+  return path.join(projectRoot, WORKSPACE_DOTDIR, 'skills');
 }
 
 export interface ResolvedSkillPayload {

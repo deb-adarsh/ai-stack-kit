@@ -34,7 +34,7 @@ coverage/
 
 # Cache
 .cache/
-.spec-engine/cache/
+.aistack/cache/
 .eslintcache
 
 # Logs
@@ -53,8 +53,8 @@ temp/
 # Lock files (keep package-lock.json, ignore others)
 # package-lock.json - keep this
 # yarn.lock - keep this
-.spec-engine/lock.yaml - example only, real projects should commit this
+.aistack/lock.yaml - example only, real projects should commit this
 
 # Test fixtures
 tests/fixtures/**/node_modules/
-tests/fixtures/**/.spec-engine/cache/
+tests/fixtures/**/.aistack/cache/

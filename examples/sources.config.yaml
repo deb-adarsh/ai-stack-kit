@@ -1,12 +1,12 @@
 # Skill catalog sources — registry aggregates these; do not list individual skills here.
-# Copy to project root as `sources.config.yaml` (or set SPEC_ENGINE_SOURCES_CONFIG).
+# Copy to project root as `sources.config.yaml` (or set AISTACK_SOURCES_CONFIG).
 #
 # GitHub REST listing: set GITHUB_TOKEN for higher rate limits (and private repos).
 # Description enrichment uses raw.githubusercontent.com (bounded; see githubMetadataEnrichMax).
 
 version: 1
 cacheTtlSeconds: 3600
-cacheDir: .cache/spec-engine
+cacheDir: .cache/aistack
 
 # Max parallel raw fetches per GitHub source per cache refresh (0 = synthetic descriptions only).
 githubMetadataEnrichMax: 120

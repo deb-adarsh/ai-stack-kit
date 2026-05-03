@@ -175,7 +175,9 @@ export class NpmSource implements SkillSource {
       const pkgJson = scopedFiles['package.json'];
       if (pkgJson) {
         const pkg = JSON.parse(pkgJson) as Record<string, unknown>;
-        const se = (pkg.specEngine ?? pkg['spec-engine']) as Record<string, unknown> | undefined;
+        const se = (pkg.aiStackKit ?? pkg.specEngine ?? pkg['spec-engine']) as
+          | Record<string, unknown>
+          | undefined;
         if (se?.skillManifest) {
           manifest = se.skillManifest as SkillManifest;
         } else {

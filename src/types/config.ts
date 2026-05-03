@@ -66,15 +66,15 @@ export interface CLIContext {
  */
 export const ENV_VARS = {
   /** Override cache directory */
-  CACHE_DIR: 'SPEC_ENGINE_CACHE_DIR',
+  CACHE_DIR: 'AISTACK_CACHE_DIR',
   /** Override config directory */
-  CONFIG_DIR: 'SPEC_ENGINE_CONFIG_DIR',
+  CONFIG_DIR: 'AISTACK_CONFIG_DIR',
   /** Default registry token */
-  TOKEN: 'SPEC_ENGINE_TOKEN',
+  TOKEN: 'AISTACK_TOKEN',
   /** Log level */
-  LOG_LEVEL: 'SPEC_ENGINE_LOG_LEVEL',
+  LOG_LEVEL: 'AISTACK_LOG_LEVEL',
   /** Disable telemetry */
-  NO_TELEMETRY: 'SPEC_ENGINE_NO_TELEMETRY',
+  NO_TELEMETRY: 'AISTACK_NO_TELEMETRY',
   /** Disable update checks */
-  NO_UPDATE_CHECK: 'SPEC_ENGINE_NO_UPDATE_CHECK',
+  NO_UPDATE_CHECK: 'AISTACK_NO_UPDATE_CHECK',
 } as const;

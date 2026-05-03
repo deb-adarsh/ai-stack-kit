@@ -15,6 +15,7 @@ import { parseRegistryEntryJson } from '../discovery/local-json-registry.js';
 import type { AIModuleType } from '../../types/ai-module.js';
 import { DEFAULT_MODULE_TYPE } from '../../types/ai-module.js';
 import { fetchRawText } from './raw-github.js';
+import { DEFAULT_RELATIVE_CACHE_DIR } from '../../branding.js';
 
 const GITHUB_API = 'https://api.github.com';
 
@@ -77,7 +78,7 @@ async function githubJson<T>(
     warnedMissingGithubToken = true;
     process.emitWarning(
       'GitHub API returned 403 for skill catalog listing. Set GITHUB_TOKEN for higher rate limits and private repo access.',
-      { code: 'SPEC_ENGINE_GITHUB_TOKEN', detail: url }
+      { code: 'AISTACK_GITHUB_TOKEN', detail: url }
     );
   }
   if (!res.ok) {
@@ -396,7 +397,7 @@ export function catalogCacheFilePath(
   skillsPath: string,
   branch: string
 ): string {
-  const root = cacheDir?.trim() || '.cache/spec-engine';
+  const root = cacheDir?.trim() || DEFAULT_RELATIVE_CACHE_DIR;
   const h = createHash('sha256')
     .update(`${owner}\0${repo}\0${skillsPath}\0${branch}`)
     .digest('hex')

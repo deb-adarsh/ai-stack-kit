@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Spec Engine Configuration",
-  "description": "Configuration schema for spec-engine spec.yaml",
+  "title": "Ai Stack Kit Configuration",
+  "description": "Configuration schema for Ai Stack Kit (spec.yaml)",
   "type": "object",
   "required": ["version", "skills"],
   "properties": {

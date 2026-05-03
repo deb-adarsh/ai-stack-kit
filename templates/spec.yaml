@@ -1,4 +1,4 @@
-# Spec Engine Configuration
+# Ai Stack Kit Configuration
 # Schema version 1.0
 
 version: "1.0"
@@ -63,7 +63,7 @@ skills:
     version: latest
     source: npm
     sourceConfig:
-      scope: "@spec-engine"
+      scope: "@aistack"
       registry: https://registry.npmjs.org
   
   # Example 3: Registry skill
@@ -71,7 +71,7 @@ skills:
   #   version: ~3.1.0
   #   source: registry
   #   sourceConfig:
-  #     registryUrl: https://registry.spec-engine.dev
+  #     registryUrl: https://registry.aistack.dev
   #   config:
   #     reviewLevel: strict
   
@@ -101,13 +101,13 @@ skills:
 # Global settings (optional)
 settings:
   # Cache directory
-  cacheDir: ~/.spec-engine/cache
+  cacheDir: ~/.aistack/cache
   
   # Lock file path
-  lockFile: .spec-engine/lock.yaml
+  lockFile: .aistack/lock.yaml
   
   # State directory
-  stateDir: ~/.spec-engine/state
+  stateDir: ~/.aistack/state
   
   # Auto-sync on spec.yaml changes
   autoSync: false

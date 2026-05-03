@@ -1,13 +1,13 @@
 /**
  * CLI Command Structure and Design
- * 
+ *
  * Main commands:
- * - spec-engine init              Initialize new project
- * - spec-engine skill|subagent|hook  search / add / info (type-specific)
- * - spec-engine add|search|info   Legacy aliases (all types or --type)
- * - spec-engine remove            Remove a module from spec.yaml
- * - spec-engine install / apply / sync
- * - spec-engine list              List modules in spec.yaml
+ * - aistack init              Initialize new project
+ * - aistack skill|subagent|hook  search / add / info (type-specific)
+ * - aistack add|search|info   Legacy aliases (all types or --type)
+ * - aistack remove            Remove a module from spec.yaml
+ * - aistack install / apply / sync
+ * - aistack list              List modules in spec.yaml
  */
 
 import { Command } from 'commander';
@@ -18,6 +18,7 @@ import { table } from 'table';
 import figures from 'figures';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CLI_COMMAND, PRODUCT_NAME } from '../branding.js';
 import {
   detectClient,
   createSpecFile,
@@ -159,8 +160,8 @@ export function createCLI(): Command {
   const program = new Command();
 
   program
-    .name('spec-engine')
-    .description('Manage AI modules (skills, subagents, hooks) and IDE client configs')
+    .name(CLI_COMMAND)
+    .description(`${PRODUCT_NAME}: manage AI modules (skills, subagents, hooks) and IDE client configs`)
     .version('1.0.0')
     .option('-v, --verbose', 'Verbose output')
     .option('--offline', 'Offline mode')
@@ -186,14 +187,14 @@ export function createCLI(): Command {
 }
 
 /**
- * COMMAND: spec-engine init
- * 
+ * COMMAND: aistack init
+ *
  * Initialize a new project with interactive prompts
  */
 function registerInitCommand(program: Command) {
   program
     .command('init')
-    .description('Initialize a new spec-engine project')
+    .description(`Initialize a new ${PRODUCT_NAME} project`)
     .option('-y, --yes', 'Skip prompts and use defaults')
     .option('-t, --template <name>', 'Use a template')
     .action(async (options) => {
@@ -303,7 +304,7 @@ function registerInitCommand(program: Command) {
         console.log(chalk.green('\n✓ Project initialized successfully!'));
         console.log(chalk.gray('\nNext steps:'));
         console.log(chalk.gray('  1. Review spec.yaml'));
-        console.log(chalk.gray('  2. Run: spec-engine sync'));
+        console.log(chalk.gray(`  2. Run: ${CLI_COMMAND} sync`));
 
       } catch (error) {
         spinner.fail('Initialization failed');
@@ -473,7 +474,7 @@ async function executeAddModuleFlow(params: {
 }
 
 /**
- * COMMAND: spec-engine add
+ * COMMAND: aistack add
  *
  * Legacy entry point: add any module type (prefer `skill add`, `subagent add`, `hook add`).
  */
@@ -524,7 +525,7 @@ function registerListCommand(program: Command) {
 
 function registerStatusCommand(program: Command) {
   program.command('status').description('Show project / spec status').action(() => {
-    console.log(chalk.cyan('Run `spec-engine sync` to apply. Status view coming soon.'));
+    console.log(chalk.cyan(`Run \`${CLI_COMMAND} sync\` to apply. Status view coming soon.`));
   });
 }
 
@@ -554,7 +555,7 @@ function registerCleanCommand(program: Command) {
 }
 
 /**
- * COMMAND: spec-engine search
+ * COMMAND: aistack search
  *
  * Search all module kinds (or use `skill search`, `subagent search`, `hook search`).
  */
@@ -599,7 +600,7 @@ function registerSearchCommand(program: Command) {
         console.log(chalk.gray(`\nShowing ${results.length} results`));
         console.log(
           chalk.gray(
-            `Run ${chalk.cyan('spec-engine info <name>')} or ${chalk.cyan('spec-engine skill|subagent|hook info <name>')}`
+            `Run ${chalk.cyan(`${CLI_COMMAND} info <name>`)} or ${chalk.cyan(`${CLI_COMMAND} skill|subagent|hook info <name>`)}`
           )
         );
 
@@ -611,8 +612,8 @@ function registerSearchCommand(program: Command) {
 }
 
 /**
- * COMMAND: spec-engine info
- * 
+ * COMMAND: aistack info
+ *
  * Show skill details
  */
 function registerInfoCommand(program: Command) {
@@ -674,8 +675,8 @@ function registerApplyCommand(program: Command) {
 }
 
 /**
- * COMMAND: spec-engine sync
- * 
+ * COMMAND: aistack sync
+ *
  * Install and apply skills
  */
 function registerSyncCommand(program: Command) {
@@ -784,7 +785,7 @@ function registerModuleKindCommandGroups(program: Command) {
           console.log();
           displaySearchResults(results);
           console.log(
-            chalk.gray(`\nRun ${chalk.cyan(`spec-engine ${g.cmd} info <name>`)} for details`)
+            chalk.gray(`\nRun ${chalk.cyan(`${CLI_COMMAND} ${g.cmd} info <name>`)} for details`)
           );
         } catch (e) {
           spinner.fail('Search failed');
@@ -855,7 +856,7 @@ function displaySyncSummary(summary: any) {
 function handleError(error: any) {
   if (error.code === 'SPEC_NOT_FOUND') {
     console.error(chalk.red('\n✗ No spec.yaml found'));
-    console.log(chalk.gray('Run: spec-engine init'));
+    console.log(chalk.gray(`Run: ${CLI_COMMAND} init`));
   } else if (error.code === 'VALIDATION_ERROR') {
     console.error(chalk.red('\n✗ Validation failed:'));
     error.errors.forEach((err: any) => {
@@ -887,7 +888,7 @@ async function quickInit(client: { type: string }): Promise<void> {
   await createSpecFile({
     project: {
       projectName: 'my-ide-setup',
-      description: 'Spec Engine project',
+      description: `${PRODUCT_NAME} project`,
       author: '',
     },
     client: client.type,
@@ -896,7 +897,7 @@ async function quickInit(client: { type: string }): Promise<void> {
   });
 }
 
-/** When this file is the process entrypoint (`spec-engine` / `node dist/cli/index.js`), run Commander. */
+/** When this file is the process entrypoint (`aistack` / `ai-stack` / `node dist/cli/index.js`), run Commander. */
 function shouldRunCliMain(): boolean {
   const argv1 = process.argv[1];
   if (!argv1) return false;

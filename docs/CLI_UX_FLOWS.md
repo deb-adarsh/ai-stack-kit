@@ -4,25 +4,25 @@ This document shows the exact user experience for each CLI command.
 
 ---
 
-## `spec-engine init`
+## `aistack init`
 
 ### Flow: Quick Init (with -y flag)
 
 ```bash
-$ spec-engine init -y
+$ aistack init -y
 ✔ Detected client: Cursor
 ✔ Created spec.yaml
 ✔ Project initialized successfully!
 
 Next steps:
   1. Review spec.yaml
-  2. Run: spec-engine sync
+  2. Run: aistack sync
 ```
 
 ### Flow: Interactive Init
 
 ```bash
-$ spec-engine init
+$ aistack init
 ⠋ Initializing project...
 ✔ Detected client: Cursor
 
@@ -64,17 +64,17 @@ Recommended skills for your project:
 
 Next steps:
   1. Review spec.yaml
-  2. Run: spec-engine sync
+  2. Run: aistack sync
 ```
 
 ---
 
-## `spec-engine add`
+## `aistack add`
 
 ### Flow: Add with skill name
 
 ```bash
-$ spec-engine add canvas
+$ aistack add canvas
 ⠋ Searching for canvas...
 ✔
 
@@ -120,7 +120,7 @@ Create interactive canvas visualizations in Cursor
 ### Flow: Interactive add (no skill name)
 
 ```bash
-$ spec-engine add
+$ aistack add
 
 Search for skills:
 ? Search: figma
@@ -138,10 +138,10 @@ Search for skills:
 
 ---
 
-## `spec-engine search`
+## `aistack search`
 
 ```bash
-$ spec-engine search react
+$ aistack search react
 
 ⠋ Searching...
 ✔ Found 5 skills
@@ -157,13 +157,13 @@ $ spec-engine search react
 └──────────────────┴─────────┴────────────────────────────────────────┴───────────┘
 
 Showing 5 results
-Run spec-engine info <skill> for more details
+Run aistack info <skill> for more details
 ```
 
 ### With filters
 
 ```bash
-$ spec-engine search react --tag ui --client cursor
+$ aistack search react --tag ui --client cursor
 
 ⠋ Searching...
 ✔ Found 2 skills
@@ -178,10 +178,10 @@ $ spec-engine search react --tag ui --client cursor
 
 ---
 
-## `spec-engine info`
+## `aistack info`
 
 ```bash
-$ spec-engine info canvas
+$ aistack info canvas
 
 ⠋ Fetching info for canvas...
 ✔
@@ -204,10 +204,10 @@ Dependencies:
 
 ---
 
-## `spec-engine sync`
+## `aistack sync`
 
 ```bash
-$ spec-engine sync
+$ aistack sync
 
 Syncing skills...
 
@@ -232,7 +232,7 @@ Summary:
 ### With errors
 
 ```bash
-$ spec-engine sync
+$ aistack sync
 
 Syncing skills...
 
@@ -246,15 +246,15 @@ Syncing skills...
   ✗ skills.0.version: Invalid version range "^abc"
   ✗ skills.2.name: Skill "invalid-skill" not found
 
-Run: spec-engine validate
+Run: aistack validate
 ```
 
 ---
 
-## `spec-engine status`
+## `aistack status`
 
 ```bash
-$ spec-engine status
+$ aistack status
 
 ✓ Spec: valid
 ✓ Client: Cursor (detected at ~/.cursor)
@@ -275,15 +275,15 @@ Changes since last sync:
   + Added: figma-agent
   ↑ Updated: canvas (2.0.5 → 2.1.0)
 
-Run: spec-engine sync
+Run: aistack sync
 ```
 
 ---
 
-## `spec-engine list`
+## `aistack list`
 
 ```bash
-$ spec-engine list
+$ aistack list
 
 Installed skills (4):
 
@@ -294,7 +294,7 @@ canvas@2.1.0
 
 react-expert@3.2.0
   React development assistance
-  Source: npm:@spec-engine/react-expert
+  Source: npm:@aistack/react-expert
   Applied: Yes
 
 typescript-helper@2.0.5
@@ -311,7 +311,7 @@ figma-agent@1.5.0
 ### Tree view
 
 ```bash
-$ spec-engine list --tree
+$ aistack list --tree
 
 Installed skills (4):
 
@@ -326,12 +326,12 @@ Installed skills (4):
 
 ---
 
-## `spec-engine validate`
+## `aistack validate`
 
 ### Success
 
 ```bash
-$ spec-engine validate
+$ aistack validate
 
 ⠋ Validating spec.yaml...
 ✔ Valid
@@ -342,7 +342,7 @@ $ spec-engine validate
 ### Errors
 
 ```bash
-$ spec-engine validate
+$ aistack validate
 
 ⠋ Validating spec.yaml...
 ✘ Validation failed:
@@ -361,16 +361,16 @@ $ spec-engine validate
 ### No spec.yaml found
 
 ```bash
-$ spec-engine sync
+$ aistack sync
 
 ✗ No spec.yaml found
-Run: spec-engine init
+Run: aistack init
 ```
 
 ### Network error
 
 ```bash
-$ spec-engine add canvas
+$ aistack add canvas
 
 ⠋ Searching for canvas...
 ✘
@@ -382,7 +382,7 @@ Try: --offline flag
 ### Skill not found
 
 ```bash
-$ spec-engine info nonexistent
+$ aistack info nonexistent
 
 ⠋ Fetching info for nonexistent...
 ✘
@@ -397,7 +397,7 @@ $ spec-engine info nonexistent
 ### Dry run
 
 ```bash
-$ spec-engine sync --dry-run
+$ aistack sync --dry-run
 
 Syncing skills... (DRY RUN)
 
@@ -418,7 +418,7 @@ No changes made (dry run mode)
 ### Verbose mode
 
 ```bash
-$ spec-engine sync -v
+$ aistack sync -v
 
 Syncing skills...
 
@@ -435,7 +435,7 @@ Syncing skills...
   → Downloading from: https://github.com/...
   → Verifying checksum: abc123...
   → Extracting files...
-  → Installed to cache: ~/.spec-engine/cache/canvas-2.1.0
+  → Installed to cache: ~/.aistack/cache/canvas-2.1.0
 ✔ Installed 1 skills
 
 [... more verbose output ...]

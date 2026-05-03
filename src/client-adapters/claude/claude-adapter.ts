@@ -19,7 +19,7 @@ export class ClaudeClientAdapter extends BaseClientAdapter {
     const orchestrationTpl = loadBundledTemplate('claude', 'orchestration.md.tpl');
 
     const systemBundle = [
-      '# Spec Engine — aggregated system context',
+      '# Ai Stack Kit — aggregated system context',
       '',
       `Project: ${input.metadata.projectName ?? 'unknown'}`,
       `Generated: ${input.metadata.generatedAt}`,
@@ -31,7 +31,7 @@ export class ClaudeClientAdapter extends BaseClientAdapter {
     ].join('\n');
 
     files.push({
-      path: '.spec-engine/claude/system-bundle.md',
+      path: '.aistack/claude/system-bundle.md',
       content: systemBundle,
       mergeStrategy: 'overwrite',
       managed: true,
@@ -39,7 +39,7 @@ export class ClaudeClientAdapter extends BaseClientAdapter {
 
     for (const prompt of input.prompts) {
       files.push({
-        path: `.spec-engine/claude/prompts/${prompt.id.replace(/[^a-zA-Z0-9._-]/g, '-')}.md`,
+        path: `.aistack/claude/prompts/${prompt.id.replace(/[^a-zA-Z0-9._-]/g, '-')}.md`,
         content: `# ${prompt.title}\n\n_role: ${prompt.role}_\n\n${prompt.body}\n`,
         mergeStrategy: 'overwrite',
         managed: true,
@@ -60,7 +60,7 @@ export class ClaudeClientAdapter extends BaseClientAdapter {
         ].join('\n');
 
     files.push({
-      path: '.spec-engine/claude/README.md',
+      path: '.aistack/claude/README.md',
       content: orch,
       mergeStrategy: 'overwrite',
       managed: true,

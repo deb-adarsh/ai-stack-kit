@@ -24,8 +24,8 @@
     "vscode",
     "development"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "Deb Adarsh <debadarsh7@gmail.com>",
+  "license": "Apache-2.0",
   "dependencies": {
     "commander": "^11.0.0",
     "inquirer": "^9.2.0",

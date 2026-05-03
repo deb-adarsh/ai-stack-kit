@@ -5,14 +5,14 @@ The registry is an **aggregator** over configured **sources**. You add repositor
 ## Configuration
 
 - **Default path:** `./sources.config.yaml` (project root)  
-- **Override:** `SPEC_ENGINE_SOURCES_CONFIG=/absolute/or/relative/path.yaml`
+- **Override:** `AISTACK_SOURCES_CONFIG=/absolute/or/relative/path.yaml`
 
 See [examples/sources.config.yaml](examples/sources.config.yaml) for **github/awesome-copilot** and **anthropics/skills** under `skills/`.
 
 ```yaml
 version: 1
 cacheTtlSeconds: 3600
-cacheDir: .cache/spec-engine
+cacheDir: .cache/aistack
 githubMetadataEnrichMax: 120
 githubMetadataEnrichConcurrency: 8
 
@@ -52,13 +52,13 @@ Skill names in the merged index are **namespaced** as `{catalogId}--{folderOrSte
 
 ### npm tree
 
-`- type: npm` with **`package`** (full name, e.g. `@scope/pkg`). The engine resolves the tarball, lists **`path`** inside the package (default `skills`), and emits the same style of entries. **`spec-engine add`** writes `source: npm` with `sourceConfig.package`, `path`, `version`, and optional `registry` so **`NpmSource`** can install a **subfolder** of the package (see `skillSubPath` handling in `npm-source.ts`).
+`- type: npm` with **`package`** (full name, e.g. `@scope/pkg`). The engine resolves the tarball, lists **`path`** inside the package (default `skills`), and emits the same style of entries. **`aistack add`** writes `source: npm` with `sourceConfig.package`, `path`, `version`, and optional `registry` so **`NpmSource`** can install a **subfolder** of the package (see `skillSubPath` handling in `npm-source.ts`).
 
 ## CLI behavior
 
 With a valid `sources.config.yaml`:
 
-- **`spec-engine search`** — dynamic catalog search **merged** with the small **offline** suggestion list (deduped by name; catalog hits ranked slightly higher).  
+- **`aistack search`** — dynamic catalog search **merged** with the small **offline** suggestion list (deduped by name; catalog hits ranked slightly higher).  
 - **`getSkillInfo` / `add`** — resolve against the dynamic registry first; if not found, **fall back** to the offline catalog before erroring.
 
 Without config, search/info behave as **offline-only** (unchanged).

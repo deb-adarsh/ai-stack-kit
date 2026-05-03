@@ -7,6 +7,7 @@ import type { AdapterOutput, AdapterOutputFile } from '../adapter-output.js';
 import { BaseClientAdapter } from '../base-client-adapter.js';
 import type { NormalizedWorkspaceInput } from '../normalized.js';
 import { loadBundledTemplate, renderTemplate } from '../template-loader.js';
+import { CLI_COMMAND, GENERATED_FILE_MARKER_KEY, WORKSPACE_DOTDIR } from '../../branding.js';
 
 function slug(id: string): string {
   return id.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'agent';
@@ -62,7 +63,7 @@ export class CursorClientAdapter extends BaseClientAdapter {
 
       const header = [
         '---',
-        `spec_engine: "1"`,
+        `${GENERATED_FILE_MARKER_KEY}: "1"`,
         `agent_id: "${agent.id}"`,
         `source_skill: "${agent.sourceSkillId ?? ''}"`,
         '---',
@@ -74,7 +75,7 @@ export class CursorClientAdapter extends BaseClientAdapter {
         content: header + body,
         mergeStrategy: 'overwrite',
         managed: true,
-        provenance: `spec-engine:${input.metadata.generatedAt}`,
+        provenance: `${CLI_COMMAND}:${input.metadata.generatedAt}`,
       });
     }
 
@@ -83,7 +84,7 @@ export class CursorClientAdapter extends BaseClientAdapter {
         path: `.cursor/prompts/${slug(prompt.id)}.md`,
         content: [
           '---',
-          `spec_engine: "1"`,
+          `${GENERATED_FILE_MARKER_KEY}: "1"`,
           `prompt_id: "${prompt.id}"`,
           `role: "${prompt.role}"`,
           `source_skill: "${prompt.sourceSkillId ?? ''}"`,
@@ -100,7 +101,7 @@ export class CursorClientAdapter extends BaseClientAdapter {
     }
 
     files.push({
-      path: '.spec-engine/manifest.cursor.json',
+      path: `${WORKSPACE_DOTDIR}/manifest.cursor.json`,
       content:
         JSON.stringify(
           {

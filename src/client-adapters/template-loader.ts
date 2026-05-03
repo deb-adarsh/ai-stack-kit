@@ -31,7 +31,7 @@ export function bundledTemplatesDir(): string {
   return fileURLToPath(new URL('../../templates/clients', import.meta.url));
 }
 
-/** Load template shipped with Spec Engine (sync, for {@link ClientAdapter.generateConfig}). */
+/** Load template shipped with Ai Stack Kit (sync, for {@link ClientAdapter.generateConfig}). */
 export function loadBundledTemplate(clientDir: string, fileName: string): string | null {
   const p = path.join(bundledTemplatesDir(), clientDir, fileName);
   try {

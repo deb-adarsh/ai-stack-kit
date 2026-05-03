@@ -11,7 +11,7 @@ export interface Logger {
   error(message: string, meta?: Record<string, unknown>): void;
 }
 
-export function createConsoleLogger(scope = 'spec-engine', level: LogLevel = 'info'): Logger {
+export function createConsoleLogger(scope = 'aistack', level: LogLevel = 'info'): Logger {
   const order: LogLevel[] = ['debug', 'info', 'warn', 'error'];
   const min = order.indexOf(level);
 

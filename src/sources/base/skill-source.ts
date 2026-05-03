@@ -15,7 +15,7 @@ export interface SkillFiles {
 
 /** Where {@link SkillSource.install} should materialize the skill on disk. */
 export interface InstallContext {
-  /** Root directory (e.g. ~/.spec-engine/skills or project .spec-engine/skills) */
+  /** Root directory (e.g. ~/.aistack/skills or project .aistack/skills) */
   installRoot: string;
 }
 

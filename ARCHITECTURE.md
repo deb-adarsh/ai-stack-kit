@@ -1,119 +1,248 @@
-# Spec Engine - Architecture Design
+# Ai Stack Kit — Architecture
+
+This document is the **single architecture reference** for the project. It combines what used to be split between a long-form design doc and a high-level overview: visual diagrams and dependency rules live here alongside interfaces, repository layout, and operational detail.
 
 ## Overview
-A CLI tool that reads `spec.yaml`, resolves skills/subagents from multiple sources, and applies them to various IDEs through pluggable adapters.
+
+CLI tool that reads `spec.yaml`, resolves **skills**, **subagents**, and **hooks** (AI modules) from multiple sources, and applies them to IDEs through pluggable **client adapters**.
 
 ---
 
-## Architecture Principles
+## Architecture principles
 
-1. **Pluggable Sources**: Skills can come from GitHub, npm, custom registries
-2. **IDE Agnostic**: Support Cursor, VSCode, and future IDEs via adapters
-3. **Spec-Driven**: Declarative configuration (like Terraform)
-4. **CLI-First**: Rich terminal UX (like kubectl)
-5. **Loose Coupling**: Modules communicate via well-defined interfaces
+1. **Pluggable sources**: Modules can come from GitHub, npm, custom registries, local paths.
+2. **IDE / client agnostic**: Cursor, VS Code Copilot, Claude layouts, etc., via `src/client-adapters/`.
+3. **Spec-driven**: Declarative configuration (Terraform-style).
+4. **CLI-first**: kubectl-style UX (`aistack` / `ai-stack`).
+5. **Loose coupling**: Boundaries over concrete types; composition over inheritance.
 
 ---
 
-## Folder Structure
+## System architecture (diagram)
 
 ```
-spec-engine/
+┌─────────────────────────────────────────────────────────────────────┐
+│                          CLI LAYER                                   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
+│  │   init   │  │ install  │  │  apply   │  │   sync   │  ...       │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘           │
+│       └──────────────┴─────────────┴─────────────┘                  │
+│                              │                                       │
+│                    ┌─────────▼─────────┐                           │
+│                    │   UI Components   │                            │
+│                    │ (spinner, logger) │                            │
+│                    └───────────────────┘                            │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────────┐
+│                         CORE LAYER                                   │
+│  ┌───────────────────────────────────────────────────────────────┐ │
+│  │                     ENGINE                                     │ │
+│  │  Orchestrates: parse → resolve → fetch → apply                │ │
+│  └───────────────┬───────────────────┬───────────────────────────┘ │
+│                  │                   │                              │
+│     ┌────────────▼─────────┐  ┌──────▼──────────┐                 │
+│     │   SPEC PARSER        │  │    RESOLVER     │                  │
+│     │ - Parse spec.yaml    │  │ - Dependency    │                  │
+│     │ - Validate schema    │  │   graph         │                  │
+│     └──────────────────────┘  │ - Version       │                  │
+│                                │   resolution    │                  │
+│                                └─────────────────┘                  │
+└─────┬────────────────┬─────────────────┬─────────────────┬─────────┘
+      │                │                 │                 │
+┌─────▼──────┐  ┌──────▼──────┐  ┌──────▼─────┐  ┌───────▼────────┐
+│  SOURCES   │  │  REGISTRY   │  │  ADAPTERS  │  │    STORAGE     │
+│            │  │             │  │            │  │                │
+│ ┌────────┐ │  │ ┌─────────┐ │  │ ┌────────┐ │  │ ┌────────────┐ │
+│ │ GitHub │ │  │ │ Manager │ │  │ │ Cursor │ │  │ │   Cache    │ │
+│ └────────┘ │  │ └─────────┘ │  │ └────────┘ │  │ └────────────┘ │
+│            │  │             │  │            │  │                │
+│ ┌────────┐ │  │ ┌─────────┐ │  │ ┌────────┐ │  │ ┌────────────┐ │
+│ │  npm   │ │  │ │  Cache  │ │  │ │ VSCode │ │  │ │   State    │ │
+│ └────────┘ │  │ └─────────┘ │  │ └────────┘ │  │ └────────────┘ │
+│            │  │             │  │            │  │                │
+│ ┌────────┐ │  │ ┌─────────┐ │  │ ┌────────┐ │  │ ┌────────────┐ │
+│ │Registry│ │  │ │  Auth   │ │  │ │ Future │ │  │ │ Lock File  │ │
+│ └────────┘ │  │ └─────────┘ │  │ └────────┘ │  │ └────────────┘ │
+│            │  │             │  │            │  │                │
+│ ┌────────┐ │  │             │  │            │  │                │
+│ │ Local  │ │  │             │  │            │  │                │
+│ └────────┘ │  │             │  │            │  │                │
+└────────────┘  └─────────────┘  └────────────┘  └────────────────┘
+      │                │                 │                 │
+      └────────────────┴─────────────────┴─────────────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │      UTILS        │
+                    │ (fs, git, semver) │
+                    └───────────────────┘
+```
+
+## End-to-end data flow (diagram)
+
+```
+┌──────────┐
+│ spec.yaml│
+└────┬─────┘
+     │
+     ▼
+┌─────────────────┐
+│  Parse & Validate│
+└────┬────────────┘
+     │
+     ▼
+┌─────────────────┐     ┌──────────────┐
+│ Resolve modules │────▶│ Query        │
+│  & dependencies │     │ registries   │
+└────┬────────────┘     └──────────────┘
+     │
+     ▼
+┌─────────────────┐
+│ Build dependency│
+│     graph       │
+└────┬────────────┘
+     │
+     ▼
+┌─────────────────┐
+│  Topological    │
+│     sort        │
+└────┬────────────┘
+     │
+     ▼
+┌─────────────────┐     ┌──────────────┐
+│ Fetch modules   │────▶│ Skill sources│
+│   (parallel)    │     │ (GitHub, npm)│
+└────┬────────────┘     └──────────────┘
+     │
+     ▼
+┌─────────────────┐
+│ Verify checksums│
+└────┬────────────┘
+     │
+     ▼
+┌─────────────────┐     ┌──────────────┐
+│  Cache content  │────▶│ Local storage│
+└────┬────────────┘     └──────────────┘
+     │
+     ▼
+┌─────────────────┐
+│ Write lock file │
+└────┬────────────┘
+     │
+     ▼
+┌─────────────────┐     ┌──────────────┐
+│ Apply to client │────▶│Client adapter│
+│  (normalize +   │     │Cursor/Copilot│
+│   transform)    │     │   / Claude   │
+└────┬────────────┘     └──────────────┘
+     │
+     ▼
+┌─────────────────┐
+│ Update IDE state│
+└─────────────────┘
+```
+
+## Layers & dependency boundaries
+
+### Layer dependencies (allowed → dependencies)
+
+```
+CLI
+ └─→ Core (pipeline)
+      ├─→ Sources
+      ├─→ Registry
+      ├─→ Client adapters
+      ├─→ Storage (cache, lock paths)
+      └─→ Utils
+
+Sources
+ └─→ Utils
+
+Registry
+ └─→ Utils
+
+Client adapters
+ └─→ Utils
+
+Storage
+ └─→ Utils
+
+Utils
+ └─→ (stdlib / no project layers)
+```
+
+### Critical rules
+
+1. **No circular dependencies**: Higher layers depend only on lower layers.
+2. **No cross-talk**: Sources, registry connectors, and client adapters do not call each other directly; the **pipeline** coordinates them.
+3. **Orchestration is centralized**: Parse → resolve → fetch → normalize → write happens in one place (`src/pipeline/`).
+4. **Utils stay thin**: Shared helpers only; no business orchestration.
+
+### Interface boundaries (conceptual)
+
+```
+┌─────────────────────────────────────────┐
+│         Pipeline / orchestration          │
+│                                         │
+│  Uses interfaces:                       │
+│  - SkillSource                          │
+│  - RegistryProvider                     │
+│  - ClientAdapter (per IDE / client)      │
+│                                         │
+│  Does NOT import adapter internals       │
+└─────────────────────────────────────────┘
+           ▲         ▲         ▲
+           │         │         │
+    ┌──────┘    ┌────┘    └────┐
+    │           │              │
+┌───┴───┐  ┌───┴────┐  ┌──────┴───────┐
+│GitHub │  │Registry│  │Cursor adapter│
+│Source │  │Provider│  │  (+ others)  │
+└───────┘  └────────┘  └──────────────┘
+```
+
+### Module responsibility matrix
+
+| Layer | Module | Responsibility | Key interfaces / locations |
+|-------|--------|----------------|----------------------------|
+| **CLI** | Commands | Arg parsing, interactive UX | `src/cli/` |
+| **Pipeline** | Apply / load | Orchestration, logging | `apply-pipeline.ts`, `spec-loader.ts` |
+| **Sources** | GitHub, npm, … | Fetch module trees / tarballs | `SkillSource` in `src/sources/base/` |
+| **Registry** | Discovery | Catalog search, dynamic providers | `RegistryProvider` in `src/registry/discovery/` |
+| **Client adapters** | Cursor, Copilot, Claude | Normalized input → IDE files | `src/client-adapters/` |
+| **Storage** | Cache, lock | Reproducible installs | `.aistack/`, configured paths |
+| **Types / validation** | Schemas | Spec & registry shapes | `src/types/`, `src/validation/` |
+
+---
+
+## Repository layout (actual)
+
+```
+ai-stack-kit/
 ├── src/
-│   ├── cli/                      # CLI entry point & commands
-│   │   ├── index.ts              # CLI bootstrap
-│   │   ├── commands/
-│   │   │   ├── init.ts           # spec-engine init
-│   │   │   ├── install.ts        # spec-engine install
-│   │   │   ├── apply.ts          # spec-engine apply
-│   │   │   ├── sync.ts           # spec-engine sync
-│   │   │   └── validate.ts       # spec-engine validate
-│   │   └── ui/
-│   │       ├── spinner.ts        # Progress indicators
-│   │       ├── logger.ts         # Structured logging
-│   │       └── prompts.ts        # User input
-│   │
-│   ├── core/                     # Core business logic
-│   │   ├── spec/
-│   │   │   ├── parser.ts         # spec.yaml parser
-│   │   │   ├── validator.ts     # Spec schema validation
-│   │   │   └── types.ts          # Spec type definitions
-│   │   ├── resolver/
-│   │   │   ├── resolver.ts       # Main resolution orchestrator
-│   │   │   ├── dependency-graph.ts # Dependency resolution
-│   │   │   └── version-resolver.ts # Semantic versioning
-│   │   └── engine/
-│   │       ├── engine.ts         # Main orchestration engine
-│   │       └── lifecycle.ts      # Lifecycle hooks
-│   │
-│   ├── sources/                  # Pluggable skill sources
-│   │   ├── base/
-│   │   │   └── skill-source.ts   # SkillSource interface
-│   │   ├── github/
-│   │   │   ├── github-source.ts  # GitHub implementation
-│   │   │   └── github-client.ts  # GitHub API wrapper
-│   │   ├── npm/
-│   │   │   ├── npm-source.ts     # npm implementation
-│   │   │   └── npm-client.ts     # npm registry client
-│   │   ├── registry/
-│   │   │   ├── registry-source.ts # Custom registry impl
-│   │   │   └── registry-client.ts # Registry API client
-│   │   └── local/
-│   │       └── local-source.ts   # File system source
-│   │
-│   ├── registry/                 # Registry abstraction
-│   │   ├── base/
-│   │   │   └── registry-provider.ts # RegistryProvider interface
-│   │   ├── manager.ts            # Registry management
-│   │   ├── cache.ts              # Local cache layer
-│   │   └── authenticator.ts     # Auth for private registries
-│   │
-│   ├── adapters/                 # IDE-specific adapters
-│   │   ├── base/
-│   │   │   └── ide-adapter.ts    # IDEAdapter interface
-│   │   ├── cursor/
-│   │   │   ├── cursor-adapter.ts # Cursor implementation
-│   │   │   ├── skills.ts         # Cursor skills handler
-│   │   │   ├── rules.ts          # Cursor rules handler
-│   │   │   └── hooks.ts          # Cursor hooks handler
-│   │   ├── vscode/
-│   │   │   └── vscode-adapter.ts # VSCode implementation
-│   │   └── factory.ts            # Adapter factory
-│   │
-│   ├── storage/                  # Local storage layer
-│   │   ├── cache-manager.ts      # Cache management
-│   │   ├── skill-store.ts        # Installed skills storage
-│   │   └── state-manager.ts      # CLI state persistence
-│   │
-│   ├── utils/                    # Shared utilities
-│   │   ├── fs.ts                 # File system helpers
-│   │   ├── git.ts                # Git operations
-│   │   ├── semver.ts             # Version utilities
-│   │   ├── hash.ts               # Content hashing
-│   │   └── validation.ts         # Common validators
-│   │
-│   └── types/                    # Shared type definitions
-│       ├── skill.ts              # Skill types
-│       ├── spec.ts               # Spec types
-│       ├── registry.ts           # Registry types
-│       └── config.ts             # Config types
-│
-├── config/
-│   ├── default.yaml              # Default configuration
-│   └── schema.json               # spec.yaml JSON schema
-│
-├── templates/
-│   └── spec.yaml                 # Template spec file
-│
-└── tests/
-    ├── unit/
-    ├── integration/
-    └── fixtures/
+│   ├── branding.ts              # CLI/product constants (.aistack, etc.)
+│   ├── cli/                     # Commander entrypoint, commands, prompts
+│   ├── pipeline/                # Load spec, apply pipeline, logging
+│   ├── sources/                 # SkillSource + github / npm implementations
+│   ├── registry/                # RegistryProvider, discovery, catalog sources
+│   ├── client-adapters/         # Cursor, Copilot, Claude client outputs
+│   ├── adapters/base/           # Legacy IDEAdapter sketch (optional reference)
+│   ├── types/
+│   └── validation/
+├── config/                      # default.yaml, schema.json
+├── templates/                   # spec template + client markdown tpl
+└── tests/                       # (fixtures / tests as added)
 ```
 
 ---
 
-## Core Interfaces
+## Core interfaces (reference shapes)
+
+The blocks below summarize **intent**. Canonical TypeScript lives alongside implementations:
+
+- **`SkillSource`** — `src/sources/base/skill-source.ts`
+- **`RegistryProvider`** — `src/registry/discovery/registry-provider.ts`
+- **IDE / client output** — today modeled as **`ClientAdapter`** and friends under `src/client-adapters/` (the `IDEAdapter` sketch below maps to that responsibility).
 
 ### 1. SkillSource Interface
 
@@ -242,6 +371,8 @@ export interface VersionInfo {
 
 ### 3. IDEAdapter Interface
 
+Today’s codebase implements the same responsibility as **`ClientAdapter`** (`src/client-adapters/client-adapter.ts`) and **`BaseClientAdapter`**. `src/adapters/base/ide-adapter.ts` is an older sketch for IDE-centric naming.
+
 ```typescript
 /**
  * Abstraction for applying skills to different IDEs
@@ -313,253 +444,196 @@ export interface SyncResult {
 
 ---
 
-## Module Responsibilities
+## Layer responsibilities (detail)
 
-### CLI Layer (`src/cli/`)
-**Responsibility**: User interaction, command routing, presentation
-- Parse command-line arguments
-- Display rich terminal UI (spinners, tables, colors)
-- Handle user prompts and confirmations
-- Format output (JSON, YAML, table)
-- Error presentation
+### CLI (`src/cli/`)
 
-**Dependencies**: `core/`, `utils/`
-**No Dependencies On**: `sources/`, `adapters/` (accessed via core)
+- Parse argv, route subcommands (`skill` / `subagent` / hook groups and legacy top-level commands).
+- Interactive prompts, suggestion helpers, project detection.
+- **Depends on**: pipeline helpers invoked from `commands.ts`, not on concrete sources/adapters directly.
 
----
+### Pipeline (`src/pipeline/`)
 
-### Core Layer (`src/core/`)
-**Responsibility**: Orchestration, business logic, coordination
+- **`spec-loader`**: Load and validate `spec.yaml`.
+- **`apply-pipeline`**: Resolve → fetch/install modules → normalize workspace input → run **AdapterFactory** → write outputs.
+- **Logging**: structured console logger for phases.
 
-#### Spec Module (`core/spec/`)
-- Parse and validate `spec.yaml`
-- Schema validation against JSON schema
-- Type-safe spec representation
+### Sources (`src/sources/`)
 
-#### Resolver Module (`core/resolver/`)
-- Resolve skill references to concrete versions
-- Build dependency graph
-- Handle version conflicts
-- Topological sort for install order
+- **`SkillSource`** implementations (GitHub, npm, …) and **`SkillSourceFactory`**.
+- Network fetch, local extract, module-type awareness (`types/ai-module.ts`).
+- **Must not** import client adapters.
 
-#### Engine Module (`core/engine/`)
-- Main orchestration: parse → resolve → fetch → apply
-- Lifecycle management (pre/post hooks)
-- State transitions
-- Error recovery
+### Registry (`src/registry/`)
 
-**Dependencies**: `sources/`, `registry/`, `adapters/`, `storage/`, `utils/`
+- **`RegistryProvider`** and discovery implementations (local JSON, remote API, GitHub tree, npm tree, enterprise stubs).
+- **`create-dynamic-skill-registry`**, `sources.config.yaml` loading for catalogs.
+- Independent of CLI presentation and IDE output format.
 
----
+### Client adapters (`src/client-adapters/`)
 
-### Sources Layer (`src/sources/`)
-**Responsibility**: Fetch skills from various origins
-- Implement `SkillSource` interface
-- Handle source-specific authentication
-- Rate limiting, retries, caching
-- Content verification (checksums)
+- **`BaseClientAdapter`** + Cursor / Copilot / Claude: map normalized agents/prompts/skills → files (`.cursor/`, `.vscode/settings.json` merge, `.aistack/` artifacts).
+- **`adapter-factory.ts`** selects adapter by client type.
+- **Must not** embed source-fetch logic.
 
-**Dependencies**: `utils/`, `types/`
-**No Dependencies On**: `core/`, `adapters/`
+### Types & validation (`src/types/`, `src/validation/`)
+
+- Shared types for spec, skills, registry entries, CLI config.
+- Zod / schema validation entry points as implemented.
 
 ---
 
-### Registry Layer (`src/registry/`)
-**Responsibility**: Registry abstraction (like npm registry)
-- Implement `RegistryProvider` interface
-- Manage multiple registries (public, private)
-- Authentication token management
-- Local cache for registry queries
+## Operational command flows
 
-**Dependencies**: `utils/`, `types/`
-**No Dependencies On**: `core/`, `adapters/`, `sources/`
+Text versions of the pipelines (see also **End-to-end data flow** above).
 
----
+### 1. Init flow
 
-### Adapters Layer (`src/adapters/`)
-**Responsibility**: IDE-specific implementation
-- Implement `IDEAdapter` interface
-- Detect IDE installation
-- Apply skills to IDE-specific formats
-- Manage IDE configuration files
-- Handle IDE-specific quirks
-
-**Dependencies**: `utils/`, `types/`
-**No Dependencies On**: `core/`, `sources/`, `registry/`
-
----
-
-### Storage Layer (`src/storage/`)
-**Responsibility**: Local persistence
-- Cache downloaded skills
-- Store installation state
-- Lock file management (like package-lock.json)
-- Content-addressable storage
-
-**Dependencies**: `utils/`, `types/`
-**No Dependencies On**: Any other layers
-
----
-
-### Utils Layer (`src/utils/`)
-**Responsibility**: Shared utilities
-- File system operations
-- Git operations
-- Semver parsing and comparison
-- Hashing and checksums
-- Validation helpers
-
-**Dependencies**: None
-
----
-
-## Data Flow
-
-### 1. Init Flow
 ```
-spec-engine init
+aistack init
     ↓
 CLI (init command)
     ↓
 Create template spec.yaml
     ↓
-Initialize .spec-engine/ directory
+Initialize .aistack/ directory (when used by pipeline / settings)
     ↓
-Create lock file
+Create lock file (when generation is wired)
 ```
 
-### 2. Install Flow
+### 2. Install flow
+
 ```
-spec-engine install
+aistack install
     ↓
 CLI (install command)
     ↓
-Core Engine
+Pipeline (apply-pipeline / spec-loader)
     ↓
-Parse spec.yaml (Spec Parser)
+Parse spec.yaml
     ↓
-Resolve Skills (Resolver)
+Resolve modules (Resolver — planned / partial)
     │
-    ├→ Query Registry (RegistryProvider)
-    │   └→ Resolve versions
+    ├→ Query RegistryProvider / catalogs
     │
     ├→ Build dependency graph
-    │   └→ Detect conflicts
     │
     └→ Topological sort
         ↓
-Fetch Skills (SkillSource)
-    │
-    ├→ GitHub Source (if github:)
-    ├→ npm Source (if npm:)
-    ├→ Registry Source (if registry:)
-    └→ Local Source (if file:)
-        ↓
-Verify checksums
+Fetch via SkillSource (GitHub, npm, …)
     ↓
-Store in cache (Storage)
+Verify checksums (when enabled)
+    ↓
+Store under configured cache / .aistack
     ↓
 Update lock file
 ```
 
-### 3. Apply Flow
+### 3. Apply flow
+
 ```
-spec-engine apply
+aistack apply
     ↓
 CLI (apply command)
     ↓
-Core Engine
+Pipeline
     ↓
-Read lock file
+Load resolved / cached modules
     ↓
-Detect IDE (Adapter Factory)
-    │
-    ├→ Cursor Adapter
-    ├→ VSCode Adapter
-    └→ (future adapters)
-        ↓
-Validate IDE environment
+AdapterFactory → ClientAdapter (cursor / copilot / claude)
     ↓
-Load cached skills (Storage)
+Normalize → emit AdapterOutput files
     ↓
-Transform for IDE (IDEAdapter)
-    │
-    ├→ Convert to IDE format
-    ├→ Resolve IDE-specific paths
-    └→ Merge configurations
-        ↓
-Write to IDE config directory
-    ↓
-Verify installation
-    ↓
-Update state
+Write / merge into IDE directories
 ```
 
-### 4. Sync Flow (Install + Apply combined)
+### 4. Sync flow (install + apply)
+
 ```
-spec-engine sync
+aistack sync
     ↓
-Run Install Flow
+Validate spec (when enforced)
     ↓
-Run Apply Flow
+Run install stages + adapter apply (single pipeline pass as implemented)
     ↓
-Report changes
+Report written files / errors
 ```
 
 ---
 
-## Dependency Boundaries
+## Design patterns
 
-### Layered Architecture (Top → Bottom)
+1. **Strategy**: Pluggable sources, registry connectors, and client adapters.
+2. **Factory**: `SkillSourceFactory`, `AdapterFactory`, dynamic registry creation.
+3. **Repository-style persistence**: Cache + lock paths under `.aistack/` / configured dirs.
+4. **Facade**: Pipeline hides fetch/normalize/apply steps from the CLI.
+
+---
+
+## Performance characteristics
+
+| Operation | Complexity | Notes |
+|-----------|------------|-------|
+| Parse spec.yaml | O(n) | Linear in file size |
+| Resolve dependencies | O(n + e) | Graph traversal (n = modules, e = edges) |
+| Fetch modules | O(n) | Parallel downloads where safe |
+| Apply to IDE | O(n × m) | n modules, m output files per module |
+| Cache lookup | O(1) | Hash / path keyed |
+
+Operational tactics: parallel independent fetches, disk cache TTL for catalog providers, skip redundant writes when possible.
+
+---
+
+## Security model
 
 ```
-┌─────────────────────────────────────┐
-│           CLI Layer                 │  ← User interaction
-│  (commands, UI, presentation)       │
-└──────────────┬──────────────────────┘
-               │
-               ↓
-┌─────────────────────────────────────┐
-│          Core Layer                 │  ← Orchestration
-│  (engine, resolver, spec parser)    │
-└──┬───────┬────────┬────────┬────────┘
-   │       │        │        │
-   ↓       ↓        ↓        ↓
-┌────┐  ┌────┐  ┌────┐  ┌────────┐
-│Src │  │Reg │  │Adp │  │Storage │    ← Implementations
-└────┘  └────┘  └────┘  └────────┘
-   │       │        │        │
-   └───────┴────────┴────────┘
-               │
-               ↓
-         ┌──────────┐
-         │  Utils   │                  ← Shared utilities
-         └──────────┘
+┌────────────────────────────────────────┐
+│         Security boundaries            │
+├────────────────────────────────────────┤
+│  Network (HTTPS), token env vars       │
+│  Checksums / integrity where enforced   │
+│  No arbitrary code exec at install     │
+│  Safe merge strategies for IDE files   │
+└────────────────────────────────────────┘
 ```
 
-### Key Rules
+---
 
-1. **CLI → Core → Implementations**
-   - CLI never directly imports from `sources/`, `adapters/`, `registry/`
-   - All access goes through Core Engine
+## CLI command reference
 
-2. **Core owns the interfaces**
-   - `SkillSource`, `RegistryProvider`, `IDEAdapter` defined in `sources/base/`, `registry/base/`, `adapters/base/`
-   - Core Engine accepts these interfaces, not concrete implementations
+```bash
+aistack init [--template <name>]
+aistack install [--offline] [--force]
+aistack apply [--dry-run]
+aistack sync
+aistack validate [--strict]
+aistack status [--verbose]
+aistack search <query>
+aistack info <name>
+aistack list [--tree]
+aistack add [name] [--type skill|subagent|hook]
+aistack remove <name>
+aistack skill|subagent|hook search|add|info ...
+aistack update [name] [--latest]
+aistack publish | login | logout   # when implemented
+aistack clean [--cache] [--all]
+```
 
-3. **Implementations are independent**
-   - `sources/` doesn't know about `adapters/`
-   - `adapters/` doesn't know about `sources/`
-   - `registry/` is independent of both
+Also available as the **`ai-stack`** binary (same executable).
 
-4. **Storage is a dumb layer**
-   - No business logic
-   - Pure persistence operations
-   - Used by Core, not by implementations
+---
 
-5. **Utils is leaf-level**
-   - No imports from any business logic layers
-   - Pure functions only
+## Configuration precedence
+
+```
+Environment variables   (override)
+        ↓
+Global ~/.aistack/config.yaml   (when present)
+        ↓
+Project spec.yaml
+        ↓
+CLI flags
+```
 
 ---
 
@@ -568,20 +642,20 @@ Report changes
 ### spec.yaml Structure
 
 ```yaml
-# Spec Engine Configuration
+# Ai Stack Kit Configuration
 version: "1.0"
 
 # Global settings
 settings:
-  cacheDir: ~/.spec-engine/cache
-  lockFile: .spec-engine/lock.yaml
+  cacheDir: ~/.aistack/cache
+  lockFile: .aistack/lock.yaml
   autoSync: true
 
 # Registries (like npm registries)
 registries:
   - name: default
-    url: https://registry.spec-engine.dev
-    auth: ${SPEC_ENGINE_TOKEN}
+    url: https://registry.aistack.dev
+    auth: ${AISTACK_TOKEN}
   
   - name: company-private
     url: https://skills.company.internal
@@ -591,13 +665,13 @@ registries:
 sources:
   - type: github
     name: official
-    repository: spec-engine/skills
+    repository: aistack/skills
     branch: main
     auth: ${GITHUB_TOKEN}
   
   - type: npm
     name: npm-skills
-    scope: "@spec-engine"
+    scope: "@aistack"
   
   - type: registry
     name: company-registry
@@ -625,7 +699,7 @@ skills:
   
   # From npm
   - source: npm:npm-skills
-    name: "@spec-engine/canvas"
+    name: "@aistack/canvas"
     version: latest
   
   # From custom registry
@@ -653,7 +727,7 @@ hooks:
     - echo "Applied successfully"
 ```
 
-### Lock File Structure (.spec-engine/lock.yaml)
+### Lock File Structure (.aistack/lock.yaml)
 
 ```yaml
 # Auto-generated lock file (like package-lock.json)
@@ -661,20 +735,20 @@ version: "1.0"
 generated: 2026-05-01T05:47:00.000Z
 
 resolved:
-  - id: github:spec-engine/skills/maersk-figma-agent@1.2.3
+  - id: github:aistack/skills/maersk-figma-agent@1.2.3
     name: maersk-figma-agent
     version: 1.2.3
     source: github:official
-    resolved: https://github.com/spec-engine/skills/tree/main/maersk-figma-agent
+    resolved: https://github.com/aistack/skills/tree/main/maersk-figma-agent
     checksum: sha256:abc123...
     dependencies:
-      - github:spec-engine/skills/figma-base@1.0.0
+      - github:aistack/skills/figma-base@1.0.0
   
-  - id: npm:@spec-engine/canvas@2.0.1
-    name: "@spec-engine/canvas"
+  - id: npm:@aistack/canvas@2.0.1
+    name: "@aistack/canvas"
     version: 2.0.1
     source: npm:npm-skills
-    resolved: https://registry.npmjs.org/@spec-engine/canvas/-/canvas-2.0.1.tgz
+    resolved: https://registry.npmjs.org/@aistack/canvas/-/canvas-2.0.1.tgz
     checksum: sha256:def456...
     dependencies: []
   
@@ -690,12 +764,12 @@ applied:
   ide: cursor
   path: /Users/user/.cursor
   skills:
-    - id: github:spec-engine/skills/maersk-figma-agent@1.2.3
+    - id: github:aistack/skills/maersk-figma-agent@1.2.3
       appliedAt: 2026-05-01T05:47:30.000Z
       files:
         - /Users/user/.cursor/skills/maersk-figma-agent/SKILL.md
     
-    - id: npm:@spec-engine/canvas@2.0.1
+    - id: npm:@aistack/canvas@2.0.1
       appliedAt: 2026-05-01T05:47:31.000Z
       files:
         - /Users/user/.cursor/skills/canvas/SKILL.md
@@ -709,128 +783,86 @@ applied:
 
 ```bash
 # Initialize a new project
-spec-engine init
+aistack init
 
-# Edit spec.yaml to add skills
+# Edit spec.yaml to add skills / subagents / hooks
 
-# Install skills (downloads and caches)
-spec-engine install
+# Install (fetch / cache) then apply to IDE — or sync for both
+aistack install
+aistack apply
+aistack sync
 
-# Apply to IDE (writes to IDE config)
-spec-engine apply
+aistack validate
+aistack status
 
-# Or do both at once
-spec-engine sync
+# Discovery (all kinds)
+aistack search figma
 
-# Validate spec.yaml
-spec-engine validate
+# Typed discovery / add
+aistack skill search canvas
+aistack subagent add my-agent
+aistack hook info my-hook
 
-# Show installation status
-spec-engine status
+# Legacy top-level add / remove
+aistack add github:official/new-skill
+aistack remove maersk-figma-agent
 
-# List available skills from registries
-spec-engine search figma
-
-# Add a new skill
-spec-engine add github:official/new-skill
-
-# Remove a skill
-spec-engine remove maersk-figma-agent
-
-# Update all skills
-spec-engine update
-
-# Update specific skill
-spec-engine update maersk-figma-agent
+aistack update
+aistack update maersk-figma-agent
 ```
 
 ---
 
 ## Extension Points
 
-### Adding a New Source
+### Adding a new source (e.g. GitLab)
 
-1. Create new directory in `src/sources/`
-2. Implement `SkillSource` interface
-3. Register in source factory
-4. Add authentication logic
-5. Add tests
+1. Add `src/sources/<name>/<name>-source.ts` implementing **`SkillSource`** (`src/sources/base/skill-source.ts`).
+2. Register the implementation in **`src/sources/skill-source-factory.ts`** (or equivalent wiring).
+3. Extend **`config/schema.json`** / validation if a new `source` discriminator is required.
 
-Example: `src/sources/gitlab/gitlab-source.ts`
+### Adding a new registry connector
 
-### Adding a New Registry
+1. Implement **`RegistryProvider`** (`src/registry/discovery/registry-provider.ts`).
+2. Register from **`create-dynamic-skill-registry.ts`** or the discovery index as appropriate.
+3. Optionally add a row shape to **`sources.config.yaml`** loading (`src/registry/sources/load-sources-config.ts`).
 
-1. Create new registry client
-2. Implement `RegistryProvider` interface
-3. Register in registry manager
-4. Add authentication support
-5. Add tests
+### Adding a new client / IDE target
 
-Example: `src/registry/custom-registry-provider.ts`
-
-### Adding a New IDE
-
-1. Create new directory in `src/adapters/`
-2. Implement `IDEAdapter` interface
-3. Add IDE-specific transformation logic
-4. Register in adapter factory
-5. Add detection logic
-6. Add tests
-
-Example: `src/adapters/vscode/vscode-adapter.ts`
+1. Add **`src/client-adapters/<client>/<client>-adapter.ts`** extending **`BaseClientAdapter`**.
+2. Register in **`src/client-adapters/adapter-factory.ts`**.
+3. Add bundled templates under **`templates/clients/<client>/`** when needed.
 
 ---
 
-## Error Handling
+## Error handling
 
-### Error Categories
+### Categories & exit codes (target)
 
-1. **User Errors**: Invalid spec, missing files
-   - Show helpful error message
-   - Suggest fixes
-   - Exit with code 1
+```typescript
+enum ErrorCode {
+  USER_ERROR = 1,
+  NETWORK_ERROR = 2,
+  SYSTEM_ERROR = 3,
+  IDE_ERROR = 4,
+  REGISTRY_ERROR = 5,
+  CONFLICT_ERROR = 6,
+}
+```
 
-2. **Network Errors**: Failed downloads, timeouts
-   - Retry with exponential backoff
-   - Fall back to cache if available
-   - Exit with code 2
+Flow: surface actionable CLI messages; on recoverable network faults prefer cache / retry; on apply failures consider rollback of writes where implemented.
 
-3. **System Errors**: Permission denied, disk full
-   - Show system-level error
-   - Suggest remediation
-   - Exit with code 3
+### Operational categories
 
-4. **IDE Errors**: IDE not detected, incompatible version
-   - Show IDE-specific guidance
-   - Suggest installation steps
-   - Exit with code 4
+1. **User errors**: Invalid spec, missing files — explain fix, exit `1`.
+2. **Network errors**: Timeouts, 403/5xx — retry/backoff, optional cache fallback, exit `2`.
+3. **System errors**: Permissions, disk — exit `3`.
+4. **Client / IDE errors**: Missing tool, bad paths — exit `4`.
 
-### Rollback Strategy
+### Rollback strategy
 
-- Keep previous state before applying
-- On error, restore previous configuration
-- Show diff of changes rolled back
-- Log for debugging
-
----
-
-## Performance Considerations
-
-1. **Parallel Downloads**: Fetch independent skills concurrently
-2. **Caching**: Content-addressable cache (like Git)
-3. **Incremental Apply**: Only update changed skills
-4. **Lock File**: Skip resolution if lock is up-to-date
-5. **Lazy Loading**: Load adapters/sources only when needed
-
----
-
-## Security Considerations
-
-1. **Checksum Verification**: Verify SHA-256 of all downloads
-2. **HTTPS Only**: All registry/source communication over TLS
-3. **Token Management**: Store tokens securely (OS keychain)
-4. **Sandboxing**: Skills cannot execute arbitrary code during install
-5. **Audit Log**: Log all installations and changes
+- Preserve previous IDE config where merge strategies support it.
+- Log diffs; avoid silent partial writes when `strict` modes exist.
 
 ---
 
@@ -850,7 +882,7 @@ Example: `src/adapters/vscode/vscode-adapter.ts`
 2. **Skill Templates**: Scaffold new skills
 3. **Diff Command**: Show changes before applying
 4. **Backup/Restore**: Save and restore IDE state
-5. **Migration Tool**: Migrate from manual setup to spec-engine
+5. **Migration Tool**: Migrate from manual setup to aistack
 6. **Plugin System**: Third-party sources/adapters
 7. **Web UI**: Visual spec editor
 8. **Team Sync**: Share configs across team
@@ -881,9 +913,11 @@ Example: `src/adapters/vscode/vscode-adapter.ts`
 
 ---
 
-This architecture provides a solid foundation that's:
-- ✅ **Extensible**: Easy to add new sources/IDEs/registries
-- ✅ **Testable**: Clear boundaries, mockable interfaces
-- ✅ **Maintainable**: Single responsibility, loose coupling
-- ✅ **Scalable**: Can handle large skill catalogs
-- ✅ **User-Friendly**: Clear error messages, rich CLI UX
+This architecture aims for:
+
+- **Extensibility**: New sources, registry connectors, and client adapters without rewriting the pipeline.
+- **Testability**: Boundaries at `SkillSource`, `RegistryProvider`, and `ClientAdapter`.
+- **Maintainability**: CLI stays thin; orchestration stays in `src/pipeline/`.
+- **UX**: kubectl-style CLI, helpful errors, reproducible installs via lock/cache conventions.
+
+For deeper diagrams only, see **[DIAGRAMS.md](./DIAGRAMS.md)**.

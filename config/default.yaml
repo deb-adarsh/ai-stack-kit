@@ -1,9 +1,9 @@
-# Spec Engine Default Configuration
+# Ai Stack Kit Default Configuration
 version: "1.0"
 
 settings:
-  cacheDir: ~/.spec-engine/cache
-  lockFile: .spec-engine/lock.yaml
+  cacheDir: ~/.aistack/cache
+  lockFile: .aistack/lock.yaml
   autoSync: false
   parallelDownloads: 5
   retryAttempts: 3
@@ -11,12 +11,12 @@ settings:
 
 registries:
   - name: default
-    url: https://registry.spec-engine.dev
+    url: https://registry.aistack.dev
 
 sources:
   - type: github
     name: official
-    repository: spec-engine/skills
+    repository: aistack/skills
     branch: main
 
 ide:

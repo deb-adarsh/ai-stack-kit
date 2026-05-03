@@ -1,4 +1,4 @@
-# Spec Engine - Quick Reference Guide
+# Ai Stack Kit - Quick Reference Guide
 
 ## Core Concepts
 
@@ -17,7 +17,7 @@ IDE-specific implementations that apply skills to Cursor, VSCode, etc.
 ### 5. Spec File (`spec.yaml`)
 Declarative configuration defining which skills to install and how.
 
-### 6. Lock File (`.spec-engine/lock.yaml`)
+### 6. Lock File (`.aistack/lock.yaml`)
 Auto-generated file with exact versions and checksums (like `package-lock.json`).
 
 ---
@@ -26,12 +26,12 @@ Auto-generated file with exact versions and checksums (like `package-lock.json`)
 
 ```bash
 # 1. Initialize project
-spec-engine init
+aistack init
 
 # 2. Edit spec.yaml to add skills
 
 # 3. Install and apply
-spec-engine sync
+aistack sync
 ```
 
 ---
@@ -100,33 +100,33 @@ spec-engine sync
 
 ```bash
 # Project Management
-spec-engine init                 # Initialize new project
-spec-engine validate             # Validate spec.yaml
-spec-engine status               # Show installation status
+aistack init                 # Initialize new project
+aistack validate             # Validate spec.yaml
+aistack status               # Show installation status
 
 # Skill Management
-spec-engine install              # Install skills (download)
-spec-engine apply                # Apply skills to IDE
-spec-engine sync                 # Install + Apply
-spec-engine update               # Update all skills
-spec-engine update <skill>       # Update specific skill
+aistack install              # Install skills (download)
+aistack apply                # Apply skills to IDE
+aistack sync                 # Install + Apply
+aistack update               # Update all skills
+aistack update <skill>       # Update specific skill
 
 # Discovery
-spec-engine search <query>       # Search registries
-spec-engine info <skill>         # Show skill details
-spec-engine list                 # List installed skills
+aistack search <query>       # Search registries
+aistack info <skill>         # Show skill details
+aistack list                 # List installed skills
 
 # Modification
-spec-engine add <skill>          # Add skill to spec.yaml
-spec-engine remove <skill>       # Remove skill from spec.yaml
+aistack add <skill>          # Add skill to spec.yaml
+aistack remove <skill>       # Remove skill from spec.yaml
 
 # Registry
-spec-engine login                # Login to registry
-spec-engine logout               # Logout from registry
-spec-engine publish              # Publish skill
+aistack login                # Login to registry
+aistack logout               # Logout from registry
+aistack publish              # Publish skill
 
 # Maintenance
-spec-engine clean                # Clean cache
+aistack clean                # Clean cache
 ```
 
 ---
@@ -149,19 +149,19 @@ skills:
 version: "1.0"
 
 settings:
-  cacheDir: ~/.spec-engine/cache
+  cacheDir: ~/.aistack/cache
   parallelDownloads: 5
   retryAttempts: 3
 
 registries:
   - name: default
-    url: https://registry.spec-engine.dev
-    auth: ${SPEC_ENGINE_TOKEN}
+    url: https://registry.aistack.dev
+    auth: ${AISTACK_TOKEN}
 
 sources:
   - type: github
     name: official
-    repository: spec-engine/skills
+    repository: aistack/skills
     auth: ${GITHUB_TOKEN}
   - type: local
     name: workspace
@@ -217,9 +217,9 @@ hooks:
 
 | Variable | Purpose | Example |
 |----------|---------|---------|
-| `SPEC_ENGINE_TOKEN` | Default registry token | `export SPEC_ENGINE_TOKEN=abc123` |
-| `SPEC_ENGINE_CACHE_DIR` | Override cache dir | `~/.cache/spec-engine` |
-| `SPEC_ENGINE_LOG_LEVEL` | Log verbosity | `debug`, `info`, `warn`, `error` |
+| `AISTACK_TOKEN` | Default registry token | `export AISTACK_TOKEN=abc123` |
+| `AISTACK_CACHE_DIR` | Override cache dir | `~/.cache/aistack` |
+| `AISTACK_LOG_LEVEL` | Log verbosity | `debug`, `info`, `warn`, `error` |
 | `GITHUB_TOKEN` | GitHub authentication | For private repos |
 | `NPM_TOKEN` | npm authentication | For private packages |
 
@@ -249,9 +249,9 @@ Resolution:
 | File/Directory | Purpose | Location |
 |----------------|---------|----------|
 | `spec.yaml` | Project configuration | Project root |
-| `.spec-engine/lock.yaml` | Lock file | Project root |
-| `~/.spec-engine/cache/` | Downloaded skills | User home |
-| `~/.spec-engine/config.yaml` | Global config | User home |
+| `.aistack/lock.yaml` | Lock file | Project root |
+| `~/.aistack/cache/` | Downloaded skills | User home |
+| `~/.aistack/config.yaml` | Global config | User home |
 | `~/.cursor/skills/` | Installed skills (Cursor) | User home |
 
 ---
@@ -278,7 +278,7 @@ Resolution:
 git clone repo && cd repo
 
 # Sync skills from spec.yaml
-spec-engine sync
+aistack sync
 
 # Start coding with skills enabled
 ```
@@ -286,37 +286,37 @@ spec-engine sync
 ### Pattern 2: Add New Skill
 ```bash
 # Search for skill
-spec-engine search figma
+aistack search figma
 
 # Add to spec.yaml
-spec-engine add github:official/figma-agent
+aistack add github:official/figma-agent
 
 # Apply changes
-spec-engine sync
+aistack sync
 ```
 
 ### Pattern 3: Update Skills
 ```bash
 # Update all to latest compatible
-spec-engine update
+aistack update
 
 # Or update specific skill
-spec-engine update canvas
+aistack update canvas
 
 # Verify changes
-spec-engine status
+aistack status
 ```
 
 ### Pattern 4: Share Configuration
 ```bash
 # Commit spec.yaml and lock file
-git add spec.yaml .spec-engine/lock.yaml
-git commit -m "Add spec-engine configuration"
+git add spec.yaml .aistack/lock.yaml
+git commit -m "Add aistack configuration"
 git push
 
 # Team members sync
 git pull
-spec-engine sync
+aistack sync
 ```
 
 ---
@@ -405,7 +405,7 @@ export class IntelliJAdapter extends BaseIDEAdapter {
 ## Best Practices
 
 ### 1. Use Lock Files
-Always commit `.spec-engine/lock.yaml` for reproducible installs.
+Always commit `.aistack/lock.yaml` for reproducible installs.
 
 ### 2. Version Constraints
 Use `^` for libraries (minor updates), exact versions for critical dependencies.
@@ -420,10 +420,10 @@ Use `local:` sources for development, switch to `github:` or `registry:` for pro
 Keep hooks simple and fast. Use them for notifications, not heavy processing.
 
 ### 6. Validation
-Always run `spec-engine validate` before committing changes.
+Always run `aistack validate` before committing changes.
 
 ### 7. Caching
-Let spec-engine manage cache. Use `spec-engine clean` if issues occur.
+Let aistack manage cache. Use `aistack clean` if issues occur.
 
 ---
 
@@ -432,32 +432,32 @@ Let spec-engine manage cache. Use `spec-engine clean` if issues occur.
 ### Skills not applying
 ```bash
 # Check IDE detection
-spec-engine status --verbose
+aistack status --verbose
 
 # Validate spec
-spec-engine validate
+aistack validate
 
 # Re-apply with force
-spec-engine apply --force
+aistack apply --force
 ```
 
 ### Network errors
 ```bash
 # Try with cached data
-spec-engine install --offline
+aistack install --offline
 
 # Increase timeout
-SPEC_ENGINE_TIMEOUT=60000 spec-engine install
+AISTACK_TIMEOUT=60000 aistack install
 
 # Clear cache and retry
-spec-engine clean --cache
-spec-engine install
+aistack clean --cache
+aistack install
 ```
 
 ### Dependency conflicts
 ```bash
 # Show dependency tree
-spec-engine list --tree
+aistack list --tree
 
 # Resolve by pinning versions in spec.yaml
 # Change: version: ^1.0.0

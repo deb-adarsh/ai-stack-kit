@@ -7,9 +7,9 @@ import * as path from 'node:path';
 import type { AdapterApplyOptions, AdapterApplyReport, AdapterOutput, AdapterOutputFile } from './adapter-output.js';
 import { deepMerge, parseJsonSafe, stringifyJsonSorted } from './merge-json.js';
 
-const CONFLICT = '<<<<<<< SPEC_ENGINE_CONFLICT\n';
+const CONFLICT = '<<<<<<< AISTACK_CONFLICT\n';
 const MID = '\n=======\n';
-const END = '\n>>>>>>> SPEC_ENGINE_CONFLICT\n';
+const END = '\n>>>>>>> AISTACK_CONFLICT\n';
 
 export async function applyAdapterOutput(
   output: AdapterOutput,

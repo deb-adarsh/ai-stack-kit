@@ -1,6 +1,6 @@
-# Spec Engine - Visual Diagrams
+# Ai Stack Kit - Visual Diagrams
 
-This document contains ASCII diagrams for various aspects of the Spec Engine architecture.
+This document contains ASCII diagrams for various aspects of the Ai Stack Kit architecture.
 
 ---
 
@@ -10,10 +10,10 @@ This document contains ASCII diagrams for various aspects of the Spec Engine arc
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         USER INTERACTION                             │
 │                                                                       │
-│  $ spec-engine init                                                  │
-│  $ spec-engine install                                               │
-│  $ spec-engine apply                                                 │
-│  $ spec-engine sync                                                  │
+│  $ aistack init                                                  │
+│  $ aistack install                                               │
+│  $ aistack apply                                                 │
+│  $ aistack sync                                                  │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │
                                 ▼
@@ -138,7 +138,7 @@ This document contains ASCII diagrams for various aspects of the Spec Engine arc
                     ▼
 ┌─────────────────────────────────────────┐
 │        Lock File Writer                 │
-│  - Write .spec-engine/lock.yaml         │
+│  - Write .aistack/lock.yaml         │
 │  - Record exact versions + checksums    │
 └───────────────────┬─────────────────────┘
                     │
@@ -464,7 +464,7 @@ skills:
 ┌───────────────────────────────────────────────┐
 │         Content-Addressable Cache             │
 │                                               │
-│  ~/.spec-engine/cache/                        │
+│  ~/.aistack/cache/                        │
 │                                               │
 │  objects/                                     │
 │    ├── ab/                                    │

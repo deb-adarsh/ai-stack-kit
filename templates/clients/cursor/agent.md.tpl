@@ -1,6 +1,6 @@
 # {{name}}
 
-> Managed by Spec Engine (template `cursor/agent.md.tpl` v1). Safe to regenerate.
+> Managed by Ai Stack Kit (template `cursor/agent.md.tpl` v1). Safe to regenerate.
 
 ## Description
 

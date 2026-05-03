@@ -46,7 +46,7 @@ export const NpmSourceEntrySchema = z.object({
 const SourcesConfigSchema = z.object({
   version: z.number().int().optional(),
   cacheTtlSeconds: z.number().min(60).max(86400 * 7).default(3600),
-  /** Relative to cwd; default `.cache/spec-engine` */
+  /** Relative to cwd; default `.cache/aistack` */
   cacheDir: z.string().optional(),
   /** Default cap on raw GitHub metadata fetches per source per refresh. */
   githubMetadataEnrichMax: z.number().min(0).max(2000).default(120),
@@ -59,7 +59,8 @@ export type NpmSourceConfig = z.infer<typeof NpmSourceEntrySchema>;
 export type SourcesConfigFile = z.infer<typeof SourcesConfigSchema>;
 
 export function resolveSourcesConfigPath(cwd: string): string {
-  const env = process.env.SPEC_ENGINE_SOURCES_CONFIG?.trim();
+  const env =
+    process.env.AISTACK_SOURCES_CONFIG?.trim() || process.env.SPEC_ENGINE_SOURCES_CONFIG?.trim();
   if (env) return path.isAbsolute(env) ? env : path.resolve(cwd, env);
   return path.join(cwd, 'sources.config.yaml');
 }

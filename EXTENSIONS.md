@@ -1,6 +1,6 @@
 # Extension strategy
 
-Spec Engine is built around **small interfaces** and **explicit registration**. New transports, IDEs, and catalogs are added by **implementing an interface** and **registering** (or **injecting** a factory) at the host boundary — not by editing the pipeline’s control flow.
+Ai Stack Kit is built around **small interfaces** and **explicit registration**. New transports, IDEs, and catalogs are added by **implementing an interface** and **registering** (or **injecting** a factory) at the host boundary — not by editing the pipeline’s control flow.
 
 ## Design principles
 
@@ -53,13 +53,13 @@ Import paths below target the **built** package (`dist/`). In a monorepo you can
 
 ```typescript
 // packages/company-spec-sources/src/bitbucket-source.ts
-import type { SkillMetadata, SkillReference, SkillManifest } from 'spec-engine/dist/types/skill.js';
+import type { SkillMetadata, SkillReference, SkillManifest } from 'ai-stack-kit/dist/types/skill.js';
 import type {
   InstallContext,
   SkillFiles,
   SkillInstallResult,
   SkillSource,
-} from 'spec-engine/dist/sources/base/skill-source.js';
+} from 'ai-stack-kit/dist/sources/base/skill-source.js';
 
 /** Use source: "bitbucket" in spec.yaml (allowed by SourceType string union). */
 export class BitbucketSource implements SkillSource {
@@ -95,8 +95,8 @@ export class BitbucketSource implements SkillSource {
 **Bootstrap (host / wrapper, no core edits):**
 
 ```typescript
-import { apply } from 'spec-engine/dist/pipeline/index.js';
-import { SkillSourceFactory } from 'spec-engine/dist/sources/index.js';
+import { apply } from 'ai-stack-kit/dist/pipeline/index.js';
+import { SkillSourceFactory } from 'ai-stack-kit/dist/sources/index.js';
 import { BitbucketSource } from '@acme/spec-sources';
 
 const skillSourceFactory = SkillSourceFactory.withDefaults();
@@ -130,9 +130,9 @@ Map the normalized model to files VS Code tooling can consume (e.g. workspace re
 
 ```typescript
 // packages/company-vscode-adapter/src/vscode-adapter.ts
-import { BaseClientAdapter } from 'spec-engine/dist/client-adapters/base-client-adapter.js';
-import type { NormalizedWorkspaceInput } from 'spec-engine/dist/client-adapters/normalized.js';
-import type { AdapterOutput } from 'spec-engine/dist/client-adapters/adapter-output.js';
+import { BaseClientAdapter } from 'ai-stack-kit/dist/client-adapters/base-client-adapter.js';
+import type { NormalizedWorkspaceInput } from 'ai-stack-kit/dist/client-adapters/normalized.js';
+import type { AdapterOutput } from 'ai-stack-kit/dist/client-adapters/adapter-output.js';
 
 export class VSCodeClientAdapter extends BaseClientAdapter {
   readonly name = 'vscode';
@@ -143,21 +143,21 @@ export class VSCodeClientAdapter extends BaseClientAdapter {
 
   generateConfig(input: NormalizedWorkspaceInput): AdapterOutput {
     const lines: string[] = [
-      `# Spec Engine — ${input.metadata.projectName ?? 'project'}`,
+      `# Ai Stack Kit — ${input.metadata.projectName ?? 'project'}`,
       '',
       ...input.skills.map((s) => `- **${s.name}** @ ${s.version}`),
     ];
     return {
       files: [
         {
-          path: '.vscode/spec-engine/generated.md',
+          path: '.vscode/aistack/generated.md',
           content: lines.join('\n') + '\n',
           mergeStrategy: 'overwrite',
           managed: true,
-          provenance: `spec-engine:${input.metadata.generatedAt}`,
+          provenance: `aistack:${input.metadata.generatedAt}`,
         },
         {
-          path: '.vscode/spec-engine/manifest.json',
+          path: '.vscode/aistack/manifest.json',
           content: JSON.stringify(
             {
               version: 1,
@@ -179,7 +179,7 @@ export class VSCodeClientAdapter extends BaseClientAdapter {
 **Register before `apply()`:**
 
 ```typescript
-import { AdapterFactory } from 'spec-engine/dist/client-adapters/index.js';
+import { AdapterFactory } from 'ai-stack-kit/dist/client-adapters/index.js';
 import { VSCodeClientAdapter } from '@acme/vscode-adapter';
 
 AdapterFactory.register(new VSCodeClientAdapter());

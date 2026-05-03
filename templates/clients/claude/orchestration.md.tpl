@@ -7,6 +7,6 @@ Project: **{{project}}**
 
 ## Session flow
 
-1. Read `.spec-engine/claude/system-bundle.md` once (full system context).
-2. Open individual files under `.spec-engine/claude/prompts/` as sub-tasks require.
-3. Do not edit generated files by hand — change `spec.yaml` / skills and re-run Spec Engine.
+1. Read `.aistack/claude/system-bundle.md` once (full system context).
+2. Open individual files under `.aistack/claude/prompts/` as sub-tasks require.
+3. Do not edit generated files by hand — change `spec.yaml` / skills and re-run Ai Stack Kit.

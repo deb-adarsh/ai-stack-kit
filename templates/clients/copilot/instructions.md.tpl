@@ -1,7 +1,7 @@
-# GitHub Copilot + Spec Engine
+# GitHub Copilot + Ai Stack Kit
 
-This project registers **{{skillCount}}** normalized skills and **{{agentCount}}** agent summaries under VS Code settings key `spec-engine.copilot`.
+This project registers **{{skillCount}}** normalized skills and **{{agentCount}}** agent summaries under VS Code settings key `aistack.copilot`.
 
-- Snippets live at `spec-engine.copilot.promptSnippets` (id → body).
+- Snippets live at `aistack.copilot.promptSnippets` (id → body).
 - Prefer referencing snippet ids from your **GitHub Copilot Instructions** or workspace prompts.
-- Re-run Spec Engine to refresh; merges deep into existing `.vscode/settings.json` under the `spec-engine` root only.
+- Re-run Ai Stack Kit to refresh; merges deep into existing `.vscode/settings.json` under the `aistack` root only.

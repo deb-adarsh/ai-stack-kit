@@ -1,12 +1,13 @@
 /**
  * GitHub Copilot (VS Code): minimal agent abstraction — settings subtree + prompt snippets file.
- * Merges into `.vscode/settings.json` under `spec-engine.copilot` to avoid clobbering user settings.
+ * Merges into `.vscode/settings.json` under `aistack.copilot` to avoid clobbering user settings.
  */
 
 import type { AdapterOutput, AdapterOutputFile } from '../adapter-output.js';
 import { BaseClientAdapter } from '../base-client-adapter.js';
 import type { NormalizedWorkspaceInput } from '../normalized.js';
 import { loadBundledTemplate, renderTemplate } from '../template-loader.js';
+import { VSCODE_SETTINGS_ROOT_KEY, WORKSPACE_DOTDIR } from '../../branding.js';
 
 export class CopilotClientAdapter extends BaseClientAdapter {
   readonly name = 'copilot';
@@ -22,7 +23,7 @@ export class CopilotClientAdapter extends BaseClientAdapter {
     }
 
     const patch = {
-      'spec-engine': {
+      [VSCODE_SETTINGS_ROOT_KEY]: {
         copilot: {
           version: 1,
           generatedAt: input.metadata.generatedAt,
@@ -55,13 +56,13 @@ export class CopilotClientAdapter extends BaseClientAdapter {
       : [
           '# Copilot usage',
           '',
-          'Snippets are registered under `spec-engine.copilot.promptSnippets` in settings.',
+          'Snippets are registered under `aistack.copilot.promptSnippets` in settings.',
           'Reference them from custom instructions or chat prompts as needed.',
           '',
         ].join('\n');
 
     files.push({
-      path: '.spec-engine/copilot/INSTRUCTIONS.md',
+      path: `${WORKSPACE_DOTDIR}/copilot/INSTRUCTIONS.md`,
       content: instructions,
       mergeStrategy: 'overwrite',
       managed: true,

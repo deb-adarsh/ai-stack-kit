@@ -1,4 +1,4 @@
-# Spec Engine
+# Ai Stack Kit
 
 A CLI tool for managing IDE skills, subagents, and configurations across multiple sources and IDEs.
 
@@ -8,7 +8,7 @@ A CLI tool for managing IDE skills, subagents, and configurations across multipl
 
 ## Overview
 
-Spec Engine allows you to:
+Ai Stack Kit allows you to:
 - 📦 **Package** IDE skills (Cursor skills, rules, hooks) as reusable components
 - 🔄 **Distribute** skills via GitHub, npm, custom registries, or local files
 - 🎯 **Apply** skills to multiple IDEs (Cursor, VSCode, and more)
@@ -19,18 +19,20 @@ Spec Engine allows you to:
 
 ## Quick Start
 
+After `npm install -g ai-stack-kit`, run **`aistack`** or **`ai-stack`** (both invoke the same CLI).
+
 ```bash
-# Install spec-engine
-npm install -g spec-engine
+# Install Ai Stack Kit (CLI commands: aistack or ai-stack)
+npm install -g ai-stack-kit
 
 # Initialize a new project
-spec-engine init
+aistack init
 
 # Edit spec.yaml to add skills
 vim spec.yaml
 
 # Install and apply skills
-spec-engine sync
+aistack sync
 ```
 
 ---
@@ -50,7 +52,7 @@ ide:
 sources:
   - type: github
     name: official
-    repository: spec-engine/skills
+    repository: aistack/skills
     auth: ${GITHUB_TOKEN}
 
 skills:
@@ -60,7 +62,7 @@ skills:
     version: ^2.0.0
   
   # From npm
-  - source: npm:@spec-engine
+  - source: npm:@aistack
     name: figma-agent
     version: latest
   
@@ -116,7 +118,7 @@ hooks:
 ## Project Structure
 
 ```
-spec-engine/
+ai-stack-kit/
 ├── src/
 │   ├── cli/              # CLI commands and UI
 │   ├── core/             # Engine, parser, resolver
@@ -177,53 +179,51 @@ Run commands at different stages:
 
 ```bash
 # Project Management
-spec-engine init                    # Initialize new project
-spec-engine validate                # Validate spec.yaml
-spec-engine status                  # Show installation status
+aistack init                    # Initialize new project
+aistack validate                # Validate spec.yaml
+aistack status                  # Show installation status
 
-# Skill Management
-spec-engine install                 # Install skills (download)
-spec-engine apply                   # Apply to IDE
-spec-engine sync                    # Install + Apply
-spec-engine update [skill]          # Update skills
+# Resolve spec → install → IDE (all module kinds in spec.yaml)
+aistack install                 # Fetch / install modules (skills, subagents, hooks, …)
+aistack apply                   # Apply generated config to IDE
+aistack sync                    # Install + apply
+aistack update [name]           # Update modules (placeholder / bump in spec)
 
-# Discovery
-spec-engine search <query>          # Search registries
-spec-engine info <skill>            # Show skill details
-spec-engine list                    # List installed skills
+# Discovery (any kind — or use typed commands below)
+aistack search <query>          # Search catalogs
+aistack info <name>             # Show catalog metadata for a module
+aistack list                    # List modules declared in spec.yaml
 
-# Modification
-spec-engine add <skill>             # Add skill to spec.yaml
-spec-engine remove <skill>          # Remove skill
+# Typed catalogs (preferred): skill | subagent | hook
+aistack skill search <query>    # Search skills only
+aistack skill add [name]       # Add a skill to spec.yaml
+aistack skill info <name>       # Skill metadata
+aistack subagent search <query> # Search subagents only
+aistack subagent add [name]    # Add a subagent to spec.yaml
+aistack subagent info <name>    # Subagent metadata
+aistack hook search <query>     # Search hooks only
+aistack hook add [name]        # Add a hook to spec.yaml
+aistack hook info <name>       # Hook metadata
+
+# Modification (legacy aliases — same spec.yaml rows as typed add)
+aistack add [name]              # Add a module (optionally --type skill|subagent|hook)
+aistack remove <name>           # Remove a module from spec.yaml
 
 # Registry
-spec-engine login                   # Login to registry
-spec-engine publish                 # Publish skill
+aistack login                  # Login to registry
+aistack publish                # Publish module
 
 # Maintenance
-spec-engine clean                   # Clean cache
+aistack clean                  # Clean cache
 ```
 
 ---
 
 ## Documentation
 
-### 📚 Architecture Documents
+### 📚 Architecture
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)**: Detailed architecture design
-  - Folder structure
-  - Module responsibilities
-  - Interface definitions
-  - Data flow diagrams
-  - Dependency boundaries
-  - Example configurations
-
-- **[ARCHITECTURE_OVERVIEW.md](./ARCHITECTURE_OVERVIEW.md)**: High-level overview
-  - System architecture diagram
-  - Data flow visualization
-  - Module summary
-  - Extension points
-  - CLI command reference
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)**: Single architecture reference — diagrams, dependency rules, **actual** repository layout, interface shapes, pipeline flows, configuration examples, extension points, CLI reference, and ops concerns (performance, security, errors).
 
 - **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)**: Quick reference guide
   - Core concepts
@@ -262,8 +262,8 @@ spec-engine clean                   # Clean cache
 
 ```bash
 # Clone repository
-git clone https://github.com/spec-engine/spec-engine.git
-cd spec-engine
+git clone https://github.com/your-org/ai-stack-kit.git
+cd ai-stack-kit
 
 # Install dependencies
 npm install
@@ -276,7 +276,7 @@ npm test
 
 # Run CLI locally
 npm link
-spec-engine --help
+aistack --help
 ```
 
 ### Testing
@@ -297,7 +297,7 @@ npm run test:coverage
 
 ---
 
-## Extending Spec Engine
+## Extending Ai Stack Kit
 
 ### Add a New Source (e.g., GitLab)
 
@@ -359,7 +359,7 @@ export class IntelliJAdapter extends BaseIDEAdapter {
 
 ## Comparison to Similar Tools
 
-| Feature | Spec Engine | npm | Terraform | kubectl |
+| Feature | Ai Stack Kit | npm | Terraform | kubectl |
 |---------|-------------|-----|-----------|---------|
 | Declarative Config | ✅ | ❌ | ✅ | ✅ |
 | Version Locking | ✅ | ✅ | ✅ | ❌ |
@@ -414,16 +414,15 @@ Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for d
 
 ## License
 
-MIT © Spec Engine Team
+Licensed under the **Apache License 2.0**. See [LICENSE](./LICENSE).
 
 ---
 
 ## Support
 
-- 📖 Documentation: [docs.spec-engine.dev](https://docs.spec-engine.dev)
-- 💬 Discord: [discord.gg/spec-engine](https://discord.gg/spec-engine)
-- 🐛 Issues: [GitHub Issues](https://github.com/spec-engine/spec-engine/issues)
-- 📧 Email: support@spec-engine.dev
+- 📖 Documentation: see `/ARCHITECTURE.md` and `/QUICK_REFERENCE.md` in this repo
+- 🐛 Issues: [GitHub Issues](https://github.com/your-org/ai-stack-kit/issues)
+- ✉️ Maintainer: [debadarsh7@gmail.com](mailto:debadarsh7@gmail.com)
 
 ---
 

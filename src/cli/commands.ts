@@ -4,6 +4,7 @@
  * Implements the business logic for each CLI command
  */
 
+import { NPM_PACKAGE_NAME, WORKSPACE_DOTDIR } from '../branding.js';
 import { SpecFile } from '../types/spec.js';
 import type { Skill } from '../types/skill.js';
 import { promises as fs } from 'fs';
@@ -266,7 +267,7 @@ async function getOfflineModuleInfo(moduleName: string, cwd: string) {
     tags: hit.tags,
     source: hit.source,
     moduleType: DEFAULT_MODULE_TYPE,
-    author: 'Spec Engine catalog',
+    author: 'Ai Stack Kit catalog',
     license: 'MIT',
     repository: undefined,
     stats: { downloads: Math.round((hit.score ?? 0) * 100_000) },
@@ -420,7 +421,7 @@ export async function createSpecFile(data: {
       version: 'latest',
       source: 'github' as any,
       sourceConfig: {
-        owner: 'spec-engine',
+        owner: NPM_PACKAGE_NAME,
         repo: 'skills',
         path: name,
       },
@@ -429,8 +430,8 @@ export async function createSpecFile(data: {
     settings: {
       autoSync: data.settings.autoSync,
       verifyChecksums: data.settings.verifyChecksums,
-      cacheDir: '~/.spec-engine/cache',
-      lockFile: '.spec-engine/lock.yaml',
+      cacheDir: `~/${WORKSPACE_DOTDIR.slice(1)}/cache`,
+      lockFile: `${WORKSPACE_DOTDIR}/lock.yaml`,
     },
   };
   
