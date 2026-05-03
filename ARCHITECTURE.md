@@ -795,7 +795,8 @@ aistack sync
 aistack validate
 aistack status
 
-# Discovery (all kinds)
+# Discovery — GitHub sources use REST listing; export token to avoid shared-IP rate limits
+export GITHUB_TOKEN=ghp_…   # or fine-grained PAT with Contents read on public repos
 aistack search figma
 
 # Typed discovery / add

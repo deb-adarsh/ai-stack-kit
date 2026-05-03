@@ -212,29 +212,53 @@ export class GitHubTreeSkillsProvider implements RegistryProvider {
     if (this.loaded) return;
 
     const { cacheFilePath, cacheTtlSeconds } = this.opts;
-    try {
-      const buf = await readFile(cacheFilePath, 'utf-8');
-      const doc = JSON.parse(buf) as CacheDoc;
-      const age = Date.now() - new Date(doc.fetchedAt).getTime();
-      if (age >= 0 && age < (doc.ttlSeconds ?? cacheTtlSeconds) * 1000 && Array.isArray(doc.entries)) {
-        this.entries = doc.entries.map(parseRegistryEntryJson);
-        this.loaded = true;
-        return;
+
+    const readCache = async (ignoreTtl: boolean): Promise<RegistryEntry[] | null> => {
+      try {
+        const buf = await readFile(cacheFilePath, 'utf-8');
+        const doc = JSON.parse(buf) as CacheDoc;
+        if (!Array.isArray(doc.entries)) return null;
+        const age = Date.now() - new Date(doc.fetchedAt).getTime();
+        const ttlMs = (doc.ttlSeconds ?? cacheTtlSeconds) * 1000;
+        const fresh = age >= 0 && age < ttlMs;
+        if (!ignoreTtl && !fresh) return null;
+        return doc.entries.map(parseRegistryEntryJson);
+      } catch {
+        return null;
       }
-    } catch {
-      /* refresh */
+    };
+
+    const cachedFresh = await readCache(false);
+    if (cachedFresh) {
+      this.entries = cachedFresh;
+      this.loaded = true;
+      return;
     }
 
-    this.entries = await this.fetchFreshEntries();
-    this.loaded = true;
+    try {
+      this.entries = await this.fetchFreshEntries();
+      this.loaded = true;
 
-    await mkdir(path.dirname(cacheFilePath), { recursive: true });
-    const payload: CacheDoc = {
-      fetchedAt: new Date().toISOString(),
-      ttlSeconds: cacheTtlSeconds,
-      entries: this.entries.map(serializeEntry),
-    };
-    await writeFile(cacheFilePath, JSON.stringify(payload, null, 0), 'utf-8');
+      await mkdir(path.dirname(cacheFilePath), { recursive: true });
+      const payload: CacheDoc = {
+        fetchedAt: new Date().toISOString(),
+        ttlSeconds: cacheTtlSeconds,
+        entries: this.entries.map(serializeEntry),
+      };
+      await writeFile(cacheFilePath, JSON.stringify(payload, null, 0), 'utf-8');
+    } catch (e) {
+      const stale = await readCache(true);
+      if (stale?.length) {
+        this.entries = stale;
+        this.loaded = true;
+        process.emitWarning(
+          `Using stale cached listing for ${this.opts.owner}/${this.opts.repo} (${this.opts.catalogId}) — refresh failed: ${e instanceof Error ? e.message : String(e)}. Set GITHUB_TOKEN for higher API limits and reliable refresh.`,
+          { code: 'AISTACK_STALE_CATALOG_CACHE' }
+        );
+        return;
+      }
+      throw e;
+    }
   }
 
   private async fetchFreshEntries(): Promise<RegistryEntry[]> {

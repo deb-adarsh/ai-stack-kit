@@ -31,8 +31,13 @@ export class DefaultRegistry implements RegistryProvider {
     const limit = options?.limit ?? 50;
     const merged: RegistrySearchResult[] = [];
     for (const b of this.backends) {
-      const chunk = await b.search(query, { ...options, limit: limit * 2, offset: 0 });
-      merged.push(...chunk);
+      try {
+        const chunk = await b.search(query, { ...options, limit: limit * 2, offset: 0 });
+        merged.push(...chunk);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`[aistack] Catalog source skipped (${b.id}): ${msg.split('\n')[0]}`);
+      }
     }
     const deduped = mergeSearchResults(merged);
     const offset = options?.offset ?? 0;
@@ -41,8 +46,13 @@ export class DefaultRegistry implements RegistryProvider {
 
   async getSkill(name: string, options?: GetSkillOptions): Promise<RegistryEntry | null> {
     for (const b of this.backends) {
-      const skill = await b.getSkill(name, options);
-      if (skill) return skill;
+      try {
+        const skill = await b.getSkill(name, options);
+        if (skill) return skill;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`[aistack] Catalog source skipped (${b.id}) during lookup: ${msg.split('\n')[0]}`);
+      }
     }
     return null;
   }

@@ -51,7 +51,8 @@ aistack sync                 # Install + Apply
 aistack update               # Update all skills
 aistack update <skill>       # Update specific skill
 
-# Discovery
+# Discovery (`search` hits GitHub REST per configured source — export token to avoid shared-IP rate limits)
+export GITHUB_TOKEN=ghp_…   # or fine-grained PAT with Contents read on public repos
 aistack search <query>       # Search registries
 aistack info <skill>         # Show skill details
 aistack list                 # List installed skills
@@ -160,7 +161,7 @@ hooks:
 | `AISTACK_TOKEN` | Default registry token | `export AISTACK_TOKEN=abc123` |
 | `AISTACK_CACHE_DIR` | Override cache dir | `~/.cache/aistack` |
 | `AISTACK_LOG_LEVEL` | Log verbosity | `debug`, `info`, `warn`, `error` |
-| `GITHUB_TOKEN` | GitHub PAT when pulling skills from **private** repos (optional) | `export GITHUB_TOKEN=ghp_...` |
+| `GITHUB_TOKEN` | Higher GitHub **REST** limits for **`aistack search`** / catalog listing + **private** skill repos | `export GITHUB_TOKEN=ghp_…` (fine-grained: **Contents** read on public repos) |
 
 ---
 

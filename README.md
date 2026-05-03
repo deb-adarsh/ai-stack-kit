@@ -47,6 +47,7 @@ The CLI is **one build**, published as the **unscoped** package **`ai-stack-kit`
 npm install -g ai-stack-kit
 
 aistack init
+export GITHUB_TOKEN=ghp_…   # optional: higher GitHub REST limits for `search` / listings (fine-grained: Contents read on public repos)
 aistack search react
 aistack skill add react-ui-expert   # or: aistack add react-ui-expert
 aistack sync
@@ -58,7 +59,7 @@ aistack sync
 
 search → add → sync
 
-**One habit loop:** **`search`** → **`add`** (or **`catalog refresh`** to merge new upstream names safely into **`modules:`**) → **`sync`**—and your IDE picks up files from the **adapter** you chose (**Cursor**, **Copilot**, **Claude**, …). **`aistack`** / **`ai-stack`** / **`npx ai-stack-kit`**, or **`npx @deb-adarsh/ai-stack-kit`** (GitHub registry + `.npmrc`) — same CLI behavior.
+**One habit loop:** **`search`** → **`add`** (or **`catalog refresh`** to merge new upstream names safely into **`modules:`**) → **`sync`** — one fetch/install pass per skill; **`SKILL.md`** trees land on disk, then **normalization turns that same resolved content into prompt sets and agent stubs** (no second download for prompts). Adapters write **Cursor**, **Copilot**, **Claude**, … layouts from that model. **`aistack`** / **`ai-stack`** / **`npx ai-stack-kit`**, or **`npx @deb-adarsh/ai-stack-kit`** (GitHub registry + `.npmrc`) — same CLI behavior.
 
 ---
 
@@ -128,6 +129,8 @@ AI Stack Kit reads **`client.type`** to decide which **client adapter** runs at 
 You normally declare **one** primary client per project; change **`type`** when you target a different editor or assistant surface.
 
 Catalog discovery uses **`sources.config.yaml`** in the project root (`aistack init` seeds a default — see Quick Start). **`hooks`** at the bottom are **lifecycle shell steps** (pre/post install/apply), not the same thing as **`moduleType: hook`** AI modules in `modules:`.
+
+**`aistack search`** calls the GitHub REST API for each configured GitHub source (same listing traffic as catalog hydration). Without **`GITHUB_TOKEN`**, shared egress IPs often hit **rate limits** (403). Export a PAT with **contents read** on those repos for higher quotas; a failing source is skipped so results still merge from npm catalogs, other GitHub mirrors, disk cache, and **offline** hints.
 
 ```yaml
 version: "1.0"
@@ -296,6 +299,13 @@ Fetch skills from multiple sources:
 | Repo / project | `.cursor/agents/*.md` | `.github/agents/*.agent.md` | `.claude/agents/*.md` |
 
 The **`*.agent.md`** pattern (**basename**: `.`, `-`, `_`, `a-z`, `A-Z`, `0-9` only before the suffix) is **GitHub Copilot only**. Cursor and Claude emit ordinary **`*.md`** agents.
+
+**Prompt sets — same payload as skills (no extra fetch)** — Prompt files are **not** downloaded on their own. After each skill is resolved and fetched once, the **normalizer** derives prompts from that same in-memory payload (e.g. **`SKILL.md`** → instruction prompt; **`skill.json` / manifest `description`** → optional short system summary when present). **`aistack sync`** / **`apply`** then emits those files next to the skill trees and agents; agents carry **`promptIds`** wired by each adapter.
+
+| Scope | Cursor | Copilot | Claude |
+|--------|--------|---------|--------|
+| Repo / project (default) | `.cursor/prompts/*.md` | **`aistack.copilot.promptSnippets`** in **project** `.vscode/settings.json` (id → body) | `.claude/prompts/*.md`, `.claude/system-bundle.aistack.md`, `.claude/README.aistack.md` |
+| Global (`installScope: user`) | `~/.cursor/prompts/*.md` | same **`promptSnippets`** merge at **project** root (tree outputs still target **`~/.copilot/`**) | `~/.claude/prompts/*.md` (+ Claude bundle/readme under **`~/.claude/`**) |
 
 **Copilot + VS Code**: `.vscode/settings.json` is still merged under the **`aistack`** key at the **project** root (e.g. **`promptSnippets`**), even when skill/agent trees target **`~/.copilot/`** via **`installScope: user`**.
 
