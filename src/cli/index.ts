@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * CLI Command Structure and Design
  *

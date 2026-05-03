@@ -1,6 +1,6 @@
 {
   "name": "@deb-adarsh/ai-stack-kit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "AI Stack Kit — CLI for managing IDE skills and configurations",
   "type": "module",
   "main": "dist/index.js",
@@ -59,7 +59,7 @@
     "ora": "^7.0.1",
     "semver": "^7.5.4",
     "table": "^6.8.1",
-    "tar": "^6.2.0",
+    "tar": "^7.5.13",
     "yaml": "^2.8.4",
     "zod": "^3.22.0"
   },
@@ -69,7 +69,6 @@
     "@types/js-yaml": "^4.0.0",
     "@types/node": "^20.0.0",
     "@types/semver": "^7.5.0",
-    "@types/tar": "^6.1.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "eslint": "^8.55.0",
