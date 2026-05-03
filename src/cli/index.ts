@@ -3,7 +3,7 @@
  *
  * Main commands:
  * - aistack init              Initialize new project
- * - aistack skill|subagent|hook  search / add / info (type-specific)
+ * - aistack skill|subagent|hook  search / add / info (type-specific; add supports --install-scope)
  * - aistack add|search|info   Legacy aliases (all types or --type)
  * - aistack catalog refresh    Diff catalogs vs spec; optional YAML-safe append under modules:
  * - aistack remove            Remove a module from spec.yaml
@@ -11,7 +11,7 @@
  * - aistack list              List modules in spec.yaml
  */
 
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -190,6 +190,13 @@ export function createCLI(): Command {
   return program;
 }
 
+function installScopeCliOption(): Option {
+  return new Option(
+    '--install-scope <scope>',
+    'Set client.installScope in spec.yaml: project (repo-local .cursor/.github/.claude) or user (global home dirs). Omit to leave client.installScope unchanged (unset means project-level apply).'
+  ).choices(['project', 'user']);
+}
+
 /**
  * COMMAND: aistack init
  *
@@ -318,7 +325,13 @@ function registerInitCommand(program: Command) {
     });
 }
 
-type AddCliOptions = { type?: string; source?: string; saveDev?: boolean };
+type AddCliOptions = {
+  type?: string;
+  source?: string;
+  saveDev?: boolean;
+  /** Passed through from `--install-scope`; updates spec client.installScope when set. */
+  installScope?: 'project' | 'user';
+};
 
 async function executeAddModuleFlow(params: {
   nameArg?: string;
@@ -459,8 +472,15 @@ async function executeAddModuleFlow(params: {
     sourceConfig: selected.sourceConfig,
     config,
     moduleType,
+    clientInstallScope: options.installScope,
   });
   addSpinner.succeed('Added to spec.yaml');
+
+  if (options.installScope === 'user') {
+    console.log(chalk.gray('Set client.installScope: user (skills/agents under home directory).'));
+  } else if (options.installScope === 'project') {
+    console.log(chalk.gray('Set client.installScope: project (repo-local skill/agent trees).'));
+  }
 
   const installAnswer = await inquirer.prompt([
     {
@@ -490,6 +510,7 @@ function registerAddCommand(program: Command) {
     .option('-s, --source <type>', 'Source type (github, npm, registry)')
     .option('--type <kind>', 'Module type: skill | subagent | hook (when not using a typed subcommand)')
     .option('--save-dev', 'Add as dev dependency')
+    .addOption(installScopeCliOption())
     .action(async (nameArg, options) => {
       try {
         await executeAddModuleFlow({ nameArg, options });
@@ -836,11 +857,16 @@ function registerModuleKindCommandGroups(program: Command) {
       .description(`Add a ${g.kind} entry to spec.yaml`)
       .option('-s, --source <type>', 'Source type (github, npm, registry)')
       .option('--save-dev', 'Add as dev dependency')
+      .addOption(installScopeCliOption())
       .action(async (name, options) => {
         try {
           await executeAddModuleFlow({
             nameArg: name,
-            options: { source: options.source, saveDev: options.saveDev },
+            options: {
+              source: options.source,
+              saveDev: options.saveDev,
+              installScope: options.installScope,
+            },
             lockedKind: g.kind,
           });
         } catch (e) {

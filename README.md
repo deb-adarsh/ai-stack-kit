@@ -283,18 +283,20 @@ aistack catalog refresh --write -y --max 50   # Non-interactive batch (disabled 
 aistack catalog refresh --refresh-sources       # Clear GitHub listing cache, then refresh
 
 # Typed catalogs (preferred): skill | subagent | hook
+# Optional --install-scope: user → client.installScope: user (~/.cursor, ~/.copilot, ~/.claude);
+#   project → remove installScope (repo-local trees). Omit → leave spec unchanged (resolver treats unset as project).
 aistack skill search <query>    # Search skills only
-aistack skill add [name]       # Add a skill to spec.yaml
+aistack skill add [name] [--install-scope project|user]
 aistack skill info <name>       # Skill metadata
 aistack subagent search <query> # Search subagents only
-aistack subagent add [name]    # Add a subagent to spec.yaml
+aistack subagent add [name] [--install-scope project|user]
 aistack subagent info <name>    # Subagent metadata
 aistack hook search <query>     # Search hooks only
-aistack hook add [name]        # Add a hook to spec.yaml
+aistack hook add [name] [--install-scope project|user]       # Add a hook to spec.yaml
 aistack hook info <name>       # Hook metadata
 
 # Modification (legacy aliases — same spec.yaml rows as typed add)
-aistack add [name]              # Add a module (optionally --type skill|subagent|hook)
+aistack add [name] [--install-scope project|user]   # Legacy (--type skill|subagent|hook)
 aistack remove <name>           # Remove a module from spec.yaml
 
 # Registry

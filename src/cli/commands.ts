@@ -7,7 +7,7 @@
 import { existsSync } from 'fs';
 import { promises as fs } from 'fs';
 import { NPM_PACKAGE_NAME, WORKSPACE_DOTDIR } from '../branding.js';
-import { SpecFile } from '../types/spec.js';
+import { SpecFile, type ClientInstallScope } from '../types/spec.js';
 import type { Skill } from '../types/skill.js';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
@@ -507,6 +507,11 @@ export async function addModuleToSpec(module: {
   sourceConfig?: Record<string, unknown>;
   config?: any;
   moduleType?: AIModuleType;
+  /**
+   * When set, updates `client.installScope` in this write.
+   * `project` removes `installScope` so adapters default to repo-local paths.
+   */
+  clientInstallScope?: ClientInstallScope;
 }): Promise<void> {
   const specPath = path.join(process.cwd(), 'spec.yaml');
 
@@ -561,6 +566,17 @@ export async function addModuleToSpec(module: {
     };
     applyModuleTypeToRow(row, requested, to);
     specModuleArray(spec, to).push(row);
+  }
+
+  if (module.clientInstallScope !== undefined) {
+    if (!spec.client || typeof spec.client !== 'object') {
+      throw { code: 'SPEC_INVALID', message: 'spec.yaml is missing a client: block' };
+    }
+    if (module.clientInstallScope === 'user') {
+      spec.client.installScope = 'user';
+    } else {
+      delete spec.client.installScope;
+    }
   }
 
   const yamlContent = yaml.dump(spec, {
