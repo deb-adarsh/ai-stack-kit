@@ -10,9 +10,6 @@ export const NPM_PACKAGE_NAME = '@deb-adarsh/ai-stack-kit';
 /** Unscoped id on https://registry.npmjs.org/ (`npm pkg set name` in CI/local before npm publish). */
 export const NPMJS_PACKAGE_NAME = 'ai-stack-kit';
 
-/** Default GitHub `owner` in scaffolded skill rows (`owner/repo/path`). Matches repo owner for GH Packages scope. */
-export const DEFAULT_SKILL_REPO_OWNER = 'deb-adarsh';
-
 /** Project-local workspace directory (skills, manifests, adapter artifacts). */
 export const WORKSPACE_DOTDIR = '.aistack';
 

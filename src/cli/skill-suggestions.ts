@@ -1,6 +1,15 @@
 /**
  * Curated suggestible skills + scoring from {@link ProjectSignals}.
  *
+ * Relationship to the weekly catalog job (`npm run build:catalog`, `web/public/catalog.json`, Skill browser):
+ * that pipeline **re-indexes everything** from `templates/sources.config.yaml`. This file does **not**
+ * participate in that sync — it is a **small, hand-maintained** set used for:
+ * - `aistack init` defaults (works **offline** for ranking; GitHub paths below must stay valid)
+ * - Opinionated lanes (`ui` / `backend` / `shared`) and tags driving scores from repo signals
+ *
+ * When upstream catalogs gain skills you want highlighted here, **extend `CATALOG` manually** (and keep
+ * `github` paths accurate). The full set remains discoverable via `aistack search` / browser once sources load.
+ *
  * Rules:
  * - **React** (incl. Next) → prioritize **UI lane** agents.
  * - **Node** (package.json) with backend hints or non-UI-only → prioritize **backend lane**.
@@ -25,6 +34,15 @@ export interface SuggestibleSkill {
   recommended: boolean;
 }
 
+/** Public repo + path inside tarball root used when scaffolding spec.yaml from init picks. */
+export interface SuggestionGithubSource {
+  owner: string;
+  repo: string;
+  /** Directory path inside the repo (e.g. `skills/canvas-design`). */
+  path: string;
+  branch?: string;
+}
+
 interface CatalogEntry {
   id: string;
   name: string;
@@ -34,6 +52,8 @@ interface CatalogEntry {
   source: string;
   /** Base score before project signals */
   baseWeight: number;
+  /** Resolved GitHub location for `aistack init` → spec.yaml rows */
+  github: SuggestionGithubSource;
 }
 
 const CATALOG: CatalogEntry[] = [
@@ -46,6 +66,7 @@ const CATALOG: CatalogEntry[] = [
     tags: ['react', 'ui', 'frontend', 'a11y'],
     source: 'github',
     baseWeight: 0.35,
+    github: { owner: 'anthropics', repo: 'skills', path: 'skills/frontend-design' },
   },
   {
     id: 'figma-agent',
@@ -55,6 +76,7 @@ const CATALOG: CatalogEntry[] = [
     tags: ['figma', 'design', 'ui'],
     source: 'github',
     baseWeight: 0.3,
+    github: { owner: 'anthropics', repo: 'skills', path: 'skills/brand-guidelines' },
   },
   {
     id: 'canvas',
@@ -64,6 +86,7 @@ const CATALOG: CatalogEntry[] = [
     tags: ['visualization', 'ui', 'canvas'],
     source: 'github',
     baseWeight: 0.45,
+    github: { owner: 'anthropics', repo: 'skills', path: 'skills/canvas-design' },
   },
   // Backend lane (Node → suggest these)
   {
@@ -74,6 +97,7 @@ const CATALOG: CatalogEntry[] = [
     tags: ['node', 'api', 'backend'],
     source: 'github',
     baseWeight: 0.4,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/openapi-to-application-code' },
   },
   {
     id: 'prisma-data-layer',
@@ -83,6 +107,7 @@ const CATALOG: CatalogEntry[] = [
     tags: ['prisma', 'sql', 'backend'],
     source: 'github',
     baseWeight: 0.32,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/postgresql-code-review' },
   },
   {
     id: 'security-headers',
@@ -92,6 +117,7 @@ const CATALOG: CatalogEntry[] = [
     tags: ['security', 'api', 'backend'],
     source: 'github',
     baseWeight: 0.28,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/security-review' },
   },
   // Shared
   {
@@ -102,6 +128,7 @@ const CATALOG: CatalogEntry[] = [
     tags: ['typescript', 'types'],
     source: 'github',
     baseWeight: 0.38,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/javascript-typescript-jest' },
   },
   {
     id: 'test-generator',
@@ -111,6 +138,7 @@ const CATALOG: CatalogEntry[] = [
     tags: ['testing', 'jest', 'vitest'],
     source: 'github',
     baseWeight: 0.25,
+    github: { owner: 'anthropics', repo: 'skills', path: 'skills/webapp-testing' },
   },
   {
     id: 'code-review',
@@ -120,8 +148,15 @@ const CATALOG: CatalogEntry[] = [
     tags: ['review', 'quality'],
     source: 'registry',
     baseWeight: 0.22,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/review-and-refactor' },
   },
 ];
+
+/** GitHub coordinates for an init-time suggestion id (`spec.skills[].name`). */
+export function resolveSuggestionGithubSource(skillName: string): SuggestionGithubSource | null {
+  const c = CATALOG.find((x) => x.name === skillName);
+  return c?.github ?? null;
+}
 
 function laneBoost(s: ProjectSignals, lane: SuggestionLane): number {
   const reactUi = s.usesReact || s.usesNext || s.usesReactNative;

@@ -4,13 +4,13 @@
  * Implements the business logic for each CLI command
  */
 
-import { existsSync } from 'fs';
-import { promises as fs } from 'fs';
-import { DEFAULT_SKILL_REPO_OWNER, WORKSPACE_DOTDIR } from '../branding.js';
+import { existsSync, promises as fs } from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import * as yaml from 'js-yaml';
+import { WORKSPACE_DOTDIR } from '../branding.js';
 import { SpecFile, type ClientInstallScope } from '../types/spec.js';
 import type { Skill } from '../types/skill.js';
-import * as yaml from 'js-yaml';
-import * as path from 'path';
 import { loadSpec } from '../pipeline/spec-loader.js';
 import { apply } from '../pipeline/apply-pipeline.js';
 import { createDynamicSkillRegistry } from '../registry/sources/create-dynamic-skill-registry.js';
@@ -18,8 +18,11 @@ import type { RegistryProvider } from '../registry/discovery/registry-provider.j
 import { DEFAULT_MODULE_TYPE, type AIModuleType } from '../types/ai-module.js';
 import type { RegistryEntry, RegistrySearchResult } from '../types/registry.js';
 import { detectProjectSignals } from './project-detection.js';
-import { buildSkillSuggestions, filterSuggestible } from './skill-suggestions.js';
-import { fileURLToPath } from 'node:url';
+import {
+  buildSkillSuggestions,
+  filterSuggestible,
+  resolveSuggestionGithubSource,
+} from './skill-suggestions.js';
 
 let dynamicRegistryCache: { cwd: string; registry: RegistryProvider | null } | null = null;
 
@@ -441,16 +444,25 @@ export async function createSpecFile(data: {
       type: data.client as any,
       features: ['skills', 'hooks'],
     },
-    skills: data.skills.map(name => ({
-      name,
-      version: 'latest',
-      source: 'github' as any,
-      sourceConfig: {
-        owner: DEFAULT_SKILL_REPO_OWNER,
-        repo: 'skills',
-        path: name,
-      },
-    })),
+    skills: data.skills.map((name) => {
+      const gh = resolveSuggestionGithubSource(name);
+      if (!gh) {
+        throw new Error(
+          `No bundled GitHub mapping for skill "${name}". Use skill add / catalog search or edit spec.yaml manually.`
+        );
+      }
+      return {
+        name,
+        version: 'latest',
+        source: 'github' as any,
+        sourceConfig: {
+          owner: gh.owner,
+          repo: gh.repo,
+          path: gh.path,
+          ...(gh.branch ? { branch: gh.branch } : {}),
+        },
+      };
+    }),
     modules: [],
     settings: {
       autoSync: data.settings.autoSync,
