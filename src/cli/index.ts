@@ -244,20 +244,27 @@ function registerInitCommand(program: Command) {
           },
         ]);
 
-        // Step 3: Confirm client
+        // Step 3: Confirm client (choices must cover detectClient() types we care about)
+        const clientChoices = [
+          { name: 'Cursor', value: 'cursor' },
+          { name: 'GitHub Copilot (VS Code)', value: 'copilot' },
+          { name: 'Claude', value: 'claude' },
+          { name: 'VS Code', value: 'vscode' },
+          { name: 'IntelliJ IDEA', value: 'intellij' },
+          { name: 'Neovim', value: 'neovim' },
+          { name: 'Other', value: 'other' },
+        ] as const;
+        const defaultClientType = clientChoices.some((c) => c.value === detectedClient.type)
+          ? detectedClient.type
+          : 'cursor';
+
         const clientAnswer = await inquirer.prompt([
           {
             type: 'list',
             name: 'client',
             message: 'Select client/IDE:',
-            default: detectedClient.type,
-            choices: [
-              { name: 'Cursor', value: 'cursor' },
-              { name: 'VS Code', value: 'vscode' },
-              { name: 'IntelliJ IDEA', value: 'intellij' },
-              { name: 'Neovim', value: 'neovim' },
-              { name: 'Other', value: 'other' },
-            ],
+            default: defaultClientType,
+            choices: [...clientChoices],
           },
         ]);
 
@@ -958,13 +965,15 @@ async function promptSkillConfig(_schema: unknown): Promise<Record<string, unkno
 }
 
 async function quickInit(client: { type: string }): Promise<void> {
+  const adaptersSupported = new Set(['cursor', 'copilot', 'claude']);
+  const clientType = adaptersSupported.has(client.type) ? client.type : 'cursor';
   await createSpecFile({
     project: {
       projectName: 'my-ide-setup',
       description: `${PRODUCT_NAME} project`,
       author: '',
     },
-    client: client.type,
+    client: clientType,
     skills: ['canvas', 'typescript-helper'],
     settings: { autoSync: false, verifyChecksums: true },
   });

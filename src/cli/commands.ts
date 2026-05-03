@@ -122,35 +122,42 @@ async function buildOfflineSearchHits(
 }
 
 /**
- * Detect installed client/IDE
+ * Best-effort detection of which AI client tooling is present under the user home directory.
+ * Used only by `aistack init` as the **default** in the client picker — **`sync`/`apply` always use `spec.yaml` → `client.type`**.
+ *
+ * Order matters when multiple dirs exist (e.g. Cursor + Claude Code): first match wins.
  */
 export async function detectClient(): Promise<{ name: string; type: string; version?: string }> {
   const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-  
-  // Check for Cursor
+
   const cursorPath = path.join(homeDir, '.cursor');
   if (await exists(cursorPath)) {
     return { name: 'Cursor', type: 'cursor' };
   }
-  
-  // Check for VSCode
-  const vscodePath = path.join(homeDir, '.vscode');
-  if (await exists(vscodePath)) {
-    return { name: 'VS Code', type: 'vscode' };
+
+  const claudePath = path.join(homeDir, '.claude');
+  if (await exists(claudePath)) {
+    return { name: 'Claude', type: 'claude' };
   }
-  
-  // Check for IntelliJ
+
+  /** VS Code + Copilot share user-level `~/.vscode`; Copilot agents/skills may use `~/.copilot`. Both → `copilot` adapter (Cursor is detected above as its own IDE). */
+  const copilotPath = path.join(homeDir, '.copilot');
+  const vscodeUserPath = path.join(homeDir, '.vscode');
+  if ((await exists(copilotPath)) || (await exists(vscodeUserPath))) {
+    return { name: 'GitHub Copilot', type: 'copilot' };
+  }
+
   const intellijPaths = [
     path.join(homeDir, '.IntelliJIdea'),
     path.join(homeDir, 'Library/Application Support/JetBrains'),
   ];
-  
+
   for (const p of intellijPaths) {
     if (await exists(p)) {
       return { name: 'IntelliJ IDEA', type: 'intellij' };
     }
   }
-  
+
   return { name: 'Unknown', type: 'unknown' };
 }
 
