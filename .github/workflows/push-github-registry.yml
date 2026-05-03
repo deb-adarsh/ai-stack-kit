@@ -1,5 +1,6 @@
 # Pushes the root CLI package to GitHub Packages (npm-compatible registry at npm.pkg.github.com).
 # Package scope (@OWNER) must match github.repository_owner. Consumers authenticate once via PAT — see README.
+# Runs only on the canonical upstream repo (aligned with npm Trusted Publisher gate).
 name: Push CLI to GitHub registry
 
 on:
@@ -20,6 +21,7 @@ permissions:
 jobs:
   push:
     runs-on: ubuntu-latest
+    if: github.repository == 'deb-adarsh/ai-stack-kit'
 
     steps:
       - name: Checkout

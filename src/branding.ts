@@ -7,7 +7,7 @@ export const CLI_COMMAND = 'aistack';
 /** Canonical scoped id on npm.pkg.github.com (must match GitHub repo owner). */
 export const NPM_PACKAGE_NAME = '@deb-adarsh/ai-stack-kit';
 
-/** Unscoped package id on https://registry.npmjs.org/ (same repo tarball as GitHub Packages). */
+/** Unscoped id on https://registry.npmjs.org/ (`npm pkg set name` in CI/local before npm publish). */
 export const NPMJS_PACKAGE_NAME = 'ai-stack-kit';
 
 /** Default GitHub `owner` in scaffolded skill rows (`owner/repo/path`). Matches repo owner for GH Packages scope. */

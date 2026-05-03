@@ -81,7 +81,7 @@ Install with **`npm install -g ai-stack-kit`** (**npm registry**) or **`npm inst
 
 ```bash
 # Install (examples — pick one)
-# npm install -g ai-stack-kit                   # NPM registry
+# npm install -g ai-stack-kit                   # npm registry (public)
 # npm install -g @deb-adarsh/ai-stack-kit       # GitHub registry (+ ~/.npmrc)
 
 # Initialize a new project (creates spec.yaml + default sources.config.yaml when missing)

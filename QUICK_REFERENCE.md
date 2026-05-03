@@ -36,66 +36,6 @@ aistack sync
 
 ---
 
-## Interface Summary
-
-### SkillSource Interface
-**Purpose**: Fetch skills from various sources
-
-**Key Methods**:
-- `canHandle(reference)` - Check if source handles this skill
-- `resolve(reference)` - Get metadata (version, checksum, URL)
-- `fetch(metadata)` - Download skill content
-- `listVersions(reference)` - Get available versions
-
-**Implementations**: GitHub, npm, Registry, Local
-
----
-
-### RegistryProvider Interface
-**Purpose**: Query and publish to skill registries
-
-**Key Methods**:
-- `search(query)` - Search for skills
-- `getPackageInfo(name)` - Get all versions
-- `getVersionInfo(name, version)` - Get specific version
-- `resolveVersion(name, range)` - Resolve semver range
-- `publish(skill)` - Publish new skill
-
-**Implementations**: Default registry, custom registries
-
----
-
-### IDEAdapter Interface
-**Purpose**: Apply skills to specific IDEs
-
-**Key Methods**:
-- `detect()` - Find IDE installation
-- `validate()` - Check IDE environment
-- `applySkill(skill)` - Install skill to IDE
-- `removeSkill(skillId)` - Uninstall skill
-- `sync(skills)` - Sync IDE with spec
-
-**Implementations**: Cursor, VSCode, (future: IntelliJ, etc.)
-
----
-
-## Module Quick Reference
-
-| Module | Location | Purpose | Key Exports |
-|--------|----------|---------|-------------|
-| **CLI Commands** | `src/cli/commands/` | User-facing commands | `init`, `install`, `apply`, `sync` |
-| **Core Engine** | `src/core/engine/` | Orchestration | `Engine` class |
-| **Spec Parser** | `src/core/spec/` | Parse spec.yaml | `parseSpec`, `validateSpec` |
-| **Resolver** | `src/core/resolver/` | Dependency resolution | `resolveSkills` |
-| **GitHub Source** | `src/sources/github/` | Fetch from GitHub | `GitHubSource` class |
-| **npm Source** | `src/sources/npm/` | Fetch from npm | `NpmSource` class |
-| **Registry Manager** | `src/registry/` | Registry operations | `RegistryManager` |
-| **Cursor Adapter** | `src/adapters/cursor/` | Apply to Cursor | `CursorAdapter` |
-| **Cache Manager** | `src/storage/cache-manager.ts` | Local caching | `CacheManager` |
-| **State Manager** | `src/storage/state-manager.ts` | State persistence | `StateManager` |
-
----
-
 ## Command Cheat Sheet
 
 ```bash
@@ -220,8 +160,7 @@ hooks:
 | `AISTACK_TOKEN` | Default registry token | `export AISTACK_TOKEN=abc123` |
 | `AISTACK_CACHE_DIR` | Override cache dir | `~/.cache/aistack` |
 | `AISTACK_LOG_LEVEL` | Log verbosity | `debug`, `info`, `warn`, `error` |
-| `GITHUB_TOKEN` | GitHub authentication | For private repos |
-| `NPM_TOKEN` | npm authentication | For private packages |
+| `GITHUB_TOKEN` | GitHub PAT when pulling skills from **private** repos (optional) | `export GITHUB_TOKEN=ghp_...` |
 
 ---
 
@@ -321,87 +260,6 @@ aistack sync
 
 ---
 
-## Testing Your Implementation
-
-### Unit Test Structure
-```typescript
-// Test a skill source
-describe('GitHubSource', () => {
-  it('should resolve skill version', async () => {
-    const source = new GitHubSource('test', {});
-    const metadata = await source.resolve({
-      source: 'github:test',
-      name: 'skill',
-      version: '^1.0.0'
-    });
-    expect(metadata.version).toMatch(/^1\.\d+\.\d+$/);
-  });
-});
-```
-
-### Integration Test Structure
-```typescript
-// Test engine orchestration
-describe('Engine', () => {
-  it('should install and apply skills', async () => {
-    const engine = new Engine(config);
-    await engine.install();
-    await engine.apply();
-    
-    const skills = await adapter.listInstalledSkills();
-    expect(skills).toHaveLength(2);
-  });
-});
-```
-
----
-
-## Extension Examples
-
-### Custom Source Implementation
-```typescript
-import { BaseSkillSource } from './base/skill-source';
-
-export class GitLabSource extends BaseSkillSource {
-  constructor(name: string) {
-    super(name, 'gitlab');
-  }
-  
-  canHandle(reference: SkillReference): boolean {
-    return reference.source.startsWith('gitlab:');
-  }
-  
-  async resolve(reference: SkillReference): Promise<SkillMetadata> {
-    // Fetch from GitLab API
-  }
-  
-  // ... implement other methods
-}
-```
-
-### Custom IDE Adapter
-```typescript
-import { BaseIDEAdapter } from './base/ide-adapter';
-
-export class IntelliJAdapter extends BaseIDEAdapter {
-  constructor() {
-    super('intellij', ['skills', 'settings']);
-  }
-  
-  async detect(): Promise<IDEDetectionResult> {
-    // Detect IntelliJ installation
-  }
-  
-  async applySkill(skill: SkillContent): Promise<ApplyResult> {
-    // Transform and write to IntelliJ format
-  }
-  
-  // ... implement other methods
-}
-```
-
----
-
 ## Best Practices
 
 ### 1. Use Lock Files
@@ -466,4 +324,4 @@ aistack list --tree
 
 ---
 
-This reference should help you navigate the architecture and implement the system effectively!
+This guide covers common CLI usage and configuration. For repo layout and extending the toolkit, see **[ARCHITECTURE.md](./ARCHITECTURE.md)** and **[EXTENSIONS.md](./EXTENSIONS.md)**.
