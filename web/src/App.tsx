@@ -151,11 +151,21 @@ export default function App() {
   return (
     <div className="shell">
       <header className="hero">
-        <h1>
-          AI Stack Kit
-          <br />
-          <span className="hero-sub">Skill browser</span>
-        </h1>
+        <div className="hero-brand">
+          <img
+            className="hero-logo"
+            src={`${import.meta.env.BASE_URL}favicon.svg`}
+            alt=""
+            width={52}
+            height={52}
+            decoding="async"
+          />
+          <h1>
+            AI Stack Kit
+            <br />
+            <span className="hero-sub">Skill browser</span>
+          </h1>
+        </div>
         <p className="hero-lead">
           Curated GitHub skill trees: Copilot community, Anthropic, Azure, Google Cloud, Composio, Antigravity, and more.
           Filter by <strong>ecosystem</strong> (Microsoft includes GitHub-hosted Copilot catalogs; Google includes Cloud
