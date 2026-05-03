@@ -1,6 +1,6 @@
-# Publishes the root CLI package to GitHub Packages (npm registry).
+# Pushes the root CLI package to GitHub Packages (npm-compatible registry at npm.pkg.github.com).
 # Package scope (@OWNER) must match github.repository_owner. Consumers authenticate once via PAT — see README.
-name: Publish CLI to GitHub Packages
+name: Push CLI to GitHub registry
 
 on:
   push:
@@ -18,14 +18,14 @@ permissions:
   packages: write
 
 jobs:
-  publish:
+  push:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js for npm.pkg.github.com
+      - name: Setup Node.js for GitHub npm registry
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Publish if version not already on registry
+      - name: Push to GitHub registry if version is new
         run: |
           PKG="$(node -p "require('./package.json').name")"
           VER="$(node -p "require('./package.json').version")"
@@ -47,7 +47,7 @@ jobs:
           HAS_RC=$?
           set -e
           if [ "$HAS_RC" -eq 0 ]; then
-            echo "Skip publish — ${PKG}@${VER} already exists on GitHub Packages."
+            echo "Skip push — ${PKG}@${VER} already exists on GitHub registry."
             exit 0
           fi
           npm publish --registry="${REG}"

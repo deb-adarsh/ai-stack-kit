@@ -1,8 +1,8 @@
-# Publishes the CLI to npmjs.com as the unscoped package `ai-stack-kit`.
-# Repo package.json stays `@deb-adarsh/ai-stack-kit` for GitHub Packages — name is rewritten only in CI for this publish.
+# Pushes the CLI to registry.npmjs.org as the unscoped package `ai-stack-kit`.
+# Repo package.json stays `@deb-adarsh/ai-stack-kit` for GitHub Packages — name is rewritten only in CI for this job.
 #
 # Add repo secret: NPM_TOKEN — npm profile → Access Tokens → Granular ("Automation") or Classic ("Automation") with publish rights for your account (unscoped publishes use the linked user).
-name: Publish CLI to npmjs.com
+name: Push CLI to npm registry
 
 on:
   push:
@@ -19,14 +19,14 @@ permissions:
   contents: read
 
 jobs:
-  publish:
+  push:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js for npmjs
+      - name: Setup Node.js for npm registry
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -37,12 +37,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Publish to npmjs (unscoped ai-stack-kit)
+      - name: Push to npm registry (ai-stack-kit)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if [ -z "${NODE_AUTH_TOKEN}" ]; then
-            echo "Skipping npmjs publish — add repo secret NPM_TOKEN (npm Automation token with publish permission)."
+            echo "Skipping npm registry push — add repo secret NPM_TOKEN (npm Automation token with publish permission)."
             exit 0
           fi
 
@@ -55,7 +55,7 @@ jobs:
           HAS_RC=$?
           set -e
           if [ "$HAS_RC" -eq 0 ]; then
-            echo "Skip publish — ${NPMJS_PKG}@${VER} already exists on npmjs."
+            echo "Skip push — ${NPMJS_PKG}@${VER} already exists on npm registry."
             exit 0
           fi
 
