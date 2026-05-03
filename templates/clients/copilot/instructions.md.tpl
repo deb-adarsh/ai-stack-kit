@@ -1,7 +1,8 @@
 # GitHub Copilot + AI Stack Kit
 
-This project registers **{{skillCount}}** normalized skills and **{{agentCount}}** agent summaries under VS Code settings key `aistack.copilot`.
+This workspace syncs **{{skillCount}}** skills and **{{agentCount}}** Copilot agents.
 
-- Snippets live at `aistack.copilot.promptSnippets` (id → body).
-- Prefer referencing snippet ids from your **GitHub Copilot Instructions** or workspace prompts.
-- Re-run AI Stack Kit to refresh; merges deep into existing `.vscode/settings.json` under the `aistack` root only.
+- **Skills**: folders under **`{{skillsDir}}/`** (each folder keeps `SKILL.md` and bundled files — no special rename beyond that).
+- **Agents**: **`{{agentsDir}}/*.agent.md`** only — GitHub Copilot requires this `*.agent.md` naming; Cursor and Claude adapters use plain `*.md` instead.
+- **Snippets**: mirrored at `aistack.copilot.promptSnippets` in `.vscode/settings.json` for quick chat use.
+- Re-run AI Stack Kit to refresh; settings merge deep under the `aistack` root without clobbering unrelated VS Code keys.

@@ -5,8 +5,16 @@
 export type MergeStrategy = 'overwrite' | 'merge' | 'append';
 
 export interface AdapterOutputFile {
-  /** Path relative to `projectPath` (POSIX-style segments). */
+  /**
+   * Path relative to the anchor root (POSIX-style segments).
+   * @see {@link AdapterApplyOptions.adapterFilesystemRoot} and {@link AdapterOutputFile.pathAnchor}.
+   */
   path: string;
+  /**
+   * `adapter`: join with `adapterFilesystemRoot` (default).
+   * `project`: join with the workspace/project root (e.g. `.vscode/settings.json` while skills live under `~`).
+   */
+  pathAnchor?: 'adapter' | 'project';
   content: string;
   mergeStrategy: MergeStrategy;
   /**
@@ -28,6 +36,11 @@ export interface AdapterApplyOptions {
   dryRun?: boolean;
   /** If true, fail when merge conflicts are detected instead of writing markers. */
   strictConflicts?: boolean;
+  /**
+   * Root for client-native paths (`.cursor`, `.claude`, `.github/skills`, `~/.copilot`, …).
+   * Defaults to `projectPath` when omitted.
+   */
+  adapterFilesystemRoot?: string;
 }
 
 export interface AdapterApplyReport {

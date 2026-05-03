@@ -87,9 +87,10 @@ project:
 # Pick the client that receives generated files (examples below — keep one active block).
 client:
   type: cursor                    # also: copilot | claude | vscode | ...
+  # installScope: project        # default — repo paths (.cursor/…, .github/…, .claude/…)
+  # installScope: user          # global paths (~/.cursor/…, ~/.copilot/…, ~/.claude/…)
   features:
     - skills
-    - rules
     - hooks
   # adapter:
   #   mergeStrategy: merge
@@ -218,10 +219,26 @@ Fetch skills from multiple sources:
 - Conflict detection
 
 ### 3. IDE Adapters
-Apply skills to different IDEs:
-- **Cursor**: Skills, rules, hooks
-- **VSCode**: Extensions, settings, snippets
-- **Future**: IntelliJ, Sublime, etc.
+
+`spec.yaml` → **`client.type`** (**cursor**, **copilot**, **claude**) plus optional **`client.installScope`**: **`project`** (default) writes under the repo; **`user`** writes under your home directory for global tooling.
+
+**Skills** — each resolved skill becomes a folder with **`SKILL.md`** (and any bundled paths preserved). There is no separate filename convention beyond normal skill packaging.
+
+| Scope | Cursor | Copilot | Claude |
+|--------|--------|---------|--------|
+| Personal / global (`installScope: user`) | `~/.cursor/skills/` | `~/.copilot/skills/` | `~/.claude/skills/` |
+| Repo / project (default) | `.cursor/skills/` | `.github/skills/` | `.claude/skills/` |
+
+**Subagents** — generated agent files:
+
+| Scope | Cursor | Copilot | Claude |
+|--------|--------|---------|--------|
+| Personal / global | `~/.cursor/agents/*.md` | `~/.copilot/agents/*.agent.md` | `~/.claude/agents/*.md` |
+| Repo / project | `.cursor/agents/*.md` | `.github/agents/*.agent.md` | `.claude/agents/*.md` |
+
+The **`*.agent.md`** pattern (**basename**: `.`, `-`, `_`, `a-z`, `A-Z`, `0-9` only before the suffix) is **GitHub Copilot only**. Cursor and Claude emit ordinary **`*.md`** agents.
+
+**Copilot + VS Code**: `.vscode/settings.json` is still merged under the **`aistack`** key at the **project** root (e.g. **`promptSnippets`**), even when skill/agent trees target **`~/.copilot/`** via **`installScope: user`**.
 
 ### 4. Lifecycle Hooks
 Run commands at different stages:

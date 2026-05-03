@@ -239,7 +239,7 @@ export async function promptSelectFeatures(): Promise<string[]> {
       message: 'Select features to enable:',
       choices: [
         { name: 'Skills', value: 'skills', checked: true },
-        { name: 'Rules', value: 'rules', checked: true },
+        { name: 'Rules', value: 'rules', checked: false },
         { name: 'Hooks', value: 'hooks', checked: true },
         { name: 'Settings', value: 'settings', checked: false },
         { name: 'Extensions', value: 'extensions', checked: false },

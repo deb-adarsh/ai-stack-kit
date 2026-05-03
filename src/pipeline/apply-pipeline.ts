@@ -15,6 +15,7 @@ import type { SkillManifest, SkillMetadata, SkillReference } from '../types/skil
 import { AdapterFactory } from '../client-adapters/adapter-factory.js';
 import { normalizeWorkspaceInput } from '../client-adapters/normalize.js';
 import type { AdapterApplyReport } from '../client-adapters/adapter-output.js';
+import { adapterFilesystemRoot, resolveInstallScope } from '../client-adapters/client-paths.js';
 import { SkillSourceFactory } from '../sources/skill-source-factory.js';
 import { loadSpec } from './spec-loader.js';
 import type { Logger } from './logger.js';
@@ -225,9 +226,11 @@ export async function apply(options: ApplyPipelineOptions): Promise<ApplyPipelin
     const adapter = AdapterFactory.getAdapter(spec.client.type);
     logger.info('Running client adapter', { adapter: adapter.name, client: spec.client.type });
     const output = adapter.generateConfig(normalized);
+    const adapterRoot = adapterFilesystemRoot(resolveInstallScope(spec.client), projectRoot);
     adapterReport = await adapter.apply(output, projectRoot, {
       dryRun: options.dryRun,
       strictConflicts: false,
+      adapterFilesystemRoot: adapterRoot,
     });
     phases.push({
       name: 'adapter',

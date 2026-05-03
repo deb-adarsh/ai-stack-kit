@@ -35,3 +35,17 @@ export {
 export { CursorClientAdapter } from './cursor/cursor-adapter.js';
 export { ClaudeClientAdapter } from './claude/claude-adapter.js';
 export { CopilotClientAdapter } from './copilot/copilot-adapter.js';
+export {
+  adapterFilesystemRoot,
+  agentsDirRelative,
+  resolveInstallScope,
+  skillsDirRelative,
+} from './client-paths.js';
+export type { ClientInstallScope } from '../types/spec.js';
+export {
+  copilotAgentBasename,
+  cursorStyleAgentBasename,
+  emitSkillTreeFiles,
+  sanitizePathSegment,
+  skillInstallFolderName,
+} from './emit-skill-agent-files.js';

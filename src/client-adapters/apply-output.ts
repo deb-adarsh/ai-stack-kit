@@ -20,9 +20,11 @@ export async function applyAdapterOutput(
   const skipped: string[] = [];
   const merged: string[] = [];
   const conflicts: { path: string; message: string }[] = [];
+  const adapterRoot = options.adapterFilesystemRoot ?? projectPath;
 
   for (const file of output.files) {
-    const abs = path.join(projectPath, ...file.path.split('/').filter(Boolean));
+    const root = file.pathAnchor === 'project' ? projectPath : adapterRoot;
+    const abs = path.join(root, ...file.path.split('/').filter(Boolean));
     await mkdir(path.dirname(abs), { recursive: true });
 
     if (options.dryRun) {

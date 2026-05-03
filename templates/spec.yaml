@@ -20,6 +20,9 @@ client:
   # Client type: cursor, vscode, intellij, etc.
   type: cursor
   
+  # Where adapters write skills/agents: project (default) vs user home directory.
+  # installScope: project
+
   # Client version constraint (optional)
   # version: ">=0.40.0"
   
@@ -29,7 +32,6 @@ client:
   # Features to enable
   features:
     - skills
-    - rules
     - hooks
   
   # Client-specific settings (optional)

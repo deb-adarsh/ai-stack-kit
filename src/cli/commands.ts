@@ -432,7 +432,7 @@ export async function createSpecFile(data: {
     },
     client: {
       type: data.client as any,
-      features: ['skills', 'rules', 'hooks'],
+      features: ['skills', 'hooks'],
     },
     skills: data.skills.map(name => ({
       name,

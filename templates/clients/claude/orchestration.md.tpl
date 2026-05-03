@@ -7,6 +7,7 @@ Project: **{{project}}**
 
 ## Session flow
 
-1. Read `.aistack/claude/system-bundle.md` once (full system context).
-2. Open individual files under `.aistack/claude/prompts/` as sub-tasks require.
-3. Do not edit generated files by hand — change `spec.yaml` / skills and re-run AI Stack Kit.
+1. Read `.claude/system-bundle.aistack.md` once (aggregated system context).
+2. Use individual agents under `.claude/agents/` and prompts under `.claude/prompts/` as needed.
+3. Skills ship as folders under `.claude/skills/` (each with `SKILL.md` plus assets).
+4. Prefer changing `spec.yaml` / skills and re-running AI Stack Kit rather than hand-editing generated files.

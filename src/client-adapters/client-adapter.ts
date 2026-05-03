@@ -20,7 +20,9 @@ export interface ClientAdapter {
   generateConfig(input: NormalizedWorkspaceInput): AdapterOutput;
 
   /**
-   * Materialize {@link AdapterOutput} under `projectPath` using merge rules.
+   * Materialize {@link AdapterOutput} using merge rules.
+   * Paths default to {@link AdapterApplyOptions.adapterFilesystemRoot} (falls back to `projectPath`);
+   * use {@link AdapterOutputFile.pathAnchor} `"project"` for workspace-only files (e.g. `.vscode/settings.json`).
    */
   apply(
     output: AdapterOutput,

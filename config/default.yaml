@@ -23,7 +23,6 @@ ide:
   type: cursor
   features:
     - skills
-    - rules
     - hooks
 
 skills: []

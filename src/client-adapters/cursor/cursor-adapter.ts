@@ -1,17 +1,19 @@
 /**
- * Cursor: file-based agents + prompt files under `.cursor/`.
- * Mapping: normalized {@link AgentDefinition} + {@link NormalizedPrompt} → `.cursor/agents/*.md` + `.cursor/prompts/*.md`.
+ * Cursor: skills under `.cursor/skills/{skill}/` (with `SKILL.md`), subagents under `.cursor/agents/*.md`,
+ * prompts under `.cursor/prompts/*.md`. Same layout under `~/.cursor/` when `client.installScope: user`.
  */
 
 import type { AdapterOutput, AdapterOutputFile } from '../adapter-output.js';
 import { BaseClientAdapter } from '../base-client-adapter.js';
+import { agentsDirRelative, resolveInstallScope, skillsDirRelative } from '../client-paths.js';
+import {
+  cursorStyleAgentBasename,
+  emitSkillTreeFiles,
+  sanitizePathSegment,
+} from '../emit-skill-agent-files.js';
 import type { NormalizedWorkspaceInput } from '../normalized.js';
 import { loadBundledTemplate, renderTemplate } from '../template-loader.js';
 import { CLI_COMMAND, GENERATED_FILE_MARKER_KEY, WORKSPACE_DOTDIR } from '../../branding.js';
-
-function slug(id: string): string {
-  return id.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'agent';
-}
 
 function defaultAgentMarkdown(input: {
   name: string;
@@ -47,7 +49,11 @@ export class CursorClientAdapter extends BaseClientAdapter {
   }
 
   generateConfig(input: NormalizedWorkspaceInput): AdapterOutput {
-    const files: AdapterOutputFile[] = [];
+    const scope = resolveInstallScope(input.client);
+    const skillsRel = skillsDirRelative(input.client.type, scope);
+    const agentsRel = agentsDirRelative(input.client.type, scope);
+
+    const files: AdapterOutputFile[] = [...emitSkillTreeFiles(input.skills, skillsRel)];
     const tpl = loadBundledTemplate('cursor', 'agent.md.tpl');
 
     for (const agent of input.agents) {
@@ -71,7 +77,7 @@ export class CursorClientAdapter extends BaseClientAdapter {
       ].join('\n');
 
       files.push({
-        path: `.cursor/agents/${slug(agent.id)}.md`,
+        path: `${agentsRel}/${cursorStyleAgentBasename(agent.id)}.md`,
         content: header + body,
         mergeStrategy: 'overwrite',
         managed: true,
@@ -81,7 +87,7 @@ export class CursorClientAdapter extends BaseClientAdapter {
 
     for (const prompt of input.prompts) {
       files.push({
-        path: `.cursor/prompts/${slug(prompt.id)}.md`,
+        path: `.cursor/prompts/${sanitizePathSegment(prompt.id)}.md`,
         content: [
           '---',
           `${GENERATED_FILE_MARKER_KEY}: "1"`,
@@ -102,11 +108,13 @@ export class CursorClientAdapter extends BaseClientAdapter {
 
     files.push({
       path: `${WORKSPACE_DOTDIR}/manifest.cursor.json`,
+      pathAnchor: 'project',
       content:
         JSON.stringify(
           {
             version: 1,
             generatedAt: input.metadata.generatedAt,
+            installScope: scope,
             skills: input.skills.map((s) => ({ id: s.id, name: s.name, version: s.version })),
             agents: input.agents.map((a) => a.id),
             prompts: input.prompts.map((p) => p.id),

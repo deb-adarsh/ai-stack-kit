@@ -63,6 +63,13 @@ export interface ProjectMetadata {
 export interface ClientConfig {
   /** Client type (cursor, vscode, etc.) */
   type: ClientType;
+  /**
+   * Where adapter output for skills/agents is rooted.
+   * - `project` (default): `.cursor/`, `.claude/`, `.github/` under the repo.
+   * - `user`: `~/.cursor/`, `~/.claude/`, `~/.copilot/` for global installs.
+   * VS Code workspace merges (e.g. Copilot `settings.json`) always use the project root.
+   */
+  installScope?: ClientInstallScope;
   /** Client version constraint */
   version?: string;
   /** Configuration directory path (override) */
@@ -88,6 +95,9 @@ export type ClientType =
   | 'neovim'
   | 'emacs'
   | string; // Allow custom clients
+
+/** Where skills/agent trees are written on disk (see {@link ClientConfig.installScope}). */
+export type ClientInstallScope = 'project' | 'user';
 
 /**
  * Client features

@@ -119,11 +119,14 @@ export const AdapterOptionsSchema = z.object({
   dryRun: z.boolean().optional(),
 }).catchall(z.unknown()); // Extensible
 
+export const ClientInstallScopeSchema = z.enum(['project', 'user']);
+
 /**
  * Client configuration schema
  */
 export const ClientConfigSchema = z.object({
   type: ClientTypeSchema,
+  installScope: ClientInstallScopeSchema.optional(),
   version: z.string().optional(),
   configDir: z.string().optional(),
   features: z.array(ClientFeatureSchema).optional(),
