@@ -1,0 +1,163 @@
+# Spec Engine Configuration
+# Schema version 1.0
+
+version: "1.0"
+
+# Project metadata (optional)
+project:
+  name: my-cursor-setup
+  description: My Cursor IDE configuration with custom skills
+  version: 1.0.0
+  author: Your Name
+  repository: https://github.com/yourusername/cursor-setup
+  tags:
+    - cursor
+    - development
+    - ai-assisted
+
+# Client/IDE configuration (required)
+client:
+  # Client type: cursor, vscode, intellij, etc.
+  type: cursor
+  
+  # Client version constraint (optional)
+  # version: ">=0.40.0"
+  
+  # Override config directory (optional)
+  # configDir: ~/.cursor
+  
+  # Features to enable
+  features:
+    - skills
+    - rules
+    - hooks
+  
+  # Client-specific settings (optional)
+  settings:
+    # Example Cursor-specific settings
+    aiModel: claude-sonnet-3.5
+    theme: dark
+  
+  # Adapter options (optional)
+  adapter:
+    backup: true
+    mergeStrategy: merge
+
+# Skills to install (required)
+skills:
+  # Example 1: GitHub skill
+  - name: canvas
+    version: ^2.0.0
+    source: github
+    sourceConfig:
+      owner: cursor-skills
+      repo: skills
+      path: canvas
+      branch: main
+    config:
+      enabled: true
+      autoOpen: false
+  
+  # Example 2: npm package skill
+  - name: figma-agent
+    version: latest
+    source: npm
+    sourceConfig:
+      scope: "@spec-engine"
+      registry: https://registry.npmjs.org
+  
+  # Example 3: Registry skill
+  # - name: ai-code-review
+  #   version: ~3.1.0
+  #   source: registry
+  #   sourceConfig:
+  #     registryUrl: https://registry.spec-engine.dev
+  #   config:
+  #     reviewLevel: strict
+  
+  # Example 4: Local skill (development)
+  # - name: my-custom-skill
+  #   source: local
+  #   sourceConfig:
+  #     localPath: ./skills/my-custom-skill
+  #   enabled: true
+  
+  # Example 5: Git repository skill
+  # - name: advanced-linter
+  #   version: v1.2.3
+  #   source: git
+  #   sourceConfig:
+  #     gitUrl: https://gitlab.com/team/advanced-linter.git
+  #     ref: v1.2.3
+  
+  # Example 6: HTTP skill
+  # - name: remote-skill
+  #   source: http
+  #   sourceConfig:
+  #     url: https://example.com/skills/remote-skill.tar.gz
+  #     headers:
+  #       Authorization: Bearer ${API_TOKEN}
+
+# Global settings (optional)
+settings:
+  # Cache directory
+  cacheDir: ~/.spec-engine/cache
+  
+  # Lock file path
+  lockFile: .spec-engine/lock.yaml
+  
+  # State directory
+  stateDir: ~/.spec-engine/state
+  
+  # Auto-sync on spec.yaml changes
+  autoSync: false
+  
+  # Parallel operations limit
+  concurrency: 5
+  
+  # Network timeout (milliseconds)
+  timeout: 30000
+  
+  # Retry attempts
+  retries: 3
+  
+  # Verify checksums
+  verifyChecksums: true
+  
+  # Offline mode
+  offline: false
+  
+  # Log level: debug, info, warn, error
+  logLevel: info
+
+# Lifecycle hooks (optional)
+hooks:
+  # Before installing skills
+  preInstall:
+    - echo "Starting skill installation..."
+  
+  # After installing skills
+  postInstall:
+    - echo "Skills installed successfully"
+  
+  # Before applying to client
+  preApply:
+    - echo "Applying skills to Cursor..."
+  
+  # After applying to client
+  postApply:
+    - echo "Skills applied! Restart Cursor to see changes."
+  
+  # Before uninstalling
+  # preUninstall:
+  #   - echo "Backing up configuration..."
+  
+  # After uninstalling
+  # postUninstall:
+  #   - echo "Skills removed"
+
+# Custom metadata (optional, extensible)
+metadata:
+  team: engineering
+  environment: development
+  lastUpdated: 2026-05-01

@@ -1,0 +1,46 @@
+{
+  "manifestVersion": "1.0",
+  "name": "canvas",
+  "version": "2.1.0",
+  "description": "Create interactive canvas visualizations in Cursor",
+  "author": "Cursor Team",
+  "license": "MIT",
+  "homepage": "https://cursor.com/skills/canvas",
+  "repository": "https://github.com/cursor-skills/canvas",
+  "tags": ["canvas", "visualization", "react", "ui"],
+  "supportedClients": ["cursor", "vscode"],
+  
+  "clientConfig": {
+    "cursor": {
+      "skillsDir": "~/.cursor/skills",
+      "files": {
+        "SKILL.md": "skills/canvas/SKILL.md",
+        "examples/": "skills/canvas/examples/"
+      }
+    },
+    "vscode": {
+      "extensionId": "cursor.canvas-skill",
+      "settings": {
+        "canvas.autoPreview": true
+      }
+    }
+  },
+  
+  "dependencies": {
+    "react-skill": "^1.0.0"
+  },
+  
+  "main": "SKILL.md",
+  
+  "files": [
+    "SKILL.md",
+    "examples/**/*",
+    "assets/**/*"
+  ],
+  
+  "hooks": {
+    "postInstall": [
+      "echo 'Canvas skill installed!'"
+    ]
+  }
+}

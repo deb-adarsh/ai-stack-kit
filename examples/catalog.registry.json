@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0",
+  "registry": {
+    "name": "example-public-catalog",
+    "description": "Sample local skill catalog for Spec Engine"
+  },
+  "entries": [
+    {
+      "name": "canvas",
+      "description": "Interactive analytical canvases beside the chat",
+      "tags": ["ui", "visualization", "react", "cursor"],
+      "supportedClients": ["cursor", "vscode"],
+      "source": {
+        "type": "github",
+        "url": "https://github.com/example/skills/tree/main/canvas",
+        "config": {
+          "owner": "example",
+          "repo": "skills",
+          "path": "canvas"
+        }
+      },
+      "versions": ["2.1.0", "2.0.5", "1.9.0"],
+      "latest": "2.1.0",
+      "author": "Example Org",
+      "license": "MIT",
+      "homepage": "https://example.dev/skills/canvas",
+      "repository": "https://github.com/example/skills",
+      "stats": {
+        "downloads": 1250000,
+        "weeklyDownloads": 42000,
+        "monthlyDownloads": 180000,
+        "stars": 890
+      },
+      "createdAt": "2025-01-10T00:00:00.000Z",
+      "updatedAt": "2026-04-28T12:00:00.000Z",
+      "metadata": {
+        "riskTier": "low"
+      }
+    },
+    {
+      "name": "auth-agent",
+      "description": "Patterns and checks for authentication and session flows",
+      "tags": ["security", "auth", "backend"],
+      "supportedClients": ["cursor", "vscode", "intellij"],
+      "source": {
+        "type": "registry",
+        "url": "https://registry.internal.example.com/skills/auth-agent",
+        "config": {
+          "registryName": "internal"
+        }
+      },
+      "versions": ["1.4.2", "1.4.1", "1.4.0"],
+      "latest": "1.4.2",
+      "author": "Platform Security",
+      "license": "Apache-2.0",
+      "createdAt": "2025-06-01T00:00:00.000Z",
+      "updatedAt": "2026-03-15T09:30:00.000Z",
+      "stats": {
+        "downloads": 54000,
+        "weeklyDownloads": 2100,
+        "monthlyDownloads": 9200
+      }
+    },
+    {
+      "name": "react-ui-expert",
+      "description": "Component architecture, accessibility, and Maersk-style UI guardrails",
+      "tags": ["react", "frontend", "ui", "accessibility"],
+      "supportedClients": ["cursor", "vscode"],
+      "source": {
+        "type": "git",
+        "url": "https://git.example.org/design/react-ui-expert.git",
+        "config": {
+          "ref": "v3.2.0"
+        }
+      },
+      "versions": ["3.2.0", "3.1.0", "3.0.0"],
+      "latest": "3.2.0",
+      "author": "Design Systems",
+      "license": "MIT",
+      "createdAt": "2025-11-20T00:00:00.000Z",
+      "updatedAt": "2026-05-01T08:00:00.000Z",
+      "stats": {
+        "downloads": 502000,
+        "weeklyDownloads": 15000,
+        "monthlyDownloads": 62000
+      }
+    }
+  ]
+}

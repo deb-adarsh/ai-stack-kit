@@ -1,0 +1,14 @@
+# Minimal spec.yaml example
+version: "1.0"
+
+client:
+  type: cursor
+
+skills:
+  - name: canvas
+    version: latest
+    source: github
+    sourceConfig:
+      owner: cursor-skills
+      repo: skills
+      path: canvas

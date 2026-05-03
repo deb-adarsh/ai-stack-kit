@@ -1,0 +1,235 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Spec Engine Configuration",
+  "description": "Configuration schema for spec-engine spec.yaml",
+  "type": "object",
+  "required": ["version", "skills"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "Spec file version"
+    },
+    "settings": {
+      "type": "object",
+      "description": "Global settings",
+      "properties": {
+        "cacheDir": {
+          "type": "string",
+          "description": "Cache directory path"
+        },
+        "lockFile": {
+          "type": "string",
+          "description": "Lock file path"
+        },
+        "autoSync": {
+          "type": "boolean",
+          "description": "Auto-sync on spec.yaml changes",
+          "default": false
+        },
+        "parallelDownloads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Maximum parallel downloads",
+          "default": 5
+        },
+        "retryAttempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Network retry attempts",
+          "default": 3
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1000,
+          "description": "Request timeout in milliseconds",
+          "default": 30000
+        }
+      },
+      "additionalProperties": false
+    },
+    "registries": {
+      "type": "array",
+      "description": "Registry configurations",
+      "items": {
+        "type": "object",
+        "required": ["name", "url"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Registry name (alphanumeric and dashes only)"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Registry URL"
+          },
+          "auth": {
+            "type": "string",
+            "description": "Authentication token or ${ENV_VAR} reference"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Registry priority (higher = preferred)",
+            "default": 0
+          },
+          "verifySsl": {
+            "type": "boolean",
+            "description": "Verify SSL certificates",
+            "default": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sources": {
+      "type": "array",
+      "description": "Skill source configurations",
+      "items": {
+        "type": "object",
+        "required": ["type", "name"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["github", "npm", "registry", "local"],
+            "description": "Source type"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Source name"
+          },
+          "repository": {
+            "type": "string",
+            "description": "GitHub repository (for github type)"
+          },
+          "branch": {
+            "type": "string",
+            "description": "Git branch (for github type)",
+            "default": "main"
+          },
+          "scope": {
+            "type": "string",
+            "description": "npm scope (for npm type)"
+          },
+          "registry": {
+            "type": "string",
+            "description": "Registry name (for registry type)"
+          },
+          "path": {
+            "type": "string",
+            "description": "File system path (for local type)"
+          },
+          "auth": {
+            "type": "string",
+            "description": "Authentication token or ${ENV_VAR} reference"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "ide": {
+      "type": "object",
+      "description": "Target IDE configuration",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["cursor", "vscode"],
+          "description": "IDE type"
+        },
+        "configPath": {
+          "type": "string",
+          "description": "IDE configuration path (optional override)"
+        },
+        "features": {
+          "type": "array",
+          "description": "Features to enable",
+          "items": {
+            "type": "string",
+            "enum": ["skills", "rules", "hooks", "settings", "extensions", "snippets", "themes"]
+          },
+          "default": ["skills", "rules", "hooks"]
+        },
+        "settings": {
+          "type": "object",
+          "description": "IDE-specific settings",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "skills": {
+      "type": "array",
+      "description": "Skills to install",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source", "name"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "pattern": "^(github|npm|registry|local):.+$",
+            "description": "Source reference (e.g., 'github:official', 'npm:npm-skills')"
+          },
+          "name": {
+            "type": "string",
+            "description": "Skill name or package name"
+          },
+          "version": {
+            "type": "string",
+            "description": "Version or version range (semver)",
+            "default": "latest"
+          },
+          "path": {
+            "type": "string",
+            "description": "Subpath within source (optional)"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "hooks": {
+      "type": "object",
+      "description": "Lifecycle hooks",
+      "properties": {
+        "preInstall": {
+          "type": "array",
+          "description": "Commands to run before install",
+          "items": { "type": "string" }
+        },
+        "postInstall": {
+          "type": "array",
+          "description": "Commands to run after install",
+          "items": { "type": "string" }
+        },
+        "preApply": {
+          "type": "array",
+          "description": "Commands to run before apply",
+          "items": { "type": "string" }
+        },
+        "postApply": {
+          "type": "array",
+          "description": "Commands to run after apply",
+          "items": { "type": "string" }
+        },
+        "preSync": {
+          "type": "array",
+          "description": "Commands to run before sync",
+          "items": { "type": "string" }
+        },
+        "postSync": {
+          "type": "array",
+          "description": "Commands to run after sync",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

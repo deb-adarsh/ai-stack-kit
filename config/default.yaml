@@ -1,0 +1,29 @@
+# Spec Engine Default Configuration
+version: "1.0"
+
+settings:
+  cacheDir: ~/.spec-engine/cache
+  lockFile: .spec-engine/lock.yaml
+  autoSync: false
+  parallelDownloads: 5
+  retryAttempts: 3
+  timeout: 30000
+
+registries:
+  - name: default
+    url: https://registry.spec-engine.dev
+
+sources:
+  - type: github
+    name: official
+    repository: spec-engine/skills
+    branch: main
+
+ide:
+  type: cursor
+  features:
+    - skills
+    - rules
+    - hooks
+
+skills: []
