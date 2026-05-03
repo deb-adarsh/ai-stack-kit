@@ -3,6 +3,8 @@
 #
 # Repo secret NPM_TOKEN — use a Granular Access Token with publish permission and
 # "bypass two-factor authentication" for automation so CI never prompts for OTP (avoids EOTP).
+# If publish succeeds with whoami but returns E403 Forbidden, the token cannot publish THIS package —
+# granular scopes often omit unscoped names; grant Publish on **ai-stack-kit** or **All packages**.
 # See: https://docs.npmjs.com/creating-and-viewing-access-tokens
 #      https://docs.npmjs.com/creating-and-publishing-unscoped-public-packages
 # Optional later: after the package exists on npm, switch to Trusted Publishers + OIDC and revoke NPM_TOKEN:
@@ -66,5 +68,11 @@ jobs:
 
           npm pkg set "name=${NPMJS_PKG}"
           npm pkg delete publishConfig 2>/dev/null || true
+
+          # Explicit registry auth (avoids relying on setup-node timing vs publish-only env)
+          npm config set "//registry.npmjs.org/:_authToken" "${NODE_AUTH_TOKEN}"
+
+          echo "Publishing as npm user:"
+          npm whoami --registry="${REG}"
 
           npm publish --access public --registry="${REG}"
