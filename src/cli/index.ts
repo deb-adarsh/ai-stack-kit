@@ -18,6 +18,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { table } from 'table';
 import figures from 'figures';
+import { realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CLI_COMMAND, PRODUCT_NAME } from '../branding.js';
@@ -988,15 +989,27 @@ async function quickInit(client: { type: string }): Promise<void> {
   await ensureDefaultSourcesConfig(process.cwd());
 }
 
-/** When this file is the process entrypoint (`aistack` / `ai-stack` / `node dist/cli/index.js`), run Commander. */
+/**
+ * True when Node started this file as the script entrypoint.
+ * Global installs often use a symlink (`bin/aistack` → `dist/cli/index.js`); compare realpaths so Commander runs.
+ */
 function shouldRunCliMain(): boolean {
   const argv1 = process.argv[1];
   if (!argv1) return false;
-  const invoked = path.resolve(argv1);
-  const thisFile = path.resolve(fileURLToPath(import.meta.url));
-  return invoked === thisFile;
+  try {
+    const invoked = realpathSync(path.resolve(argv1));
+    const thisFile = realpathSync(fileURLToPath(import.meta.url));
+    return invoked === thisFile;
+  } catch {
+    return false;
+  }
 }
 
 if (shouldRunCliMain()) {
-  void createCLI().parseAsync(process.argv);
+  createCLI()
+    .parseAsync(process.argv)
+    .catch((err: unknown) => {
+      console.error(err);
+      process.exit(1);
+    });
 }
