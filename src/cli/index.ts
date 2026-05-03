@@ -38,6 +38,7 @@ import {
   getModuleInfo,
   parseModuleTypeCli,
   ensureDefaultSourcesConfig,
+  ensureProjectGitignoreForAistack,
 } from './commands.js';
 import { runCatalogRefresh } from './catalog-refresh.js';
 import { flattenSpecModules } from '../types/spec.js';
@@ -306,6 +307,7 @@ function registerInitCommand(program: Command) {
           settings: settingsAnswers,
         });
         await ensureDefaultSourcesConfig(process.cwd());
+        await ensureProjectGitignoreForAistack(process.cwd());
         spinner.succeed('Created spec.yaml');
 
         // Step 7: Install skills
@@ -987,6 +989,7 @@ async function quickInit(client: { type: string }): Promise<void> {
     settings: { autoSync: false, verifyChecksums: true },
   });
   await ensureDefaultSourcesConfig(process.cwd());
+  await ensureProjectGitignoreForAistack(process.cwd());
 }
 
 /**

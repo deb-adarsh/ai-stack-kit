@@ -44,10 +44,10 @@ aistack init                 # Initialize new project
 aistack validate             # Validate spec.yaml
 aistack status               # Show installation status
 
-# Skill Management
-aistack install              # Install skills (download)
-aistack apply                # Apply skills to IDE
-aistack sync                 # Install + Apply
+# Skill Management — **`install` / `apply` / `sync` read `spec.yaml`** (`skills:` + `modules:`); no skill name on these commands. Use **`add`** first to put modules in the spec.
+aistack install              # Resolve → fetch/cache → adapter writes (everything enabled in spec.yaml)
+aistack apply                # Same full pipeline as `install` today
+aistack sync                 # Validate spec, then same pipeline (also ensures managed `.gitignore` if missing)
 aistack update               # Update all skills
 aistack update <skill>       # Update specific skill
 

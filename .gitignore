@@ -38,6 +38,8 @@ coverage/
 # Cache
 .cache/
 .aistack/cache/
+.aistack/manifest.*.json
+.aistack/copilot/
 .eslintcache
 
 # Logs

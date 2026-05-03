@@ -37,6 +37,37 @@ export async function ensureDefaultSourcesConfig(projectRoot: string): Promise<v
   await fs.copyFile(bundledSourcesConfigTemplate, dest);
 }
 
+const GITIGNORE_MANAGED_START = '# --- ai-stack-kit (managed block)';
+const GITIGNORE_MANAGED_END = '# --- end ai-stack-kit';
+
+/** Append ignored paths for adapter manifests & catalog cache so they are not committed (idempotent). */
+export async function ensureProjectGitignoreForAistack(projectRoot: string): Promise<void> {
+  const lines = [
+    GITIGNORE_MANAGED_START,
+    '# Adapter metadata, listing cache, catalog refresh backups (.aistack/lock.yaml is not ignored)',
+    `${WORKSPACE_DOTDIR}/manifest.*.json`,
+    `${WORKSPACE_DOTDIR}/copilot/`,
+    '.cache/aistack/',
+    'spec.yaml.aistack-backup-*',
+    GITIGNORE_MANAGED_END,
+  ];
+  const block = `${lines.join('\n')}\n`;
+  const gitignorePath = path.join(projectRoot, '.gitignore');
+
+  let existing = '';
+  try {
+    existing = await fs.readFile(gitignorePath, 'utf-8');
+  } catch {
+    /* create */
+  }
+
+  if (existing.includes(GITIGNORE_MANAGED_START)) return;
+
+  const next =
+    existing.length === 0 ? block : `${existing.replace(/\s*$/, '')}\n\n${block}`;
+  await fs.writeFile(gitignorePath, next, 'utf-8');
+}
+
 async function getDynamicRegistry(cwd: string): Promise<RegistryProvider | null> {
   if (dynamicRegistryCache?.cwd === cwd) {
     return dynamicRegistryCache.registry;
@@ -414,8 +445,11 @@ export async function getModuleVersions(moduleName: string, cwd = process.cwd())
 /** @deprecated Use {@link getModuleVersions} */
 export const getSkillVersions = getModuleVersions;
 
-/** Full install + client adapter apply (idempotent). */
+/** Full install + client adapter apply (idempotent). Ensures managed `.gitignore` entries for `.aistack` manifests & catalog cache (skipped when `dryRun`). */
 export async function runApply(cwd: string, options?: { dryRun?: boolean; strict?: boolean }) {
+  if (!options?.dryRun) {
+    await ensureProjectGitignoreForAistack(path.resolve(cwd));
+  }
   return apply({
     projectRoot: cwd,
     dryRun: options?.dryRun,

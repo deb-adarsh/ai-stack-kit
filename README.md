@@ -85,7 +85,7 @@ Install with **`npm install -g ai-stack-kit`** (**npm registry**) or **`npm inst
 # npm install -g ai-stack-kit                   # npm registry (public)
 # npm install -g @deb-adarsh/ai-stack-kit       # GitHub registry (+ ~/.npmrc)
 
-# Initialize a new project (creates spec.yaml + default sources.config.yaml when missing)
+# Initialize (spec.yaml + sources.config.yaml; appends a managed `.gitignore` block — same block is ensured again on `sync` / `apply` / `install` if missing)
 aistack init
 
 # Edit spec.yaml to add skills / agents / hooks
@@ -94,6 +94,17 @@ vim spec.yaml
 # Install and apply
 aistack sync
 ```
+
+### Upgrade the CLI
+
+**`npm install -g …@latest`** only updates the **global CLI** (the `aistack` / `ai-stack` binaries). It does **not** rewrite **`spec.yaml`**, **`sources.config.yaml`**, your IDE skill folders, or caches — those stay until **you** change them or run commands that modify them.
+
+```bash
+npm install -g ai-stack-kit@latest
+# GitHub registry: npm install -g @deb-adarsh/ai-stack-kit@latest
+```
+
+Use **`aistack --version`** to confirm. Open projects keep working; run **`aistack sync`** when you want outputs regenerated under the new CLI.
 
 ### GitHub Packages
 
