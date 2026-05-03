@@ -448,37 +448,19 @@ export class IntelliJAdapter extends BaseIDEAdapter {
 
 ## Roadmap
 
-### Phase 1: Core (v0.1)
-- [x] Architecture design
-- [ ] Core engine implementation
-- [ ] Spec parser and validator
-- [ ] GitHub source
-- [ ] Cursor adapter
-- [ ] Basic CLI
+Snapshot of **what’s in the repo today** and **what might come next**—adjust as the project evolves.
 
-### Phase 2: Extended Sources (v0.2)
-- [ ] npm source
-- [ ] Registry provider
-- [ ] Local source
-- [ ] Dependency resolver
+| Area | Status |
+|------|--------|
+| **CLI** | Shipped: `init`, `search`, typed `skill` / `subagent` / `hook`, `add`, `sync`, `catalog refresh`, validation, etc. Some commands are still **placeholders** (e.g. `update`, `clean`, registry `login` / `publish`). |
+| **`spec.yaml`** | Load + **Zod validation**, apply pipeline, modules merge (`skills` + `modules`). |
+| **Sources** | **GitHub** fetch/install + **npm** packages; **dynamic catalogs** from `sources.config.yaml` (GitHub tree + npm tree providers). |
+| **Discovery** | Composite registry, hybrid search, **`catalog refresh`** for additive spec merges. |
+| **IDE outputs** | **Cursor**, **Copilot** (VS Code settings path), **Claude** client adapters in the apply pipeline—not a full generic “VS Code extension marketplace” story. |
+| **Skill browser** | **Static web app** + `catalog.json` build + **GitHub Pages** deploy (weekly cron + pushes). |
+| **Hosted registry product** | No dedicated **public registry server** or npm-like **publish** flow yet—discovery is **aggregate-from-upstreams** plus local spec. |
 
-### Phase 3: Extended IDEs (v0.3)
-- [ ] VSCode adapter
-- [ ] Multiple IDE support
-- [ ] Backup/restore
-
-### Phase 4: Registry (v0.4)
-- [ ] Public registry server
-- [ ] Search functionality
-- [ ] Publishing support
-- [ ] Private registries
-
-### Phase 5: Advanced (v1.0)
-- [ ] Watch mode
-- [ ] Skill templates
-- [ ] Web UI
-- [ ] Team sync
-- [ ] Analytics
+**Possible next steps** (community-driven, not commitments): richer VS Code story, real registry/auth, watch mode, polish placeholders, tests/CI depth—track via **Issues** and **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
 
 ---
 
