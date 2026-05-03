@@ -267,7 +267,7 @@ async function getOfflineModuleInfo(moduleName: string, cwd: string) {
     tags: hit.tags,
     source: hit.source,
     moduleType: DEFAULT_MODULE_TYPE,
-    author: 'Ai Stack Kit catalog',
+    author: 'AI Stack Kit catalog',
     license: 'MIT',
     repository: undefined,
     stats: { downloads: Math.round((hit.score ?? 0) * 100_000) },

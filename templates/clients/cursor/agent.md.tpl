@@ -1,6 +1,6 @@
 # {{name}}
 
-> Managed by Ai Stack Kit (template `cursor/agent.md.tpl` v1). Safe to regenerate.
+> Managed by AI Stack Kit (template `cursor/agent.md.tpl` v1). Safe to regenerate.
 
 ## Description
 

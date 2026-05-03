@@ -1,6 +1,6 @@
 # Extension strategy
 
-Ai Stack Kit is built around **small interfaces** and **explicit registration**. New transports, IDEs, and catalogs are added by **implementing an interface** and **registering** (or **injecting** a factory) at the host boundary — not by editing the pipeline’s control flow.
+AI Stack Kit is built around **small interfaces** and **explicit registration**. New transports, IDEs, and catalogs are added by **implementing an interface** and **registering** (or **injecting** a factory) at the host boundary — not by editing the pipeline’s control flow.
 
 ## Design principles
 
@@ -143,7 +143,7 @@ export class VSCodeClientAdapter extends BaseClientAdapter {
 
   generateConfig(input: NormalizedWorkspaceInput): AdapterOutput {
     const lines: string[] = [
-      `# Ai Stack Kit — ${input.metadata.projectName ?? 'project'}`,
+      `# AI Stack Kit — ${input.metadata.projectName ?? 'project'}`,
       '',
       ...input.skills.map((s) => `- **${s.name}** @ ${s.version}`),
     ];

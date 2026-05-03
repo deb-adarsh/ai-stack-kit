@@ -1,6 +1,6 @@
-# Ai Stack Kit - Visual Diagrams
+# AI Stack Kit - Visual Diagrams
 
-This document contains ASCII diagrams for various aspects of the Ai Stack Kit architecture.
+This document contains ASCII diagrams for various aspects of the AI Stack Kit architecture.
 
 ---
 

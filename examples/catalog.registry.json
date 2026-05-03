@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "registry": {
     "name": "example-public-catalog",
-    "description": "Sample local skill catalog for Ai Stack Kit"
+    "description": "Sample local skill catalog for AI Stack Kit"
   },
   "entries": [
     {

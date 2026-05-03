@@ -1,5 +1,5 @@
 /** Display name for docs and user-facing strings. */
-export const PRODUCT_NAME = 'Ai Stack Kit';
+export const PRODUCT_NAME = 'AI Stack Kit';
 
 /** Primary CLI binary (`npm install -g ai-stack-kit` → `aistack`). */
 export const CLI_COMMAND = 'aistack';

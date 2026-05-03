@@ -1,4 +1,4 @@
-# Ai Stack Kit — Architecture
+# AI Stack Kit — Architecture
 
 This document is the **single architecture reference** for the project. It combines what used to be split between a long-form design doc and a high-level overview: visual diagrams and dependency rules live here alongside interfaces, repository layout, and operational detail.
 
@@ -642,7 +642,7 @@ CLI flags
 ### spec.yaml Structure
 
 ```yaml
-# Ai Stack Kit Configuration
+# AI Stack Kit Configuration
 version: "1.0"
 
 # Global settings

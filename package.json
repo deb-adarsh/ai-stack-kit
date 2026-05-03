@@ -1,7 +1,7 @@
 {
   "name": "ai-stack-kit",
   "version": "1.0.0",
-  "description": "Ai Stack Kit — CLI for managing IDE skills and configurations",
+  "description": "AI Stack Kit — CLI for managing IDE skills and configurations",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

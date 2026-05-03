@@ -1,4 +1,4 @@
-# Ai Stack Kit - Quick Reference Guide
+# AI Stack Kit - Quick Reference Guide
 
 ## Core Concepts
 

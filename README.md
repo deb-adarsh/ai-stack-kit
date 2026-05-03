@@ -1,4 +1,4 @@
-# Ai Stack Kit
+# AI Stack Kit
 
 A CLI tool for managing IDE skills, subagents, and configurations across multiple sources and IDEs.
 
@@ -8,7 +8,7 @@ A CLI tool for managing IDE skills, subagents, and configurations across multipl
 
 ## Overview
 
-Ai Stack Kit allows you to:
+AI Stack Kit allows you to:
 - 📦 **Package** IDE skills (Cursor skills, rules, hooks) as reusable components
 - 🔄 **Distribute** skills via GitHub, npm, custom registries, or local files
 - 🎯 **Apply** skills to multiple IDEs (Cursor, VSCode, and more)
@@ -22,7 +22,7 @@ Ai Stack Kit allows you to:
 After `npm install -g ai-stack-kit`, run **`aistack`** or **`ai-stack`** (both invoke the same CLI).
 
 ```bash
-# Install Ai Stack Kit (CLI commands: aistack or ai-stack)
+# Install AI Stack Kit (CLI commands: aistack or ai-stack)
 npm install -g ai-stack-kit
 
 # Initialize a new project
@@ -39,7 +39,7 @@ aistack sync
 
 ## Example `spec.yaml`
 
-Ai Stack Kit reads **`client.type`** to decide which **client adapter** runs at apply time (`cursor`, `copilot`, `claude`, `vscode`, …). You normally declare **one** primary client per project; change `type` when you target a different editor or assistant surface.
+AI Stack Kit reads **`client.type`** to decide which **client adapter** runs at apply time (`cursor`, `copilot`, `claude`, `vscode`, …). You normally declare **one** primary client per project; change `type` when you target a different editor or assistant surface.
 
 Catalog discovery uses optional **`sources.config.yaml`** in the project root (not shown here). **`hooks`** at the bottom are **lifecycle shell steps** (pre/post install/apply), not the same thing as **`moduleType: hook`** AI modules in `modules:`.
 
@@ -101,7 +101,7 @@ modules:
 # Lifecycle commands (optional), not AI hook modules
 hooks:
   postApply:
-    - echo "Ai Stack Kit apply finished."
+    - echo "AI Stack Kit apply finished."
 ```
 
 ---
@@ -325,7 +325,7 @@ npm run test:coverage
 
 ---
 
-## Extending Ai Stack Kit
+## Extending AI Stack Kit
 
 ### Add a New Source (e.g., GitLab)
 
@@ -387,7 +387,7 @@ export class IntelliJAdapter extends BaseIDEAdapter {
 
 ## Comparison to Similar Tools
 
-| Feature | Ai Stack Kit | npm | Terraform | kubectl |
+| Feature | AI Stack Kit | npm | Terraform | kubectl |
 |---------|-------------|-----|-----------|---------|
 | Declarative Config | ✅ | ❌ | ✅ | ✅ |
 | Version Locking | ✅ | ✅ | ✅ | ❌ |

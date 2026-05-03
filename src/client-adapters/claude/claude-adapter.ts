@@ -19,7 +19,7 @@ export class ClaudeClientAdapter extends BaseClientAdapter {
     const orchestrationTpl = loadBundledTemplate('claude', 'orchestration.md.tpl');
 
     const systemBundle = [
-      '# Ai Stack Kit — aggregated system context',
+      '# AI Stack Kit — aggregated system context',
       '',
       `Project: ${input.metadata.projectName ?? 'unknown'}`,
       `Generated: ${input.metadata.generatedAt}`,
