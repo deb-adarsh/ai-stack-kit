@@ -34,6 +34,7 @@ import {
   getModuleVersions,
   getModuleInfo,
   parseModuleTypeCli,
+  ensureDefaultSourcesConfig,
 } from './commands.js';
 import { flattenSpecModules } from '../types/spec.js';
 import { DEFAULT_MODULE_TYPE, type AIModuleType } from '../types/ai-module.js';
@@ -285,6 +286,7 @@ function registerInitCommand(program: Command) {
           skills: skillNames,
           settings: settingsAnswers,
         });
+        await ensureDefaultSourcesConfig(process.cwd());
         spinner.succeed('Created spec.yaml');
 
         // Step 7: Install skills
@@ -895,6 +897,7 @@ async function quickInit(client: { type: string }): Promise<void> {
     skills: ['canvas', 'typescript-helper'],
     settings: { autoSync: false, verifyChecksums: true },
   });
+  await ensureDefaultSourcesConfig(process.cwd());
 }
 
 /** When this file is the process entrypoint (`aistack` / `ai-stack` / `node dist/cli/index.js`), run Commander. */

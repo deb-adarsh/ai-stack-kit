@@ -107,7 +107,7 @@ function dirManifestPaths(rel: string, moduleType: AIModuleType): string[] {
 
 function skillRepoPath(skillsPath: string, skillKey: string): string {
   const root = skillsPath.replace(/^\/+|\/+$/g, '');
-  return `${root}/${skillKey}`;
+  return root ? `${root}/${skillKey}` : skillKey;
 }
 
 function summarizeMd(text: string): string {

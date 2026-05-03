@@ -25,15 +25,19 @@ After `npm install -g ai-stack-kit`, run **`aistack`** or **`ai-stack`** (both i
 # Install AI Stack Kit (CLI commands: aistack or ai-stack)
 npm install -g ai-stack-kit
 
-# Initialize a new project
+# Initialize a new project (creates spec.yaml + default sources.config.yaml when missing)
 aistack init
 
-# Edit spec.yaml to add skills
+# Edit spec.yaml to add skills / agents / hooks
 vim spec.yaml
 
-# Install and apply skills
+# Install and apply
 aistack sync
 ```
+
+Fresh **`init`** drops a **`sources.config.yaml`** next to `spec.yaml` with curated GitHub catalogs ([Copilot awesome-copilot](https://github.com/github/awesome-copilot), [Anthropic skills](https://github.com/anthropics/skills/tree/main/skills), [Composio awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills), [Antigravity bundle](https://github.com/sickn33/antigravity-awesome-skills)). Override or trim sources anytime.
+
+Skill packs from those trees are mostly **portable**: the same folder layout works across **Cursor**, **Copilot**, and **Claude** outputs — `client.type` in `spec.yaml` picks where files land. For a large curated index that is **README-only** (not a tree the CLI can crawl), see [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills).
 
 ---
 
@@ -41,7 +45,7 @@ aistack sync
 
 AI Stack Kit reads **`client.type`** to decide which **client adapter** runs at apply time (`cursor`, `copilot`, `claude`, `vscode`, …). You normally declare **one** primary client per project; change `type` when you target a different editor or assistant surface.
 
-Catalog discovery uses optional **`sources.config.yaml`** in the project root (not shown here). **`hooks`** at the bottom are **lifecycle shell steps** (pre/post install/apply), not the same thing as **`moduleType: hook`** AI modules in `modules:`.
+Catalog discovery uses **`sources.config.yaml`** in the project root (`aistack init` seeds a default — see Quick Start). **`hooks`** at the bottom are **lifecycle shell steps** (pre/post install/apply), not the same thing as **`moduleType: hook`** AI modules in `modules:`.
 
 ```yaml
 version: "1.0"

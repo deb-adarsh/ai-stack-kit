@@ -1,14 +1,9 @@
-# Skill catalog sources — registry aggregates these; do not list individual skills here.
-# Copy to project root as `sources.config.yaml` (or set AISTACK_SOURCES_CONFIG).
-#
-# GitHub REST listing: set GITHUB_TOKEN for higher rate limits (and private repos).
-# Description enrichment uses raw.githubusercontent.com (bounded; see githubMetadataEnrichMax).
+# Same as `templates/sources.config.yaml` — copy to project root as `sources.config.yaml`.
+# On `aistack init`, this file is created automatically when missing.
 
 version: 1
 cacheTtlSeconds: 3600
 cacheDir: .cache/aistack
-
-# Max parallel raw fetches per GitHub source per cache refresh (0 = synthetic descriptions only).
 githubMetadataEnrichMax: 120
 githubMetadataEnrichConcurrency: 8
 
@@ -18,9 +13,6 @@ sources:
     repo: github/awesome-copilot
     path: skills
     branch: main
-    # Optional per-source overrides:
-    # enrich: false
-    # enrichMax: 80
 
   - type: github
     id: anthropic-skills
@@ -28,10 +20,14 @@ sources:
     path: skills
     branch: main
 
-  # npm: list skills/ inside a published package tarball (one registry download per cache TTL).
-  # - type: npm
-  #   id: my-org-skills
-  #   package: "@myorg/skills-bundle"
-  #   path: skills
-  #   version: latest
-  #   registryUrl: https://registry.npmjs.org
+  - type: github
+    id: composio-awesome-claude-skills
+    repo: ComposioHQ/awesome-claude-skills
+    path: ""
+    branch: master
+
+  - type: github
+    id: antigravity-awesome-skills
+    repo: sickn33/antigravity-awesome-skills
+    path: skills
+    branch: main

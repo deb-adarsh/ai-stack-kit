@@ -7,7 +7,20 @@ The registry is an **aggregator** over configured **sources**. You add repositor
 - **Default path:** `./sources.config.yaml` (project root)  
 - **Override:** `AISTACK_SOURCES_CONFIG=/absolute/or/relative/path.yaml`
 
-See [examples/sources.config.yaml](examples/sources.config.yaml) for **github/awesome-copilot** and **anthropics/skills** under `skills/`.
+See [templates/sources.config.yaml](templates/sources.config.yaml) (bundled default; copied on `aistack init`) and [examples/sources.config.yaml](examples/sources.config.yaml).
+
+Default GitHub trees:
+
+| Catalog | Repo |
+|--------|------|
+| Copilot community | [github/awesome-copilot](https://github.com/github/awesome-copilot) (`skills/`) |
+| Anthropic reference | [anthropics/skills](https://github.com/anthropics/skills) (`skills/`) |
+| Composio Claude-oriented | [ComposioHQ/awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills) (skill folders at repo root — use `path: ""`, branch `master`) |
+| Antigravity bundle | [sickn33/antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills) (`skills/`) |
+
+**Browse-only:** [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) is a curated README (1000+ links); it is **not** a single directory tree — use it for discovery, not as a GitHub `path` source.
+
+Portability: Markdown / `SKILL.md`-style packs from these catalogs generally work across **Cursor**, **Copilot**, and **Claude** client adapters; **`client.type`** selects the output layout.
 
 ```yaml
 version: 1
@@ -41,7 +54,7 @@ Per **GitHub** source (optional):
 
 ### GitHub tree
 
-One **Contents API** call lists `path` (e.g. `skills`):
+One **Contents API** call lists `path` (e.g. `skills`). Use **`path: ""`** (empty string) to list **repository root** directories as skill folders (for catalogs that do not nest under `skills/`).
 
 | Repo entry | Treated as |
 |------------|------------|

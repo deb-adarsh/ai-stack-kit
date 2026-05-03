@@ -4,10 +4,11 @@
  * Implements the business logic for each CLI command
  */
 
+import { existsSync } from 'fs';
+import { promises as fs } from 'fs';
 import { NPM_PACKAGE_NAME, WORKSPACE_DOTDIR } from '../branding.js';
 import { SpecFile } from '../types/spec.js';
 import type { Skill } from '../types/skill.js';
-import { promises as fs } from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 import { loadSpec } from '../pipeline/spec-loader.js';
@@ -18,8 +19,20 @@ import { DEFAULT_MODULE_TYPE, type AIModuleType } from '../types/ai-module.js';
 import type { RegistryEntry, RegistrySearchResult } from '../types/registry.js';
 import { detectProjectSignals } from './project-detection.js';
 import { buildSkillSuggestions, filterSuggestible } from './skill-suggestions.js';
+import { fileURLToPath } from 'node:url';
 
 let dynamicRegistryCache: { cwd: string; registry: RegistryProvider | null } | null = null;
+
+const bundledSourcesConfigTemplate = fileURLToPath(
+  new URL('../../templates/sources.config.yaml', import.meta.url)
+);
+
+/** Copy bundled default GitHub/npm catalog definitions when `sources.config.yaml` is missing. */
+export async function ensureDefaultSourcesConfig(projectRoot: string): Promise<void> {
+  const dest = path.join(projectRoot, 'sources.config.yaml');
+  if (existsSync(dest)) return;
+  await fs.copyFile(bundledSourcesConfigTemplate, dest);
+}
 
 async function getDynamicRegistry(cwd: string): Promise<RegistryProvider | null> {
   if (dynamicRegistryCache?.cwd === cwd) {
