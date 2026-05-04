@@ -1,6 +1,6 @@
 {
   "name": "@deb-adarsh/ai-stack-kit",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "AI Stack Kit — CLI for managing IDE skills and configurations",
   "type": "module",
   "main": "dist/index.js",
@@ -55,7 +55,6 @@
     "figures": "^6.0.1",
     "inquirer": "^9.2.0",
     "js-yaml": "^4.1.0",
-    "node-fetch": "^3.3.2",
     "ora": "^7.0.1",
     "semver": "^7.5.4",
     "table": "^6.8.1",
