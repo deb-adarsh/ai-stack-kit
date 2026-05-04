@@ -257,7 +257,7 @@ Run: aistack validate
 $ aistack status
 
 ✓ Spec: valid
-✓ Client: Cursor (detected at ~/.cursor)
+✓ Client: GitHub Copilot (example hint — yours follows ~/.vscode / ~/.copilot / ~/.cursor per USER_GUIDE)
 ✓ Lock file: up to date
 
 Installed skills: 4
@@ -410,7 +410,7 @@ Would install:
   + typescript-helper@2.0.5
 
 Would apply to:
-  Cursor (~/.cursor)
+  GitHub Copilot (~/.vscode or ~/.copilot — varies by client.type)
 
 No changes made (dry run mode)
 ```
