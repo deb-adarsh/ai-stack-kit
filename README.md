@@ -1,5 +1,9 @@
 # AI Stack Kit
 
+[![npm](https://img.shields.io/npm/v/ai-stack-kit)](https://www.npmjs.com/package/ai-stack-kit)
+[![license](https://img.shields.io/github/license/deb-adarsh/ai-stack-kit)](https://github.com/deb-adarsh/ai-stack-kit/blob/main/LICENSE)
+[![Skill browser](https://img.shields.io/badge/skill%20browser-live-informational)](https://deb-adarsh.github.io/ai-stack-kit/)
+
 **Install AI skills, subagents, and hooks like npm packages - across Cursor, Claude, and Copilot.**
 
 Stop copy-pasting AI workflows between repos. Install them like packages.
