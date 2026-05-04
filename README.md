@@ -8,7 +8,7 @@
 
 Stop copy-pasting AI workflows between repos. Install them like packages.
 
-A CLI to **discover, install, and apply reusable AI capabilities** from GitHub, npm, and registries — using a simple declarative spec.
+A CLI to **discover, install, apply and sync reusable AI capabilities** from GitHub, npm, and registries — using a simple declarative spec.
 
 > Think: npm (distribution) + Terraform (setup) for AI dev environments
 
@@ -37,12 +37,25 @@ aistack add react-ui-expert
 aistack sync
 ```
 
+Your AI capabilities are now installed and configured in your IDE.
+
+---
+
+## What happens after `aistack sync`
+
+- Skills are installed into your project or user scope  
+- Subagents are generated and configured per client  
+- Prompts are derived automatically from the same source  
+- Hooks run as part of lifecycle (if configured)  
+
+Everything is generated from the same spec — no duplication.
+
 ---
 
 ## 🧠 Works out of the box
 
 - Auto-detects your AI client (Cursor, Claude, Copilot)
-- Applies configs to the correct locations
+- Installs and configures everything in the right place
 - No manual wiring per tool
 
 ---
@@ -90,7 +103,7 @@ search → add → sync
 
 AI Stack Kit lets you:
 
-- 📦 **Assemble** **skills**, **subagents**, and **hooks** in **`spec.yaml`**—portable, versioned modules you can sync and apply as reusable intelligence.
+- 📦 **Assemble** AI capabilities (**skills**, **subagents**, and **hooks**) in **`spec.yaml`**—portable, versioned modules you can sync and apply as reusable intelligence.
 - 🔄 **Pull** modules from **GitHub**, **npm**, registries, or **local** paths using **`sources.config.yaml`**.
 - 🎯 **Apply** the same portable manifests through **client adapters** (**Cursor**, **Copilot** / VS Code settings, **Claude**, …)—output paths follow **`client.type`**, not copy-paste sprawl.
 - 🔒 **Version** and lock dependencies like you would with package managers.
