@@ -8,7 +8,7 @@
 
 Stop copy-pasting AI workflows between repos. Install them like packages.
 
-A CLI to **discover, install, apply and sync reusable AI capabilities** from GitHub, npm, and registries — using a simple declarative spec.
+A CLI to **discover, install, apply and sync reusable AI capabilities** from GitHub, npm, and registries - using a simple declarative spec.
 
 > Think: npm (distribution) + Terraform (setup) for AI dev environments
 
