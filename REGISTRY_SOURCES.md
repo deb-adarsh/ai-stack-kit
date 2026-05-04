@@ -13,10 +13,13 @@ Default GitHub trees:
 
 | Catalog | Repo |
 |--------|------|
-| Copilot community | [github/awesome-copilot](https://github.com/github/awesome-copilot) (`skills/`) |
-| Anthropic reference | [anthropics/skills](https://github.com/anthropics/skills) (`skills/`) |
+| Copilot community | [github/awesome-copilot](https://github.com/github/awesome-copilot/tree/main/skills) (`skills/`) |
+| Anthropic reference | [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills) (`skills/`) |
+| Microsoft GitHub skills | [microsoft/skills](https://github.com/microsoft/skills/tree/main/.github/skills) (`.github/skills/`) |
+| Microsoft Azure skills | [microsoft/azure-skills](https://github.com/microsoft/azure-skills/tree/main/skills) (`skills/`) |
+| OpenAI curated | [openai/skills](https://github.com/openai/skills/tree/main/skills/.curated) (`skills/.curated/`) |
 | Composio Claude-oriented | [ComposioHQ/awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills) (skill folders at repo root — use `path: ""`, branch `master`) |
-| Antigravity bundle | [sickn33/antigravity-awesome-skills](https://github.com/sickn33/antigravity-awesome-skills) (`skills/`) |
+| Google Cloud subtree | [google/skills](https://github.com/google/skills/tree/main/skills/cloud) (`skills/cloud/`) |
 
 **Browse-only:** [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) is a curated README (1000+ links); it is **not** a single directory tree — use it for discovery, not as a GitHub `path` source.
 
