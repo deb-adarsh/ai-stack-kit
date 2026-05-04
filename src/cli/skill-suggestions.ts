@@ -12,8 +12,9 @@
  *
  * Rules:
  * - **React** (incl. Next) → prioritize **UI lane** agents.
- * - **Node** (package.json) with backend hints or non-UI-only → prioritize **backend lane**.
- * - Both → UI first, backend second; shared skills always available.
+ * - **Node** with backend hints or non-UI-only → prioritize **backend lane**.
+ * - **.NET / Java / Go / Python / Rust** (no `package.json` required) → boost **backend** and generic shared skills; de-emphasize TypeScript-first picks without TS.
+ * - Both → UI first when React; polyglot backends use backend/shared lanes.
  */
 
 import type { ProjectSignals } from './project-detection.js';
@@ -158,24 +159,41 @@ export function resolveSuggestionGithubSource(skillName: string): SuggestionGith
   return c?.github ?? null;
 }
 
+function backendProfile(s: ProjectSignals): boolean {
+  return (
+    s.isNodeProject ||
+    s.usesDotnet ||
+    s.usesJava ||
+    s.usesGo ||
+    s.hasPython ||
+    s.hasRust
+  );
+}
+
 function laneBoost(s: ProjectSignals, lane: SuggestionLane): number {
   const reactUi = s.usesReact || s.usesNext || s.usesReactNative;
+  const anyBackend = backendProfile(s);
 
   if (lane === 'ui') {
     if (reactUi) return 0.45;
     return 0.05;
   }
   if (lane === 'backend') {
-    if (!s.isNodeProject) return 0.05;
-    // Node → backend agents
-    if (s.backendHints.length) return 0.42;
-    if (!reactUi) return 0.38;
-    return 0.2;
+    if (!anyBackend) return 0.05;
+    if (s.isNodeProject) {
+      if (s.backendHints.length) return 0.42;
+      if (!reactUi) return 0.38;
+      return 0.2;
+    }
+    // .NET, JVM, Go, Python-only, Rust: generic backend/API agents
+    return 0.38;
   }
   // shared
   let b = 0.15;
   if (s.usesTypeScript) b += 0.12;
+  else if (s.isNodeProject) b += 0.04;
   if (s.hasJestOrVitest) b += 0.08;
+  if (!s.usesTypeScript && anyBackend) b += 0.06;
   return Math.min(0.35, b);
 }
 
@@ -199,9 +217,10 @@ export function buildSkillSuggestions(signals: ProjectSignals): SuggestibleSkill
 
   // Recommended: top of each lane when signals match
   const reactUi = signals.usesReact || signals.usesNext || signals.usesReactNative;
+  const backendish = backendProfile(signals);
   for (const s of scored) {
     if (s.lane === 'ui' && reactUi && s.score >= 0.55) s.recommended = true;
-    if (s.lane === 'backend' && signals.isNodeProject && s.score >= 0.55) s.recommended = true;
+    if (s.lane === 'backend' && backendish && s.score >= 0.55) s.recommended = true;
     if (s.lane === 'shared' && signals.usesTypeScript && s.name === 'typescript-helper') s.recommended = true;
     if (s.lane === 'shared' && signals.hasJestOrVitest && s.name === 'test-generator') s.recommended = true;
   }

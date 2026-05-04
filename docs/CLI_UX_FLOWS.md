@@ -257,7 +257,7 @@ Run: aistack validate
 $ aistack status
 
 ✓ Spec: valid
-✓ Client: GitHub Copilot (example hint — yours follows ~/.vscode / ~/.copilot / ~/.cursor per USER_GUIDE)
+✓ Client: Cursor (example hint — detection prefers ~/.cursor before ~/.vscode; see USER_GUIDE)
 ✓ Lock file: up to date
 
 Installed skills: 4

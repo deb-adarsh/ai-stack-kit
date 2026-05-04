@@ -159,8 +159,10 @@ async function buildOfflineSearchHits(
  * Best-effort detection of which AI client tooling is present under the user home directory.
  * Used only by `aistack init` as the **default** in the client picker — **`sync`/`apply` always use `spec.yaml` → `client.type`**.
  *
- * Order matters when multiple dirs exist (e.g. VS Code + Cursor): **VS Code–scoped tooling first**, then Cursor,
- * then standalone Claude Code. Repo-local `.idea` / current editor window are **not** consulted.
+ * **Cursor before VS Code:** Cursor uses its own **`~/.cursor`** tree but often also has **`~/.vscode`** (Electron / extensions).
+ * If we checked VS Code first, every Cursor user would look like Copilot.
+ *
+ * Then VS Code ecosystem (Copilot vs Claude), standalone Claude, IntelliJ. Repo `.idea` / focused editor are ignored.
  */
 export async function detectClient(): Promise<{ name: string; type: string; version?: string }> {
   const homeDir = process.env.HOME || process.env.USERPROFILE || '';
@@ -170,7 +172,11 @@ export async function detectClient(): Promise<{ name: string; type: string; vers
   const claudePath = path.join(homeDir, '.claude');
   const cursorPath = path.join(homeDir, '.cursor');
 
-  /** VS Code–oriented: user-level config (`~/.vscode`) and/or Copilot agents (`~/.copilot`). Prefer Copilot when explicit; else Claude Code when present (often used from VS Code); else default Copilot adapter for plain VS Code installs. */
+  if (await exists(cursorPath)) {
+    return { name: 'Cursor', type: 'cursor' };
+  }
+
+  /** VS Code–oriented: user-level config (`~/.vscode`) and/or Copilot agents (`~/.copilot`). Prefer Copilot when explicit; else Claude Code when present; else default Copilot for plain VS Code installs. */
   const vscodeEcosystem = (await exists(vscodeUserPath)) || (await exists(copilotPath));
   if (vscodeEcosystem) {
     if (await exists(copilotPath)) {
@@ -180,10 +186,6 @@ export async function detectClient(): Promise<{ name: string; type: string; vers
       return { name: 'Claude', type: 'claude' };
     }
     return { name: 'GitHub Copilot', type: 'copilot' };
-  }
-
-  if (await exists(cursorPath)) {
-    return { name: 'Cursor', type: 'cursor' };
   }
 
   if (await exists(claudePath)) {
