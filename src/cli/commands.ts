@@ -159,26 +159,35 @@ async function buildOfflineSearchHits(
  * Best-effort detection of which AI client tooling is present under the user home directory.
  * Used only by `aistack init` as the **default** in the client picker — **`sync`/`apply` always use `spec.yaml` → `client.type`**.
  *
- * Order matters when multiple dirs exist (e.g. Cursor + Claude Code): first match wins.
+ * Order matters when multiple dirs exist (e.g. VS Code + Cursor): **VS Code–scoped tooling first**, then Cursor,
+ * then standalone Claude Code. Repo-local `.idea` / current editor window are **not** consulted.
  */
 export async function detectClient(): Promise<{ name: string; type: string; version?: string }> {
   const homeDir = process.env.HOME || process.env.USERPROFILE || '';
 
+  const vscodeUserPath = path.join(homeDir, '.vscode');
+  const copilotPath = path.join(homeDir, '.copilot');
+  const claudePath = path.join(homeDir, '.claude');
   const cursorPath = path.join(homeDir, '.cursor');
+
+  /** VS Code–oriented: user-level config (`~/.vscode`) and/or Copilot agents (`~/.copilot`). Prefer Copilot when explicit; else Claude Code when present (often used from VS Code); else default Copilot adapter for plain VS Code installs. */
+  const vscodeEcosystem = (await exists(vscodeUserPath)) || (await exists(copilotPath));
+  if (vscodeEcosystem) {
+    if (await exists(copilotPath)) {
+      return { name: 'GitHub Copilot', type: 'copilot' };
+    }
+    if (await exists(claudePath)) {
+      return { name: 'Claude', type: 'claude' };
+    }
+    return { name: 'GitHub Copilot', type: 'copilot' };
+  }
+
   if (await exists(cursorPath)) {
     return { name: 'Cursor', type: 'cursor' };
   }
 
-  const claudePath = path.join(homeDir, '.claude');
   if (await exists(claudePath)) {
     return { name: 'Claude', type: 'claude' };
-  }
-
-  /** VS Code + Copilot share user-level `~/.vscode`; Copilot agents/skills may use `~/.copilot`. Both → `copilot` adapter (Cursor is detected above as its own IDE). */
-  const copilotPath = path.join(homeDir, '.copilot');
-  const vscodeUserPath = path.join(homeDir, '.vscode');
-  if ((await exists(copilotPath)) || (await exists(vscodeUserPath))) {
-    return { name: 'GitHub Copilot', type: 'copilot' };
   }
 
   const intellijPaths = [
