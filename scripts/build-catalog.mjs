@@ -36,7 +36,6 @@ function publisherLabel(owner) {
     openai: 'OpenAI',
     google: 'Google',
     googleworkspace: 'Google Workspace',
-    sickn33: 'Antigravity',
     getsentry: 'Sentry',
     figma: 'Figma',
     firebase: 'Firebase',
@@ -86,11 +85,11 @@ function publisherLabel(owner) {
     .join(' ');
 }
 
-/** Umbrella for filters: Microsoft ↔ GitHub + microsoft org; Google ↔ google org + Antigravity (+ Workspace/Firebase). */
+/** Umbrella for filters: Microsoft ↔ GitHub + microsoft org; Google ↔ google org (+ Workspace/Firebase). */
 function publisherFamily(owner, catalogId) {
   const o = (owner || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   if (['microsoft', 'github'].includes(o)) return 'Microsoft';
-  if (['google', 'googleworkspace', 'firebase', 'sickn33'].includes(o)) return 'Google';
+  if (['google', 'googleworkspace', 'firebase'].includes(o)) return 'Google';
   return publisherLabel(owner || catalogId);
 }
 
@@ -98,10 +97,11 @@ function publisherChannel(catalogId, ownerKey, skillPath) {
   const id = (catalogId || '').toLowerCase();
   const pathNorm = (skillPath || '').replace(/\\/g, '/').toLowerCase();
   if (id === 'awesome-copilot') return 'Copilot community';
+  if (id === 'microsoft-skills') return 'Microsoft official';
   if (id === 'microsoft-azure-skills') return 'Azure';
   if (id === 'google-skills-cloud' || (pathNorm.includes('skills/cloud') && ownerKey === 'google'))
     return 'Google Cloud';
-  if (id === 'antigravity-awesome-skills') return 'Antigravity';
+  if (id === 'openai-skills') return 'OpenAI curated';
   if (id === 'anthropic-skills') return 'Anthropic reference';
   if (id === 'composio-awesome-claude-skills') return 'Composio curated';
   if (ownerKey === 'github') return 'GitHub';

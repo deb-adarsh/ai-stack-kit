@@ -47,7 +47,7 @@ GitHub’s npm registry (**`npm.pkg.github.com`**) expects authentication even f
 
 Then **`npm install -g @deb-adarsh/ai-stack-kit`**. **npm registry** installs (**`ai-stack-kit`**, unscoped) need **no** `.npmrc` for public packages.
 
-Fresh **`init`** drops a **`sources.config.yaml`** next to `spec.yaml` with curated GitHub catalogs ([Copilot awesome-copilot](https://github.com/github/awesome-copilot), [Anthropic skills](https://github.com/anthropics/skills/tree/main/skills), [Composio awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills), [Antigravity bundle](https://github.com/sickn33/antigravity-awesome-skills)). Override or trim sources anytime.
+Fresh **`init`** drops a **`sources.config.yaml`** next to `spec.yaml` with curated GitHub catalogs ([Copilot awesome-copilot](https://github.com/github/awesome-copilot/tree/main/skills), [Anthropic skills](https://github.com/anthropics/skills/tree/main/skills), [Microsoft skills](https://github.com/microsoft/skills/tree/main/.github/skills), [Microsoft Azure skills](https://github.com/microsoft/azure-skills/tree/main/skills), [OpenAI curated skills](https://github.com/openai/skills/tree/main/skills/.curated), [Composio awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills), [Google Cloud skills](https://github.com/google/skills/tree/main/skills/cloud)). Override or trim sources anytime.
 
 **`init` client hint (optional):** the CLI peeks under your home directory only to **pre-select** the client list — **`sync` always follows `spec.yaml` → `client.type`**. Order of detection: **`~/.cursor`** → Cursor; **`~/.claude`** → Claude; **`~/.copilot`** or **`~/.vscode`** → GitHub Copilot (`copilot`); then IntelliJ paths. You can override in the prompt.
 

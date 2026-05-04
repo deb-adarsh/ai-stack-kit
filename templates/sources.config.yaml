@@ -6,8 +6,7 @@
 #
 # Skill markdown / SKILL.md packs from these repos are largely interchangeable across clients:
 # Cursor, Copilot, and Claude adapters normalize similar payloads — pick `client.type` in spec.yaml
-# for where files are written. Antigravity bundles follow the same portable patterns when they use
-# standard skill folders under `skills/`.
+# for where files are written.
 #
 # Browse-only (curated README, not a GitHub skill tree — use for discovery, not this file):
 #   https://github.com/VoltAgent/awesome-agent-skills
@@ -19,7 +18,7 @@ githubMetadataEnrichMax: 120
 githubMetadataEnrichConcurrency: 8
 
 sources:
-  # Copilot community skills — https://github.com/github/awesome-copilot
+  # Copilot community skills — https://github.com/github/awesome-copilot/tree/main/skills
   - type: github
     id: awesome-copilot
     repo: github/awesome-copilot
@@ -40,11 +39,11 @@ sources:
     path: ""
     branch: master
 
-  # Large portable bundle — https://github.com/sickn33/antigravity-awesome-skills
+  # Microsoft GitHub skills — https://github.com/microsoft/skills/tree/main/.github/skills
   - type: github
-    id: antigravity-awesome-skills
-    repo: sickn33/antigravity-awesome-skills
-    path: skills
+    id: microsoft-skills
+    repo: microsoft/skills
+    path: .github/skills
     branch: main
 
   # Microsoft Azure agent skills — https://github.com/microsoft/azure-skills/tree/main/skills
@@ -52,6 +51,13 @@ sources:
     id: microsoft-azure-skills
     repo: microsoft/azure-skills
     path: skills
+    branch: main
+
+  # OpenAI curated skills — https://github.com/openai/skills/tree/main/skills/.curated
+  - type: github
+    id: openai-skills
+    repo: openai/skills
+    path: skills/.curated
     branch: main
 
   # Google Cloud skills subtree — https://github.com/google/skills/tree/main/skills/cloud

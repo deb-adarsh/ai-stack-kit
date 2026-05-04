@@ -27,15 +27,21 @@ sources:
     branch: master
 
   - type: github
-    id: antigravity-awesome-skills
-    repo: sickn33/antigravity-awesome-skills
-    path: skills
+    id: microsoft-skills
+    repo: microsoft/skills
+    path: .github/skills
     branch: main
 
   - type: github
     id: microsoft-azure-skills
     repo: microsoft/azure-skills
     path: skills
+    branch: main
+
+  - type: github
+    id: openai-skills
+    repo: openai/skills
+    path: skills/.curated
     branch: main
 
   - type: github

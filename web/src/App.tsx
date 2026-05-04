@@ -170,9 +170,10 @@ export default function App() {
           </h1>
         </div>
         <p className="hero-lead">
-          Curated GitHub skill trees: Copilot community, Anthropic, Azure, Google Cloud, Composio, Antigravity, and more.
-          Filter by <strong>ecosystem</strong> (Microsoft includes GitHub-hosted Copilot catalogs; Google includes Cloud
-          subtree + Antigravity) or by GitHub org. Copy <code>npx</code>, run in a project with{' '}
+          Curated GitHub skill trees: Copilot community, Anthropic, Microsoft, Azure, OpenAI, Google Cloud, Composio, and more.
+          Filter by <strong>ecosystem</strong> (Microsoft includes GitHub-hosted Copilot catalogs,{' '}
+          <code>microsoft/skills</code>, and <code>microsoft/azure-skills</code>; Google includes the Cloud subtree) or by GitHub org.
+          Copy <code>npx</code>, run in a project with{' '}
           <code>aistack init</code>, then sync.
         </p>
       </header>
@@ -204,7 +205,7 @@ export default function App() {
 
       <p className="filters-label filters-label-eco">
         <span className="filters-label-full">
-          Ecosystem — Microsoft ↔ GitHub org + Azure; Google ↔ Cloud repo + Antigravity
+          Ecosystem — Microsoft ↔ GitHub org + microsoft/skills + Azure repo; Google ↔ Cloud subtree
         </span>
         <span className="filters-label-short">Ecosystem</span>
       </p>
@@ -285,9 +286,17 @@ export default function App() {
         install location.
         <br />
         <br />
-        Azure skills:{' '}
+        Microsoft skills:{' '}
+        <a href="https://github.com/microsoft/skills/tree/main/.github/skills" target="_blank" rel="noreferrer">
+          microsoft/skills (.github/skills)
+        </a>
+        ; Azure skills:{' '}
         <a href="https://github.com/microsoft/azure-skills/tree/main/skills" target="_blank" rel="noreferrer">
           microsoft/azure-skills
+        </a>
+        . OpenAI curated:{' '}
+        <a href="https://github.com/openai/skills/tree/main/skills/.curated" target="_blank" rel="noreferrer">
+          openai/skills/skills/.curated
         </a>
         . Google Cloud subtree:{' '}
         <a href="https://github.com/google/skills/tree/main/skills/cloud" target="_blank" rel="noreferrer">
