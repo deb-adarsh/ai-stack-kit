@@ -13,7 +13,10 @@
  * Rules:
  * - **React** (incl. Next) → prioritize **UI lane** agents.
  * - **Node** with backend hints or non-UI-only → prioritize **backend lane**.
- * - **.NET / Java / Go / Python / Rust** (no `package.json` required) → boost **backend** and generic shared skills; de-emphasize TypeScript-first picks without TS.
+ * - **.NET** → promote **`awesome-copilot`** / **`openai/skills`** `.NET` rows; demote Node-only rows when there is no `package.json`.
+ * - **Python** → **`awesome-copilot`** Python/pytest + **`openai/skills`** Jupyter curated row.
+ * - **Java / Kotlin** → **`awesome-copilot`** Spring Boot + JUnit rows (`usesJava` includes `.kt` / Gradle / Maven).
+ * - Other non-Node backends (**Go**, **Rust**) → demote Prisma / Node API via shared rule below.
  * - Both → UI first when React; polyglot backends use backend/shared lanes.
  */
 
@@ -120,6 +123,109 @@ const CATALOG: CatalogEntry[] = [
     baseWeight: 0.28,
     github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/security-review' },
   },
+  // .NET — github/awesome-copilot + openai/skills curated (paths verified on main)
+  {
+    id: 'aspnet-core',
+    name: 'aspnet-core',
+    description: 'ASP.NET Core structure, middleware, APIs, and idiomatic patterns',
+    lane: 'backend',
+    tags: ['dotnet', 'csharp', 'aspnet', 'api'],
+    source: 'github',
+    baseWeight: 0.42,
+    github: { owner: 'openai', repo: 'skills', path: 'skills/.curated/aspnet-core', branch: 'main' },
+  },
+  {
+    id: 'aspnet-minimal-api-openapi',
+    name: 'aspnet-minimal-api-openapi',
+    description: 'Minimal APIs, OpenAPI, and HTTP contracts in .NET',
+    lane: 'backend',
+    tags: ['dotnet', 'csharp', 'aspnet', 'openapi'],
+    source: 'github',
+    baseWeight: 0.41,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/aspnet-minimal-api-openapi' },
+  },
+  {
+    id: 'dotnet-best-practices',
+    name: 'dotnet-best-practices',
+    description: 'C# style, .NET conventions, and design-oriented reviews',
+    lane: 'backend',
+    tags: ['dotnet', 'csharp', 'backend'],
+    source: 'github',
+    baseWeight: 0.4,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/dotnet-best-practices' },
+  },
+  {
+    id: 'csharp-xunit',
+    name: 'csharp-xunit',
+    description: 'xUnit patterns, fixtures, and test layout for .NET',
+    lane: 'shared',
+    tags: ['csharp', 'dotnet', 'testing', 'xunit'],
+    source: 'github',
+    baseWeight: 0.3,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/csharp-xunit' },
+  },
+  // Python — github/awesome-copilot + openai/skills curated
+  {
+    id: 'python-pypi-package-builder',
+    name: 'python-pypi-package-builder',
+    description: 'Packaging, pyproject/setup, and publishable Python layouts',
+    lane: 'backend',
+    tags: ['python', 'packaging', 'pypi'],
+    source: 'github',
+    baseWeight: 0.39,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/python-pypi-package-builder' },
+  },
+  {
+    id: 'pytest-coverage',
+    name: 'pytest-coverage',
+    description: 'pytest layout, coverage habits, and test ergonomics',
+    lane: 'shared',
+    tags: ['python', 'pytest', 'testing'],
+    source: 'github',
+    baseWeight: 0.31,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/pytest-coverage' },
+  },
+  {
+    id: 'jupyter-notebook',
+    name: 'jupyter-notebook',
+    description: 'Notebook workflows, reproducibility, and literate Python',
+    lane: 'shared',
+    tags: ['python', 'jupyter', 'notebook'],
+    source: 'github',
+    baseWeight: 0.33,
+    github: { owner: 'openai', repo: 'skills', path: 'skills/.curated/jupyter-notebook', branch: 'main' },
+  },
+  // Java / Kotlin (JVM) — github/awesome-copilot
+  {
+    id: 'java-springboot',
+    name: 'java-springboot',
+    description: 'Spring Boot structure, beans, APIs, and idiomatic Java services',
+    lane: 'backend',
+    tags: ['java', 'spring', 'jvm', 'backend'],
+    source: 'github',
+    baseWeight: 0.41,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/java-springboot' },
+  },
+  {
+    id: 'kotlin-springboot',
+    name: 'kotlin-springboot',
+    description: 'Spring Boot with Kotlin: DSLs, coroutines-friendly patterns, service layout',
+    lane: 'backend',
+    tags: ['kotlin', 'spring', 'jvm', 'backend'],
+    source: 'github',
+    baseWeight: 0.41,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/kotlin-springboot' },
+  },
+  {
+    id: 'java-junit',
+    name: 'java-junit',
+    description: 'JUnit tests, fixtures, and JVM test organization',
+    lane: 'shared',
+    tags: ['java', 'kotlin', 'junit', 'testing'],
+    source: 'github',
+    baseWeight: 0.3,
+    github: { owner: 'github', repo: 'awesome-copilot', path: 'skills/java-junit' },
+  },
   // Shared
   {
     id: 'typescript-helper',
@@ -170,6 +276,31 @@ function backendProfile(s: ProjectSignals): boolean {
   );
 }
 
+const DOTNET_BOOST = new Set([
+  'aspnet-core',
+  'aspnet-minimal-api-openapi',
+  'dotnet-best-practices',
+  'csharp-xunit',
+]);
+const PYTHON_BOOST = new Set(['python-pypi-package-builder', 'pytest-coverage', 'jupyter-notebook']);
+const JVM_BOOST = new Set(['java-springboot', 'kotlin-springboot', 'java-junit']);
+
+/** Nudge polyglot repos away from unrelated Node-only picks (offline heuristics). */
+function stackScoreAdjustment(c: CatalogEntry, s: ProjectSignals): number {
+  let adj = 0;
+  const nonNode = !s.isNodeProject;
+
+  if (nonNode && (s.usesDotnet || s.hasPython || s.usesJava || s.usesGo || s.hasRust)) {
+    if (c.name === 'node-api-agent' || c.name === 'prisma-data-layer') adj -= 0.26;
+  }
+
+  if (nonNode && s.usesDotnet && DOTNET_BOOST.has(c.name)) adj += 0.07;
+  if (nonNode && s.hasPython && PYTHON_BOOST.has(c.name)) adj += 0.07;
+  if (nonNode && s.usesJava && JVM_BOOST.has(c.name)) adj += 0.07;
+
+  return adj;
+}
+
 function laneBoost(s: ProjectSignals, lane: SuggestionLane): number {
   const reactUi = s.usesReact || s.usesNext || s.usesReactNative;
   const anyBackend = backendProfile(s);
@@ -202,7 +333,10 @@ function laneBoost(s: ProjectSignals, lane: SuggestionLane): number {
  */
 export function buildSkillSuggestions(signals: ProjectSignals): SuggestibleSkill[] {
   const scored = CATALOG.map((c) => {
-    const score = Math.min(1, c.baseWeight + laneBoost(signals, c.lane));
+    const score = Math.min(
+      1,
+      c.baseWeight + laneBoost(signals, c.lane) + stackScoreAdjustment(c, signals)
+    );
     return {
       id: c.id,
       name: c.name,
@@ -216,6 +350,10 @@ export function buildSkillSuggestions(signals: ProjectSignals): SuggestibleSkill
   });
 
   // Recommended: top of each lane when signals match
+  const nonNode = !signals.isNodeProject;
+  const dotnetLike = nonNode && signals.usesDotnet;
+  const pythonLike = nonNode && signals.hasPython;
+  const jvmLike = nonNode && signals.usesJava;
   const reactUi = signals.usesReact || signals.usesNext || signals.usesReactNative;
   const backendish = backendProfile(signals);
   for (const s of scored) {
@@ -223,6 +361,30 @@ export function buildSkillSuggestions(signals: ProjectSignals): SuggestibleSkill
     if (s.lane === 'backend' && backendish && s.score >= 0.55) s.recommended = true;
     if (s.lane === 'shared' && signals.usesTypeScript && s.name === 'typescript-helper') s.recommended = true;
     if (s.lane === 'shared' && signals.hasJestOrVitest && s.name === 'test-generator') s.recommended = true;
+    if (dotnetLike && s.name === 'csharp-xunit' && s.score >= 0.52) s.recommended = true;
+    if (pythonLike && (s.name === 'pytest-coverage' || s.name === 'python-pypi-package-builder') && s.score >= 0.52) {
+      s.recommended = true;
+    }
+    if (jvmLike && s.name === 'java-junit' && s.score >= 0.52) s.recommended = true;
+  }
+
+  if (dotnetLike) {
+    for (const pick of ['aspnet-core', 'aspnet-minimal-api-openapi', 'dotnet-best-practices'] as const) {
+      const row = scored.find((x) => x.name === pick);
+      if (row && row.score >= 0.52) row.recommended = true;
+    }
+  }
+
+  if (pythonLike) {
+    const row = scored.find((x) => x.name === 'jupyter-notebook');
+    if (row && row.score >= 0.52) row.recommended = true;
+  }
+
+  if (jvmLike) {
+    for (const pick of ['java-springboot', 'kotlin-springboot'] as const) {
+      const row = scored.find((x) => x.name === pick);
+      if (row && row.score >= 0.52) row.recommended = true;
+    }
   }
 
   // Always nudge canvas for rich UI work when React
