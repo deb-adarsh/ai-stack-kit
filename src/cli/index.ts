@@ -18,10 +18,24 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { table } from 'table';
 import figures from 'figures';
-import { realpathSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CLI_COMMAND, PRODUCT_NAME } from '../branding.js';
+
+/** Matches npm-installed package.json beside dist/ (single source of truth for --version). */
+function readCliPackageVersion(): string {
+  try {
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const pkgPath = path.join(here, '..', '..', 'package.json');
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8')) as { version?: unknown };
+    return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
+
+const CLI_VERSION = readCliPackageVersion();
 import {
   detectClient,
   createSpecFile,
@@ -168,7 +182,7 @@ export function createCLI(): Command {
   program
     .name(CLI_COMMAND)
     .description(`${PRODUCT_NAME}: manage AI modules (skills, subagents, hooks) and IDE client configs`)
-    .version('1.0.0')
+    .version(CLI_VERSION)
     .option('-v, --verbose', 'Verbose output')
     .option('--offline', 'Offline mode')
     .option('--dry-run', 'Preview changes without applying');
