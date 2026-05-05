@@ -3,7 +3,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import * as tar from 'tar';
@@ -144,14 +144,24 @@ export class GitHubSource implements SkillSource {
     const root = rootDir ? path.join(extractDir, rootDir.name) : extractDir;
     const skillRoot = subPath ? path.join(root, subPath) : root;
 
-    const files = await readTextFilesRecursive(skillRoot, skillRoot);
+    let files: Record<string, string>;
     let manifest: SkillManifest | null = null;
-    const mj = files['skill.json'] ?? files['skill.manifest.json'];
-    if (mj) {
-      manifest = JSON.parse(mj) as SkillManifest;
-    }
 
-    await rm(tmp, { recursive: true, force: true });
+    try {
+      const st = await stat(skillRoot);
+      if (st.isFile()) {
+        const text = await readFile(skillRoot, 'utf-8');
+        files = { [path.basename(subPath)]: text };
+      } else {
+        files = await readTextFilesRecursive(skillRoot, skillRoot);
+        const mj = files['skill.json'] ?? files['skill.manifest.json'];
+        if (mj) {
+          manifest = JSON.parse(mj) as SkillManifest;
+        }
+      }
+    } finally {
+      await rm(tmp, { recursive: true, force: true });
+    }
 
     return { files, manifest };
   }

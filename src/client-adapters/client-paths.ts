@@ -1,5 +1,5 @@
 /**
- * Canonical layout for skills + subagents across Cursor, Copilot, and Claude.
+ * Canonical layout for skills, agents, and hook packs across Cursor, Copilot, and Claude.
  *
  * Project vs user scope:
  * - `project`: paths live under the repo root (or VS Code workspace root).
@@ -45,5 +45,19 @@ export function agentsDirRelative(clientType: string, scope: ClientInstallScope)
       return scope === 'project' ? '.github/agents' : '.copilot/agents';
     default:
       return '.aistack/agents';
+  }
+}
+
+/** Copilot hook packs use `.github/hooks/` (project) to align with community layouts (e.g. awesome-copilot). */
+export function hooksDirRelative(clientType: string, scope: ClientInstallScope): string {
+  switch (clientType) {
+    case 'cursor':
+      return '.cursor/hooks';
+    case 'claude':
+      return '.claude/hooks';
+    case 'copilot':
+      return scope === 'project' ? '.github/hooks' : '.copilot/hooks';
+    default:
+      return '.aistack/hooks';
   }
 }

@@ -5,6 +5,7 @@
 
 import type { AdapterOutputFile } from './adapter-output.js';
 import type { AgentDefinition, ResolvedSkill } from './normalized.js';
+import { resolvedModuleType } from './normalized.js';
 
 export function sanitizePathSegment(segment: string): string {
   return segment.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'item';
@@ -21,7 +22,21 @@ export function skillInstallFolderName(skill: ResolvedSkill): string {
   return sanitizePathSegment(raw);
 }
 
-/** One folder per skill under `skillsRelativeDir`, preserving package-relative paths. */
+/** Split hook modules from skills/subagents for client-specific hook directories. */
+export function partitionSkillsAndHooks(skills: ResolvedSkill[]): {
+  skillLike: ResolvedSkill[];
+  hooks: ResolvedSkill[];
+} {
+  const skillLike: ResolvedSkill[] = [];
+  const hooks: ResolvedSkill[] = [];
+  for (const s of skills) {
+    if (resolvedModuleType(s) === 'hook') hooks.push(s);
+    else skillLike.push(s);
+  }
+  return { skillLike, hooks };
+}
+
+/** One folder per module under `skillsRelativeDir`, preserving package-relative paths. */
 export function emitSkillTreeFiles(
   skills: ResolvedSkill[],
   skillsRelativeDir: string
@@ -41,6 +56,11 @@ export function emitSkillTreeFiles(
     }
   }
   return out;
+}
+
+/** Hook packs (`hook.json`, scripts, etc.) under `.cursor/hooks`, `.claude/hooks`, `.github/hooks`, … */
+export function emitHookTreeFiles(hooks: ResolvedSkill[], hooksRelativeDir: string): AdapterOutputFile[] {
+  return emitSkillTreeFiles(hooks, hooksRelativeDir);
 }
 
 export function cursorStyleAgentBasename(agentId: string): string {

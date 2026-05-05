@@ -13,6 +13,7 @@ import type {
   ToolDefinition,
   WorkspaceMetadata,
 } from './normalized.js';
+import { resolvedModuleType } from './normalized.js';
 
 export interface NormalizeOptions {
   engineVersion?: string;
@@ -113,7 +114,7 @@ export function normalizeWorkspaceInput(
 
   const prompts = skills.flatMap((s) => s.prompts);
   const tools = skills.flatMap((s) => s.tools);
-  const agents = skills.map(agentFromSkill);
+  const agents = skills.filter((s) => resolvedModuleType(s) !== 'hook').map(agentFromSkill);
 
   const metadata: WorkspaceMetadata = {
     specVersion: spec.version,

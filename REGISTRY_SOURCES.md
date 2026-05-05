@@ -14,6 +14,8 @@ Default GitHub trees:
 | Catalog | Repo |
 |--------|------|
 | Copilot community | [github/awesome-copilot](https://github.com/github/awesome-copilot/tree/main/skills) (`skills/`) |
+| Copilot community hooks | [github/awesome-copilot/hooks](https://github.com/github/awesome-copilot/tree/main/hooks) (`hooks/` — use **`moduleType: hook`** on the source row) |
+| Copilot community agents | [github/awesome-copilot/agents](https://github.com/github/awesome-copilot/tree/main/agents) (flat **`*.agent.md`** — use **`moduleType: subagent`**) |
 | Anthropic reference | [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills) (`skills/`) |
 | Microsoft GitHub skills | [microsoft/skills](https://github.com/microsoft/skills/tree/main/.github/skills) (`.github/skills/`) |
 | Microsoft Azure skills | [microsoft/azure-skills](https://github.com/microsoft/azure-skills/tree/main/skills) (`skills/`) |
@@ -22,6 +24,12 @@ Default GitHub trees:
 | Google Cloud subtree | [google/skills](https://github.com/google/skills/tree/main/skills/cloud) (`skills/cloud/`) |
 
 **Browse-only:** [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) is a curated README (1000+ links); it is **not** a single directory tree — use it for discovery, not as a GitHub `path` source.
+
+**Hook modules (`moduleType: hook`):** per-folder manifest enrichment looks for `hook.json` / `hook.yaml` / `hook.md` (`github-tree-skills-provider`).
+
+**Subagent modules (`moduleType: subagent`):** per-folder enrichment looks for `agent.json` / `AGENT.md` / `system.md` / `SKILL.md` / `skill.json`. Copilot **awesome-copilot [`agents/`](https://github.com/github/awesome-copilot/tree/main/agents)** is mostly **flat `*.agent.md` files**, indexed like **`github-tree-md`** rows; **`GitHubSource.fetch`** must treat **`subPath`** as a **single file** inside the tarball (now supported).
+
+After **`sync` / `apply`**, fetched payloads still flow through today’s adapters into the **skills** subtree (and synthesized agents); native **`.cursor/hooks/`** vs **`.github/agents/`** passthrough layouts are not mapped separately yet.
 
 Portability: Markdown / `SKILL.md`-style packs from these catalogs generally work across **Cursor**, **Copilot**, and **Claude** client adapters; **`client.type`** selects the output layout.
 

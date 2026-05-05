@@ -5,6 +5,8 @@
 
 import type { ClientConfig, SpecFile } from '../types/spec.js';
 import type { SkillManifest } from '../types/skill.js';
+import type { AIModuleType } from '../types/ai-module.js';
+import { DEFAULT_MODULE_TYPE } from '../types/ai-module.js';
 
 /** Declarative prompt block (templates, variables, roles). */
 export interface NormalizedPrompt {
@@ -72,6 +74,13 @@ export interface ResolvedSkill {
   tags?: string[];
   supportedClients?: string[];
   metadata?: Record<string, unknown>;
+}
+
+/** Module kind from spec/catalog (`metadata.moduleType`); defaults to skill. */
+export function resolvedModuleType(skill: ResolvedSkill): AIModuleType {
+  const mt = skill.metadata?.moduleType;
+  if (mt === 'skill' || mt === 'subagent' || mt === 'hook') return mt;
+  return DEFAULT_MODULE_TYPE;
 }
 
 /** Run-wide metadata (project, engine version, trace). */

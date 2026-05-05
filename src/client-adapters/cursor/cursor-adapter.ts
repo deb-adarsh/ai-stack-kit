@@ -1,14 +1,22 @@
 /**
- * Cursor: skills under `.cursor/skills/{skill}/` (with `SKILL.md`), subagents under `.cursor/agents/*.md`,
- * prompts under `.cursor/prompts/*.md`. Same layout under `~/.cursor/` when `client.installScope: user`.
+ * Cursor: skills under `.cursor/skills/{skill}/` (with `SKILL.md`), hook packs under `.cursor/hooks/{hook}/`,
+ * subagents under `.cursor/agents/*.md`, prompts under `.cursor/prompts/*.md`.
+ * Same layout under `~/.cursor/` when `client.installScope: user`.
  */
 
 import type { AdapterOutput, AdapterOutputFile } from '../adapter-output.js';
 import { BaseClientAdapter } from '../base-client-adapter.js';
-import { agentsDirRelative, resolveInstallScope, skillsDirRelative } from '../client-paths.js';
+import {
+  agentsDirRelative,
+  hooksDirRelative,
+  resolveInstallScope,
+  skillsDirRelative,
+} from '../client-paths.js';
 import {
   cursorStyleAgentBasename,
+  emitHookTreeFiles,
   emitSkillTreeFiles,
+  partitionSkillsAndHooks,
   sanitizePathSegment,
 } from '../emit-skill-agent-files.js';
 import type { NormalizedWorkspaceInput } from '../normalized.js';
@@ -52,8 +60,13 @@ export class CursorClientAdapter extends BaseClientAdapter {
     const scope = resolveInstallScope(input.client);
     const skillsRel = skillsDirRelative(input.client.type, scope);
     const agentsRel = agentsDirRelative(input.client.type, scope);
+    const hooksRel = hooksDirRelative(input.client.type, scope);
+    const { skillLike, hooks } = partitionSkillsAndHooks(input.skills);
 
-    const files: AdapterOutputFile[] = [...emitSkillTreeFiles(input.skills, skillsRel)];
+    const files: AdapterOutputFile[] = [
+      ...emitSkillTreeFiles(skillLike, skillsRel),
+      ...emitHookTreeFiles(hooks, hooksRel),
+    ];
     const tpl = loadBundledTemplate('cursor', 'agent.md.tpl');
 
     for (const agent of input.agents) {
@@ -115,7 +128,8 @@ export class CursorClientAdapter extends BaseClientAdapter {
             version: 1,
             generatedAt: input.metadata.generatedAt,
             installScope: scope,
-            skills: input.skills.map((s) => ({ id: s.id, name: s.name, version: s.version })),
+            skills: skillLike.map((s) => ({ id: s.id, name: s.name, version: s.version })),
+            hooks: hooks.map((h) => ({ id: h.id, name: h.name, version: h.version })),
             agents: input.agents.map((a) => a.id),
             prompts: input.prompts.map((p) => p.id),
           },

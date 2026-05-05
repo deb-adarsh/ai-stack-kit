@@ -15,6 +15,20 @@ sources:
     branch: main
 
   - type: github
+    id: awesome-copilot-hooks
+    repo: github/awesome-copilot
+    path: hooks
+    branch: main
+    moduleType: hook
+
+  - type: github
+    id: awesome-copilot-agents
+    repo: github/awesome-copilot
+    path: agents
+    branch: main
+    moduleType: subagent
+
+  - type: github
     id: anthropic-skills
     repo: anthropics/skills
     path: skills

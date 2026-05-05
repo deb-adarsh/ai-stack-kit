@@ -97,6 +97,8 @@ function publisherChannel(catalogId, ownerKey, skillPath) {
   const id = (catalogId || '').toLowerCase();
   const pathNorm = (skillPath || '').replace(/\\/g, '/').toLowerCase();
   if (id === 'awesome-copilot') return 'Copilot community';
+  if (id === 'awesome-copilot-hooks') return 'Copilot hooks';
+  if (id === 'awesome-copilot-agents') return 'Copilot agents';
   if (id === 'microsoft-skills') return 'Microsoft official';
   if (id === 'microsoft-azure-skills') return 'Azure';
   if (id === 'google-skills-cloud' || (pathNorm.includes('skills/cloud') && ownerKey === 'google'))

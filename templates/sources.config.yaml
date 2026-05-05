@@ -25,6 +25,22 @@ sources:
     path: skills
     branch: main
 
+  # Copilot community hooks — https://github.com/github/awesome-copilot/tree/main/hooks (hook.json / hook.md layout)
+  - type: github
+    id: awesome-copilot-hooks
+    repo: github/awesome-copilot
+    path: hooks
+    branch: main
+    moduleType: hook
+
+  # Copilot community subagents — https://github.com/github/awesome-copilot/tree/main/agents (flat *.agent.md files)
+  - type: github
+    id: awesome-copilot-agents
+    repo: github/awesome-copilot
+    path: agents
+    branch: main
+    moduleType: subagent
+
   # Official Anthropic reference skills — https://github.com/anthropics/skills/tree/main/skills
   - type: github
     id: anthropic-skills

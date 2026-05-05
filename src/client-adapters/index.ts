@@ -38,6 +38,7 @@ export { CopilotClientAdapter } from './copilot/copilot-adapter.js';
 export {
   adapterFilesystemRoot,
   agentsDirRelative,
+  hooksDirRelative,
   resolveInstallScope,
   skillsDirRelative,
 } from './client-paths.js';
@@ -45,7 +46,9 @@ export type { ClientInstallScope } from '../types/spec.js';
 export {
   copilotAgentBasename,
   cursorStyleAgentBasename,
+  emitHookTreeFiles,
   emitSkillTreeFiles,
+  partitionSkillsAndHooks,
   sanitizePathSegment,
   skillInstallFolderName,
 } from './emit-skill-agent-files.js';

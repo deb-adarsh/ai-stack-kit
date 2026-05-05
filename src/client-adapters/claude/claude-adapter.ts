@@ -1,14 +1,22 @@
 /**
- * Claude: skills under `.claude/skills/{skill}/`, subagents under `.claude/agents/*.md` (not `.agent.md`),
- * prompts under `.claude/prompts/*.md`. Same under `~/.claude/` when `client.installScope: user`.
+ * Claude: skills under `.claude/skills/{skill}/`, hook packs under `.claude/hooks/{hook}/`,
+ * subagents under `.claude/agents/*.md` (not `.agent.md`), prompts under `.claude/prompts/*.md`.
+ * Same under `~/.claude/` when `client.installScope: user`.
  */
 
 import type { AdapterOutput, AdapterOutputFile } from '../adapter-output.js';
 import { BaseClientAdapter } from '../base-client-adapter.js';
-import { agentsDirRelative, resolveInstallScope, skillsDirRelative } from '../client-paths.js';
+import {
+  agentsDirRelative,
+  hooksDirRelative,
+  resolveInstallScope,
+  skillsDirRelative,
+} from '../client-paths.js';
 import {
   cursorStyleAgentBasename,
+  emitHookTreeFiles,
   emitSkillTreeFiles,
+  partitionSkillsAndHooks,
   sanitizePathSegment,
 } from '../emit-skill-agent-files.js';
 import type { NormalizedWorkspaceInput } from '../normalized.js';
@@ -51,8 +59,13 @@ export class ClaudeClientAdapter extends BaseClientAdapter {
     const scope = resolveInstallScope(input.client);
     const skillsRel = skillsDirRelative(input.client.type, scope);
     const agentsRel = agentsDirRelative(input.client.type, scope);
+    const hooksRel = hooksDirRelative(input.client.type, scope);
+    const { skillLike, hooks } = partitionSkillsAndHooks(input.skills);
 
-    const files: AdapterOutputFile[] = [...emitSkillTreeFiles(input.skills, skillsRel)];
+    const files: AdapterOutputFile[] = [
+      ...emitSkillTreeFiles(skillLike, skillsRel),
+      ...emitHookTreeFiles(hooks, hooksRel),
+    ];
 
     const systemBundle = [
       '# AI Stack Kit — aggregated system context',
