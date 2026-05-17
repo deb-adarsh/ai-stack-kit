@@ -16,6 +16,9 @@ build/
 *.js.map
 *.d.ts
 !templates/**/*.js
+!extension/esbuild.js
+!extension/media/catalog-fallback/**/*.js
+!extension/src/**/*.d.ts
 
 # VS Code extension test/build artifacts
 extension/.vscode-test/
