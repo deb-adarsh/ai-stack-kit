@@ -79,3 +79,4 @@ tests/fixtures/**/.aistack/cache/
 
 # Maintainer-only local notes (never commit)
 private.md
+extension/PUBLISHING.md

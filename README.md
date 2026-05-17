@@ -1,7 +1,7 @@
 # AI Stack Kit
 
 [![npm](https://img.shields.io/npm/v/ai-stack-kit)](https://www.npmjs.com/package/ai-stack-kit)
-[![VS Code extension](https://img.shields.io/visual-studio-marketplace/v/deb-adarsh.ai-stack-kit?label=VS%20Code%20extension)](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)
+[![VS Code extension](https://img.shields.io/badge/VS%20Code%20extension-Install%20on%20Marketplace-007ACC?style=flat&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)
 [![license](https://img.shields.io/github/license/deb-adarsh/ai-stack-kit)](https://github.com/deb-adarsh/ai-stack-kit/blob/main/LICENSE)
 [![Skill browser](https://img.shields.io/badge/skill%20browser-live-informational)](https://deb-adarsh.github.io/ai-stack-kit/)
 
