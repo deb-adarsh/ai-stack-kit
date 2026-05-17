@@ -2,7 +2,7 @@
   "name": "ai-stack-kit",
   "displayName": "AI Stack Kit",
   "description": "Manage AI skills, subagents, and hooks from spec.yaml — search catalogs, sync to Cursor, Copilot, and Claude.",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "publisher": "deb-adarsh",
   "license": "Apache-2.0",
   "repository": {
@@ -24,7 +24,14 @@
   "categories": ["Other", "Machine Learning"],
   "keywords": ["ai", "copilot", "cursor", "claude", "skills", "agents"],
   "icon": "media/icon.png",
-  "activationEvents": ["onView:aistack.modules", "workspaceContains:spec.yaml"],
+  "activationEvents": [
+    "onView:aistack.modules",
+    "onView:aistack.catalog",
+    "onView:aistack.outputs",
+    "onCommand:aistack.openCatalog",
+    "onCommand:aistack.openSkillBrowser",
+    "workspaceContains:spec.yaml"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -33,8 +40,8 @@
           "id": "aistack",
           "title": "AI Stack Kit",
           "icon": {
-            "light": "media/activity-bar-icon.svg",
-            "dark": "media/activity-bar-icon.svg"
+            "light": "media/activity-bar-icon-light.svg",
+            "dark": "media/activity-bar-icon-dark.svg"
           }
         }
       ]
@@ -46,13 +53,13 @@
           "name": "Modules"
         },
         {
-          "id": "aistack.outputs",
-          "name": "Outputs"
-        },
-        {
           "type": "webview",
           "id": "aistack.catalog",
           "name": "Catalog"
+        },
+        {
+          "id": "aistack.outputs",
+          "name": "Outputs"
         }
       ]
     },
@@ -89,7 +96,12 @@
       },
       {
         "command": "aistack.openCatalog",
-        "title": "AI Stack Kit: Open Skill Browser",
+        "title": "AI Stack Kit: Show Catalog Panel",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "aistack.openSkillBrowser",
+        "title": "AI Stack Kit: Open Skill Browser (Web)",
         "icon": "$(globe)"
       },
       {
@@ -135,7 +147,7 @@
           "group": "navigation@2"
         },
         {
-          "command": "aistack.openCatalog",
+          "command": "aistack.openSkillBrowser",
           "when": "view == aistack.catalog",
           "group": "navigation@1"
         }

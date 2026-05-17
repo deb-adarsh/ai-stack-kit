@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { SKILL_BROWSER_URL } from '../constants.js';
 import { requireWorkspace } from '../services/workspaceService.js';
 import { applyGithubTokenFromSettings } from '../services/configService.js';
 import { prepareWebviewHtml } from '../utils/webview.js';
@@ -30,6 +31,10 @@ export class CatalogWebviewProvider implements vscode.WebviewViewProvider {
     }
 
     webviewView.webview.onDidReceiveMessage(async (msg: { type: string; id?: string; text?: string }) => {
+      if (msg.type === 'openSkillBrowser') {
+        await vscode.env.openExternal(vscode.Uri.parse(SKILL_BROWSER_URL));
+        return;
+      }
       if (msg.type === 'copy' && msg.text) {
         await vscode.env.clipboard.writeText(msg.text);
         void webviewView.webview.postMessage({ type: 'toast', text: 'Copied!' });

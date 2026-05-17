@@ -2,6 +2,20 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
+## [1.1.6] - 2026-05-18
+
+### Fixed
+
+- **Activity Bar view order** default is now Modules → Catalog → Outputs.
+- **Globe (skill browser) button** opens the hosted [skill browser](https://deb-adarsh.github.io/ai-stack-kit/) in your browser instead of re-focusing the sidebar.
+- **Show Catalog** command reveals the AI Stack Kit sidebar and Catalog panel reliably.
+
+## [1.1.5] - 2026-05-18
+
+### Fixed
+
+- **Activity Bar icon** uses separate light/dark SVGs (single-path, no `opacity`/`currentColor`) so VS Code renders stacked bars instead of a gray placeholder square.
+
 ## [1.1.4] - 2026-05-18
 
 ### Fixed
