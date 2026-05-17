@@ -28,6 +28,8 @@ export function renderTemplate(template: string, vars: Record<string, string>): 
 
 /** Resolve repo-root `templates/clients` next to `src/` (bundled layout). */
 export function bundledTemplatesDir(): string {
+  const fromEnv = process.env.AISTACK_TEMPLATES_CLIENTS?.trim();
+  if (fromEnv) return fromEnv;
   return fileURLToPath(new URL('../../templates/clients', import.meta.url));
 }
 

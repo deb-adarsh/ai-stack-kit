@@ -6,7 +6,7 @@
  */
 
 import { WORKSPACE_DOTDIR } from '../branding.js';
-import { rm } from 'node:fs/promises';
+import { rm, stat } from 'node:fs/promises';
 import * as path from 'node:path';
 import type { SpecFile } from '../types/spec.js';
 import { flattenSpecModules } from '../types/spec.js';
@@ -30,6 +30,8 @@ export interface ApplyPipelineOptions {
   logLevel?: 'debug' | 'info' | 'warn' | 'error';
   logger?: Logger;
   dryRun?: boolean;
+  /** Remove existing install dirs before writing (sync --force). */
+  forceReinstall?: boolean;
   engineVersion?: string;
   /** If true, first skill error aborts the pipeline (after optional rollback). */
   strict?: boolean;
@@ -143,6 +145,18 @@ export async function apply(options: ApplyPipelineOptions): Promise<ApplyPipelin
       const fetched = await source.fetch(metadata);
 
       if (!options.dryRun) {
+        const installDir = path.join(installRoot, `${metadata.name}@${metadata.version}`);
+        if (options.forceReinstall) {
+          try {
+            const st = await stat(installDir);
+            if (st.isDirectory()) {
+              logger.debug('Force reinstall: removing existing install dir', { path: installDir });
+              await rm(installDir, { recursive: true, force: true });
+            }
+          } catch {
+            /* not present */
+          }
+        }
         logger.debug('Install skill', { skill: label, installRoot });
         const installResult = await source.install(metadata, fetched, { installRoot });
         installedPaths.push(installResult.installPath);

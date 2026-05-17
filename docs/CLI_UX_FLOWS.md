@@ -1,6 +1,6 @@
 # CLI UX Flow Examples
 
-This document shows the exact user experience for each CLI command.
+This document shows the **target** user experience for each CLI command. Implemented today: `init`, `search`, `add` / typed `skill|subagent|hook`, `sync` (with `--dry-run`, `-v`, `--offline`, `--force`), `validate`, `status`, `doctor`, `clean`, `catalog refresh`. Placeholders: full `update`, registry publish.
 
 ---
 
@@ -32,10 +32,9 @@ $ aistack init
 
 ? Select client/IDE: 
 ❯ Cursor
-  VS Code
-  IntelliJ IDEA
-  Neovim
-  Other
+  GitHub Copilot (VS Code)
+  Claude
+  Other (advanced — defaults to cursor; edit spec.yaml)
 
 ⠋ Analyzing project...
 ✔ Found skill suggestions

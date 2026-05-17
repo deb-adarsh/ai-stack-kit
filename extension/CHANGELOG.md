@@ -1,0 +1,29 @@
+# Change Log
+
+All notable changes to the **AI Stack Kit** VS Code extension are documented here.
+
+## [1.1.4] - 2026-05-18
+
+### Fixed
+
+- **Activity Bar icon** now uses a theme-aware SVG (PNG was shown as a gray square).
+- **Catalog search** loads the bundled `catalog.json` again (Vite build no longer deletes it; webview uses an injected URL).
+- **Catalog UI** uses VS Code input colors, result counts, publisher badges, and broader search (publisher, catalog id).
+- **Sync** shows an error notification when the pipeline fails instead of always reporting success.
+
+## [1.1.3] - 2026-05-18
+
+### Fixed
+
+- **Initialize Workspace** no longer fails validation on an empty starter `spec.yaml` (`skills: []`).
+
+## [1.1.2] - 2026-05-18
+
+### Added
+
+- Initial Marketplace release: Activity Bar views (Modules, Outputs, Catalog webview).
+- Commands: Initialize, Sync, Doctor, Search/Add, Switch Client, Refresh Catalog.
+- Settings for client type, install scope, GitHub token, dry-run, and auto-sync on save.
+- Getting-started walkthrough.
+- Integrated **Report Issue** flow (`Help → Report Issue`).
+- Bundled catalog snapshot and headless `AistackWorkspace` sync engine.

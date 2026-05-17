@@ -4,6 +4,13 @@
   "description": "AI Stack Kit — CLI for managing IDE skills and configurations",
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "bin": {
     "ai-stack-kit": "dist/cli/index.js",
     "aistack": "dist/cli/index.js",
@@ -13,7 +20,8 @@
     "dist",
     "templates",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "USER_GUIDE.md"
   ],
   "scripts": {
     "build": "tsc",
@@ -22,9 +30,12 @@
     "build:catalog": "node scripts/build-catalog.mjs",
     "dev:web": "npm run build && npm run build:catalog && npm run dev --prefix web",
     "build:web": "npm run build && npm run build:catalog && npm run build --prefix web",
+    "build:extension": "npm run build && npm run build:catalog && rm -rf extension/templates && cp -R templates extension/templates && cp web/public/catalog.json extension/media/catalog.json && cd extension/webview-ui && npm install && npm run build && cp ../../web/public/catalog.json ../media/catalog/catalog.json && cd .. && npm install && npm run package",
+    "test:extension": "cd extension && npm run compile-tests && npm test",
+    "package:extension": "npm run build:extension && cd extension && npm run vsix",
     "dev": "tsc --watch",
     "start": "node dist/cli/index.js",
-    "test": "jest",
+    "test": "npm run build && node --test dist/cli/__tests__/get-module-versions.test.js dist/pipeline/__tests__/spec-loader.test.js dist/pipeline/__tests__/apply-dry-run.test.js dist/client-adapters/__tests__/adapter-factory.test.js dist/api/__tests__/workspace-api.test.js",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\""
   },

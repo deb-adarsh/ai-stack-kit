@@ -8,8 +8,9 @@ import { existsSync, promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as yaml from 'js-yaml';
-import { WORKSPACE_DOTDIR } from '../branding.js';
-import { SpecFile, type ClientInstallScope } from '../types/spec.js';
+import { DEFAULT_RELATIVE_CACHE_DIR, WORKSPACE_DOTDIR } from '../branding.js';
+import { AdapterFactory } from '../client-adapters/adapter-factory.js';
+import { SpecFile, flattenSpecModules, type ClientInstallScope } from '../types/spec.js';
 import type { Skill } from '../types/skill.js';
 import { loadSpec } from '../pipeline/spec-loader.js';
 import { apply } from '../pipeline/apply-pipeline.js';
@@ -26,15 +27,17 @@ import {
 
 let dynamicRegistryCache: { cwd: string; registry: RegistryProvider | null } | null = null;
 
-const bundledSourcesConfigTemplate = fileURLToPath(
-  new URL('../../templates/sources.config.yaml', import.meta.url)
-);
+function bundledSourcesConfigTemplatePath(): string {
+  const fromEnv = process.env.AISTACK_SOURCES_CONFIG_TEMPLATE?.trim();
+  if (fromEnv) return fromEnv;
+  return fileURLToPath(new URL('../../templates/sources.config.yaml', import.meta.url));
+}
 
 /** Copy bundled default GitHub/npm catalog definitions when `sources.config.yaml` is missing. */
 export async function ensureDefaultSourcesConfig(projectRoot: string): Promise<void> {
   const dest = path.join(projectRoot, 'sources.config.yaml');
   if (existsSync(dest)) return;
-  await fs.copyFile(bundledSourcesConfigTemplate, dest);
+  await fs.copyFile(bundledSourcesConfigTemplatePath(), dest);
 }
 
 const GITIGNORE_MANAGED_START = '# --- ai-stack-kit (managed block)';
@@ -267,10 +270,22 @@ export async function searchModules(
     tags?: string[];
     client?: string;
     moduleTypes?: AIModuleType[];
+    /** Skip remote catalog APIs; use offline project suggestions only. */
+    offline?: boolean;
   } = {}
 ): Promise<ModuleSearchHit[]> {
   const cwd = opts.cwd ?? process.cwd();
   const limit = opts.limit ?? 50;
+
+  if (opts.offline) {
+    return buildOfflineSearchHits(cwd, query, {
+      tags: opts.tags,
+      client: opts.client,
+      limit,
+      moduleTypes: opts.moduleTypes,
+    });
+  }
+
   const reg = await getDynamicRegistry(cwd);
 
   if (reg) {
@@ -449,15 +464,22 @@ export async function getModuleVersions(moduleName: string, cwd = process.cwd())
     await getOfflineModuleInfo(moduleName, cwd);
     return ['latest'];
   } catch {
-    return ['latest', '1.0.0', '0.9.0'];
+    return ['latest'];
   }
 }
 
 /** @deprecated Use {@link getModuleVersions} */
 export const getSkillVersions = getModuleVersions;
 
+export interface RunApplyOptions {
+  dryRun?: boolean;
+  strict?: boolean;
+  verbose?: boolean;
+  forceReinstall?: boolean;
+}
+
 /** Full install + client adapter apply (idempotent). Ensures managed `.gitignore` entries for `.aistack` manifests & catalog cache (skipped when `dryRun`). */
-export async function runApply(cwd: string, options?: { dryRun?: boolean; strict?: boolean }) {
+export async function runApply(cwd: string, options?: RunApplyOptions) {
   if (!options?.dryRun) {
     await ensureProjectGitignoreForAistack(path.resolve(cwd));
   }
@@ -465,19 +487,126 @@ export async function runApply(cwd: string, options?: { dryRun?: boolean; strict
     projectRoot: cwd,
     dryRun: options?.dryRun,
     strict: options?.strict,
-    logLevel: 'info',
+    forceReinstall: options?.forceReinstall,
+    logLevel: options?.verbose ? 'debug' : 'info',
   });
+}
+
+export interface ProjectStatusRow {
+  label: string;
+  ok: boolean;
+  detail: string;
+}
+
+/** Minimal project status from spec + adapter support (used by `aistack status`). */
+export async function runStatus(cwd: string): Promise<{
+  rows: ProjectStatusRow[];
+  specPath: string;
+  moduleCount: number;
+  clientType?: string;
+}> {
+  const projectRoot = path.resolve(cwd);
+  const specPath = path.join(projectRoot, 'spec.yaml');
+  const rows: ProjectStatusRow[] = [];
+
+  if (!existsSync(specPath)) {
+    rows.push({ label: 'spec.yaml', ok: false, detail: 'not found — run aistack init' });
+    return { rows, specPath, moduleCount: 0 };
+  }
+  rows.push({ label: 'spec.yaml', ok: true, detail: 'present' });
+
+  const sourcesPath = path.join(projectRoot, 'sources.config.yaml');
+  rows.push({
+    label: 'sources.config.yaml',
+    ok: existsSync(sourcesPath),
+    detail: existsSync(sourcesPath) ? 'present' : 'missing — run aistack init',
+  });
+
+  let clientType: string | undefined;
+  let moduleCount = 0;
+  try {
+    const spec = await loadSpec(projectRoot);
+    rows.push({ label: 'spec validation', ok: true, detail: 'valid' });
+    {
+      clientType = spec.client.type;
+      moduleCount = flattenSpecModules(spec).length;
+      rows.push({
+        label: 'modules in spec',
+        ok: true,
+        detail: `${moduleCount} enabled/listed`,
+      });
+      try {
+        AdapterFactory.getAdapter(spec.client.type);
+        rows.push({
+          label: `client adapter (${spec.client.type})`,
+          ok: true,
+          detail: 'supported',
+        });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        rows.push({
+          label: `client adapter (${spec.client.type})`,
+          ok: false,
+          detail: msg,
+        });
+      }
+    }
+  } catch (e: unknown) {
+    const err = e as { code?: string; errors?: { path?: string; message?: string }[] };
+    if (err.code === 'VALIDATION_ERROR') {
+      rows.push({
+        label: 'spec validation',
+        ok: false,
+        detail: `${err.errors?.length ?? 0} error(s) — run aistack validate`,
+      });
+    } else {
+      rows.push({
+        label: 'spec validation',
+        ok: false,
+        detail: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
+
+  const manifestGlob = path.join(projectRoot, WORKSPACE_DOTDIR);
+  rows.push({
+    label: WORKSPACE_DOTDIR,
+    ok: existsSync(manifestGlob),
+    detail: existsSync(manifestGlob) ? 'workspace dir present (run sync to refresh)' : 'not created yet',
+  });
+
+  return { rows, specPath, moduleCount, clientType };
+}
+
+/** Remove catalog listing cache under `.cache/aistack/`. */
+export async function cleanAistackCache(cwd: string): Promise<{ removed: string[] }> {
+  const cacheRoot = path.join(path.resolve(cwd), DEFAULT_RELATIVE_CACHE_DIR);
+  const removed: string[] = [];
+  if (!existsSync(cacheRoot)) {
+    return { removed };
+  }
+  const entries = await fs.readdir(cacheRoot, { withFileTypes: true });
+  for (const ent of entries) {
+    const full = path.join(cacheRoot, ent.name);
+    await fs.rm(full, { recursive: true, force: true });
+    removed.push(full);
+  }
+  invalidateDynamicRegistryCache();
+  return { removed };
 }
 
 /**
  * Create spec.yaml file
  */
-export async function createSpecFile(data: {
-  project: any;
-  client: string;
-  skills: string[];
-  settings: any;
-}): Promise<void> {
+export async function createSpecFile(
+  data: {
+    project: any;
+    client: string;
+    skills: string[];
+    settings: any;
+  },
+  projectRoot = process.cwd()
+): Promise<void> {
   const spec: SpecFile = {
     version: '1.0',
     project: {
@@ -522,7 +651,7 @@ export async function createSpecFile(data: {
     lineWidth: -1,
   });
   
-  await fs.writeFile('spec.yaml', yamlContent, 'utf-8');
+  await fs.writeFile(path.join(projectRoot, 'spec.yaml'), yamlContent, 'utf-8');
 }
 
 function ensureSpecModuleArrays(spec: SpecFile): void {
@@ -576,8 +705,10 @@ export async function addModuleToSpec(module: {
    * `project` removes `installScope` so adapters default to repo-local paths.
    */
   clientInstallScope?: ClientInstallScope;
-}): Promise<void> {
-  const specPath = path.join(process.cwd(), 'spec.yaml');
+},
+  projectRoot = process.cwd()
+): Promise<void> {
+  const specPath = path.join(projectRoot, 'spec.yaml');
 
   if (!(await exists(specPath))) {
     throw { code: 'SPEC_NOT_FOUND', message: 'spec.yaml not found' };
@@ -657,8 +788,8 @@ export const addSkillToSpec = addModuleToSpec;
 /**
  * Remove a module by name from either `skills` or `modules`.
  */
-export async function removeModuleFromSpec(moduleName: string): Promise<void> {
-  const specPath = path.join(process.cwd(), 'spec.yaml');
+export async function removeModuleFromSpec(moduleName: string, projectRoot = process.cwd()): Promise<void> {
+  const specPath = path.join(projectRoot, 'spec.yaml');
 
   if (!(await exists(specPath))) {
     throw { code: 'SPEC_NOT_FOUND', message: 'spec.yaml not found' };
@@ -685,16 +816,16 @@ export const removeSkillFromSpec = removeModuleFromSpec;
 /**
  * Read and validate spec.yaml (current working directory).
  */
-export async function readSpec(): Promise<SpecFile> {
-  return loadSpec(process.cwd());
+export async function readSpec(projectRoot = process.cwd()): Promise<SpecFile> {
+  return loadSpec(projectRoot);
 }
 
 /**
  * Validate spec.yaml
  */
-export async function validateSpecFile(): Promise<{ valid: boolean; errors?: any[] }> {
+export async function validateSpecFile(projectRoot = process.cwd()): Promise<{ valid: boolean; errors?: any[] }> {
   try {
-    await readSpec();
+    await readSpec(projectRoot);
     return { valid: true };
   } catch (error: any) {
     if (error.code === 'VALIDATION_ERROR') {

@@ -17,6 +17,15 @@ build/
 *.d.ts
 !templates/**/*.js
 
+# VS Code extension test/build artifacts
+extension/.vscode-test/
+extension/out/
+extension/media/catalog/
+extension/test-workspace/spec.yaml
+extension/test-workspace/sources.config.yaml
+extension/test-workspace/.gitignore
+extension/*.vsix
+
 # Testing
 coverage/
 .nyc_output/
@@ -24,6 +33,7 @@ coverage/
 
 # IDEs
 .vscode/
+!extension/.vscode/
 .idea/
 *.swp
 *.swo
@@ -69,3 +79,4 @@ tests/fixtures/**/.aistack/cache/
 
 # Maintainer-only local notes (never commit)
 private.md
+extension/PUBLISHING.md

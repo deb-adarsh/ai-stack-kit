@@ -471,3 +471,112 @@ a:hover {
     padding: 1rem 0.9rem;
   }
 }
+
+.hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.docs-link {
+  flex-shrink: 0;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.docs-link:hover {
+  text-decoration: none;
+  border-color: var(--accent);
+}
+
+.getting-started {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent) 8%);
+}
+
+.getting-started-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.getting-started-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.getting-started-steps li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.getting-started-steps code {
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.step-hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.copy-inline {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+.empty-state p {
+  margin: 0 0 1rem;
+}
+
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 0.65rem 1.1rem;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.module-type-tag {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background: var(--pill);
+  color: var(--muted);
+  margin-left: 0.35rem;
+}

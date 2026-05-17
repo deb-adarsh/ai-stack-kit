@@ -10,6 +10,7 @@
  * - aistack remove            Remove a module from spec.yaml
  * - aistack install / apply / sync
  * - aistack list              List modules in spec.yaml
+ * - aistack status / doctor   Project health checks
  */
 
 import { Command, Option } from 'commander';
@@ -53,7 +54,13 @@ import {
   parseModuleTypeCli,
   ensureDefaultSourcesConfig,
   ensureProjectGitignoreForAistack,
+  runStatus,
+  cleanAistackCache,
+  type RunApplyOptions,
 } from './commands.js';
+import { getGlobalCliOptions, dryRunSuffix } from './cli-options.js';
+import { promptSkillConfig } from './prompts.js';
+import { printDoctorReport, runDoctor } from './doctor.js';
 import { runCatalogRefresh } from './catalog-refresh.js';
 import { flattenSpecModules } from '../types/spec.js';
 import { DEFAULT_MODULE_TYPE, type AIModuleType } from '../types/ai-module.js';
@@ -202,9 +209,34 @@ export function createCLI(): Command {
   registerUpdateCommand(program);
   registerValidateCommand(program);
   registerCleanCommand(program);
+  registerDoctorCommand(program);
   registerCatalogCommands(program);
 
+  program.addHelpText(
+    'after',
+    `\nDocumentation: https://github.com/deb-adarsh/ai-stack-kit/blob/main/USER_GUIDE.md\n`
+  );
+
   return program;
+}
+
+function runApplyOptionsFromGlobal(
+  globalOpts: ReturnType<typeof getGlobalCliOptions>,
+  extra?: { forceReinstall?: boolean }
+): RunApplyOptions {
+  return {
+    dryRun: globalOpts.dryRun,
+    verbose: globalOpts.verbose,
+    forceReinstall: extra?.forceReinstall,
+  };
+}
+
+const SUPPORTED_CLIENT_TYPES = new Set(['cursor', 'copilot', 'claude']);
+
+function resolveInitClientType(raw: string): string {
+  if (SUPPORTED_CLIENT_TYPES.has(raw)) return raw;
+  if (raw === 'other') return 'cursor';
+  return 'cursor';
 }
 
 function installScopeCliOption(): Option {
@@ -225,7 +257,8 @@ function registerInitCommand(program: Command) {
     .description(`Initialize a new ${PRODUCT_NAME} project`)
     .option('-y, --yes', 'Skip prompts and use defaults')
     .option('-t, --template <name>', 'Use a template')
-    .action(async (options) => {
+    .action(async (options, cmd) => {
+      const globalOpts = getGlobalCliOptions(cmd);
       const spinner = ora('Initializing project...').start();
 
       try {
@@ -235,8 +268,8 @@ function registerInitCommand(program: Command) {
         spinner.succeed(`Detected client: ${chalk.cyan(detectedClient.name)}`);
 
         if (options.yes) {
-          // Quick init with defaults
-          await quickInit(detectedClient);
+          await quickInit(detectedClient, globalOpts);
+          spinner.succeed('Project initialized');
           return;
         }
 
@@ -266,10 +299,10 @@ function registerInitCommand(program: Command) {
           { name: 'Cursor', value: 'cursor' },
           { name: 'GitHub Copilot (VS Code)', value: 'copilot' },
           { name: 'Claude', value: 'claude' },
-          { name: 'VS Code', value: 'vscode' },
-          { name: 'IntelliJ IDEA', value: 'intellij' },
-          { name: 'Neovim', value: 'neovim' },
-          { name: 'Other', value: 'other' },
+          {
+            name: 'Other (advanced — defaults to cursor; edit spec.yaml)',
+            value: 'other',
+          },
         ] as const;
         const defaultClientType = clientChoices.some((c) => c.value === detectedClient.type)
           ? detectedClient.type
@@ -313,10 +346,19 @@ function registerInitCommand(program: Command) {
         ]);
 
         // Step 6: Create spec.yaml
+        const clientType = resolveInitClientType(clientAnswer.client);
+        if (clientType !== clientAnswer.client && clientAnswer.client !== 'other') {
+          console.log(
+            chalk.yellow(
+              `Note: "${clientAnswer.client}" has no built-in adapter — using client.type "${clientType}".`
+            )
+          );
+        }
+
         spinner.start('Creating spec.yaml...');
         await createSpecFile({
           project: projectAnswers,
-          client: clientAnswer.client,
+          client: clientType,
           skills: skillNames,
           settings: settingsAnswers,
         });
@@ -335,7 +377,7 @@ function registerInitCommand(program: Command) {
         ]);
 
         if (shouldInstall.install) {
-          await runApply(process.cwd());
+          await runApply(process.cwd(), runApplyOptionsFromGlobal(globalOpts));
         }
 
         console.log(chalk.green('\n✓ Project initialized successfully!'));
@@ -362,8 +404,10 @@ async function executeAddModuleFlow(params: {
   nameArg?: string;
   options: AddCliOptions;
   lockedKind?: AIModuleType;
+  globalOpts?: ReturnType<typeof getGlobalCliOptions>;
 }): Promise<void> {
-  const { nameArg, options, lockedKind } = params;
+  const { nameArg, options, lockedKind, globalOpts = { verbose: false, offline: false, dryRun: false } } =
+    params;
 
   let explicitType: AIModuleType | undefined;
   if (lockedKind !== undefined) {
@@ -428,6 +472,7 @@ async function executeAddModuleFlow(params: {
     const results = await searchModules(searchAnswer.query, {
       cwd: process.cwd(),
       moduleTypes: moduleTypesFilter,
+      offline: globalOpts.offline,
     });
     spinner.succeed(`Found ${results.length} result(s)`);
 
@@ -456,18 +501,22 @@ async function executeAddModuleFlow(params: {
   const versions = await getModuleVersions(selected.name);
   verSpinner.succeed();
 
+  const versionChoices =
+    versions.length <= 1 && versions[0] === 'latest'
+      ? [{ name: 'latest (no other versions in catalog)', value: 'latest' }]
+      : [
+          { name: `latest${versions[0] && versions[0] !== 'latest' ? ` (${versions[0]})` : ''}`, value: 'latest' },
+          new inquirer.Separator(),
+          ...versions.filter((v) => v !== 'latest').slice(0, 10).map((v) => ({ name: v, value: v })),
+        ];
+
   const versionAnswer = await inquirer.prompt([
     {
       type: 'list',
       name: 'version',
       message: 'Select version:',
       default: 'latest',
-      choices: [
-        { name: `latest (${versions[0]})`, value: 'latest' },
-        new inquirer.Separator(),
-        ...versions.slice(0, 10).map((v) => ({ name: v, value: v })),
-        ...(versions.length > 10 ? [{ name: 'Other...', value: 'custom' }] : []),
-      ],
+      choices: versionChoices,
     },
   ]);
 
@@ -484,7 +533,7 @@ async function executeAddModuleFlow(params: {
     ]);
 
     if (configureAnswer.configure) {
-      config = await promptSkillConfig(selected.configSchema);
+      config = await promptSkillConfig(selected.name, selected.configSchema);
     }
   }
 
@@ -517,7 +566,7 @@ async function executeAddModuleFlow(params: {
   ]);
 
   if (installAnswer.install) {
-    await runApply(process.cwd());
+    await runApply(process.cwd(), runApplyOptionsFromGlobal(globalOpts));
   }
 
   console.log(chalk.green(`\n✓ ${selected.name} added successfully!`));
@@ -536,9 +585,9 @@ function registerAddCommand(program: Command) {
     .option('--type <kind>', 'Module type: skill | subagent | hook (when not using a typed subcommand)')
     .option('--save-dev', 'Add as dev dependency')
     .addOption(installScopeCliOption())
-    .action(async (nameArg, options) => {
+    .action(async (nameArg, options, cmd) => {
       try {
-        await executeAddModuleFlow({ nameArg, options });
+        await executeAddModuleFlow({ nameArg, options, globalOpts: getGlobalCliOptions(cmd) });
       } catch (error) {
         handleError(error);
       }
@@ -575,15 +624,46 @@ function registerListCommand(program: Command) {
 }
 
 function registerStatusCommand(program: Command) {
-  program.command('status').description('Show project / spec status').action(() => {
-    console.log(chalk.cyan(`Run \`${CLI_COMMAND} sync\` to apply. Status view coming soon.`));
-  });
+  program
+    .command('status')
+    .description('Show project / spec status')
+    .action(async () => {
+      try {
+        const { rows, moduleCount, clientType } = await runStatus(process.cwd());
+        console.log(chalk.cyan.bold('\nProject status\n'));
+        for (const row of rows) {
+          const icon = row.ok ? chalk.green(figures.tick) : chalk.red(figures.cross);
+          console.log(`  ${icon}  ${chalk.bold(row.label)}: ${row.detail}`);
+        }
+        if (clientType) {
+          console.log(chalk.gray(`\n  client.type: ${clientType} · modules: ${moduleCount}`));
+        }
+        console.log(chalk.gray(`\n  Run: ${CLI_COMMAND} sync  ·  ${CLI_COMMAND} doctor\n`));
+      } catch (e) {
+        handleError(e);
+      }
+    });
 }
 
 function registerUpdateCommand(program: Command) {
-  program.command('update [skill]').description('Update skills').action(() => {
-    console.log(chalk.yellow('Not implemented — bump versions in spec.yaml and run sync.'));
-  });
+  program
+    .command('update [skill]')
+    .description('Update module versions (manual — edit spec.yaml and sync)')
+    .action((skillName) => {
+      console.log(chalk.yellow('\nAutomatic updates are not implemented yet.'));
+      if (skillName) {
+        console.log(chalk.gray(`  Bump the version for "${skillName}" in spec.yaml, then run:`));
+      } else {
+        console.log(chalk.gray('  Bump versions in spec.yaml, then run:'));
+      }
+      console.log(chalk.cyan(`  ${CLI_COMMAND} sync`));
+      console.log(
+        chalk.gray(
+          '\n  To discover new catalog entries: aistack catalog refresh --write\n  Guide: https://github.com/deb-adarsh/ai-stack-kit/blob/main/USER_GUIDE.md\n'
+        )
+      );
+      process.exit(2);
+    });
 }
 
 function registerValidateCommand(program: Command) {
@@ -600,9 +680,41 @@ function registerValidateCommand(program: Command) {
 }
 
 function registerCleanCommand(program: Command) {
-  program.command('clean').description('Clean local cache').action(() => {
-    console.log(chalk.yellow('Not implemented yet.'));
-  });
+  program
+    .command('clean')
+    .description('Remove local catalog cache (.cache/aistack)')
+    .action(async () => {
+      const spinner = ora('Cleaning catalog cache…').start();
+      try {
+        const { removed } = await cleanAistackCache(process.cwd());
+        if (removed.length === 0) {
+          spinner.succeed('Nothing to clean (cache directory empty or missing)');
+        } else {
+          spinner.succeed(`Removed ${removed.length} cache entr${removed.length === 1 ? 'y' : 'ies'}`);
+        }
+      } catch (e) {
+        spinner.fail('Clean failed');
+        handleError(e);
+      }
+    });
+}
+
+function registerDoctorCommand(program: Command) {
+  program
+    .command('doctor')
+    .description('Check environment, spec, and catalog configuration')
+    .action(async () => {
+      try {
+        const { checks, ok } = await runDoctor(process.cwd());
+        printDoctorReport(checks);
+        if (!ok) {
+          process.exit(1);
+        }
+        console.log(chalk.green('All checks passed.'));
+      } catch (e) {
+        handleError(e);
+      }
+    });
 }
 
 function registerCatalogCommands(program: Command) {
@@ -652,17 +764,22 @@ function registerSearchCommand(program: Command) {
     .option('--type <kind>', 'Filter by module type: skill | subagent | hook')
     .option('--client <type>', 'Filter by client type')
     .option('--json', 'Output as JSON')
-    .action(async (query, options) => {
-      const spinner = ora('Searching...').start();
+    .action(async (query, options, cmd) => {
+      const globalOpts = getGlobalCliOptions(cmd);
+      const spinner = ora(
+        globalOpts.offline ? 'Searching (offline)…' : 'Searching…'
+      ).start();
 
       try {
         const moduleTypes = options.type ? [parseModuleTypeCli(options.type)] : undefined;
+        const limit = parseInt(String(options.limit), 10) || 20;
         const results = await searchModules(query, {
           cwd: process.cwd(),
-          limit: parseInt(options.limit),
+          limit,
           tags: options.tag ? [options.tag] : undefined,
           client: options.client,
           moduleTypes,
+          offline: globalOpts.offline,
         });
 
         spinner.succeed(`Found ${results.length} module(s)`);
@@ -730,11 +847,14 @@ function registerInstallCommand(program: Command) {
   program
     .command('install')
     .description('Resolve, fetch, and install skills from spec.yaml')
-    .action(async () => {
-      const spinner = ora('Installing…').start();
+    .action(async (_options, cmd) => {
+      const globalOpts = getGlobalCliOptions(cmd);
+      const spinner = ora(`Installing…${dryRunSuffix(globalOpts.dryRun)}`).start();
       try {
-        const result = await runApply(process.cwd());
-        spinner.succeed(`Installed / refreshed ${result.skillsInstalled} skill(s)`);
+        const result = await runApply(process.cwd(), runApplyOptionsFromGlobal(globalOpts));
+        spinner.succeed(
+          `Installed / refreshed ${result.skillsInstalled} skill(s)${dryRunSuffix(globalOpts.dryRun)}`
+        );
       } catch (e) {
         spinner.fail('Install failed');
         handleError(e);
@@ -746,11 +866,12 @@ function registerApplyCommand(program: Command) {
   program
     .command('apply')
     .description('Run full apply pipeline (install + client adapter)')
-    .action(async () => {
-      const spinner = ora('Applying…').start();
+    .action(async (_options, cmd) => {
+      const globalOpts = getGlobalCliOptions(cmd);
+      const spinner = ora(`Applying…${dryRunSuffix(globalOpts.dryRun)}`).start();
       try {
-        await runApply(process.cwd());
-        spinner.succeed('Apply complete');
+        await runApply(process.cwd(), runApplyOptionsFromGlobal(globalOpts));
+        spinner.succeed(`Apply complete${dryRunSuffix(globalOpts.dryRun)}`);
       } catch (e) {
         spinner.fail('Apply failed');
         handleError(e);
@@ -768,8 +889,10 @@ function registerSyncCommand(program: Command) {
     .command('sync')
     .description('Sync skills (install + apply)')
     .option('-f, --force', 'Force reinstall')
-    .action(async (options) => {
-      console.log(chalk.cyan('Syncing skills...\n'));
+    .action(async (options, cmd) => {
+      const globalOpts = getGlobalCliOptions(cmd);
+      const dryLabel = dryRunSuffix(globalOpts.dryRun);
+      console.log(chalk.cyan(`Syncing skills…${dryLabel}\n`));
 
       try {
         const spinner = ora('Validating spec.yaml...').start();
@@ -780,10 +903,13 @@ function registerSyncCommand(program: Command) {
         }
         spinner.succeed('Spec validated');
 
-        spinner.start('Running apply pipeline (resolve → install → adapter)...');
-        const applyResult = await runApply(process.cwd());
+        spinner.start(`Running apply pipeline (resolve → install → adapter)…${dryLabel}`);
+        const applyResult = await runApply(
+          process.cwd(),
+          runApplyOptionsFromGlobal(globalOpts, { forceReinstall: Boolean(options.force) })
+        );
         spinner.succeed(
-          `Done — skills processed: ${applyResult.skillsResolved}, files written: ${applyResult.adapterReport?.written.length ?? 0}`
+          `Done — skills processed: ${applyResult.skillsResolved}, files written: ${applyResult.adapterReport?.written.length ?? 0}${dryLabel}`
         );
 
         if (!applyResult.success) {
@@ -848,14 +974,17 @@ function registerModuleKindCommandGroups(program: Command) {
       .option('-t, --tag <tag>', 'Filter by tag')
       .option('--client <type>', 'Filter by client type')
       .option('--json', 'Output as JSON')
-      .action(async (query, options) => {
-        const spinner = ora('Searching...').start();
+      .action(async (query, options, cmd) => {
+        const globalOpts = getGlobalCliOptions(cmd);
+        const spinner = ora(globalOpts.offline ? 'Searching (offline)…' : 'Searching…').start();
         try {
-          const results = await g.searchFn(query, {
+          const results = await searchModules(query, {
             cwd: process.cwd(),
             limit: parseInt(options.limit, 10) || 20,
             tags: options.tag ? [options.tag] : undefined,
             client: options.client,
+            moduleTypes: [g.kind],
+            offline: globalOpts.offline,
           });
           spinner.succeed(`Found ${results.length} ${g.cmd}(s)`);
           if (options.json) {
@@ -883,7 +1012,7 @@ function registerModuleKindCommandGroups(program: Command) {
       .option('-s, --source <type>', 'Source type (github, npm, registry)')
       .option('--save-dev', 'Add as dev dependency')
       .addOption(installScopeCliOption())
-      .action(async (name, options) => {
+      .action(async (name, options, cmd) => {
         try {
           await executeAddModuleFlow({
             nameArg: name,
@@ -893,6 +1022,7 @@ function registerModuleKindCommandGroups(program: Command) {
               installScope: options.installScope,
             },
             lockedKind: g.kind,
+            globalOpts: getGlobalCliOptions(cmd),
           });
         } catch (e) {
           handleError(e);
@@ -969,6 +1099,9 @@ function handleError(error: any) {
   } else if (error.code === 'SPEC_APPEND_VALIDATION_FAILED') {
     console.error(chalk.red('\n✗ Append rolled back'));
     console.log(chalk.gray(error.message));
+  } else if (isGithubRateLimitError(error)) {
+    console.error(chalk.red('\n✗ GitHub API rate limit or auth error'));
+    printGithubTokenHint();
   } else {
     console.error(chalk.red('\n✗ Error:'), error.message);
     if (process.env.DEBUG) {
@@ -978,17 +1111,39 @@ function handleError(error: any) {
   process.exit(1);
 }
 
-async function promptSkillConfig(_schema: unknown): Promise<Record<string, unknown>> {
-  return {};
+function isGithubRateLimitError(error: { message?: string }): boolean {
+  const msg = (error.message ?? '').toLowerCase();
+  return (
+    msg.includes('rate limit') ||
+    msg.includes('api rate limit') ||
+    msg.includes('403') ||
+    msg.includes('401') ||
+    msg.includes('bad credentials')
+  );
 }
 
-async function quickInit(client: { type: string }): Promise<void> {
-  const adaptersSupported = new Set(['cursor', 'copilot', 'claude']);
-  const clientType = adaptersSupported.has(client.type) ? client.type : 'cursor';
-  if (clientType !== client.type) {
+function printGithubTokenHint(): void {
+  console.log(chalk.gray('\n  Higher GitHub API limits for search and catalogs:'));
+  console.log(chalk.cyan('  export GITHUB_TOKEN=ghp_…'));
+  console.log(
+    chalk.gray(
+      '  # fine-grained PAT: Contents read on public repos\n  https://github.com/deb-adarsh/ai-stack-kit/blob/main/USER_GUIDE.md#quick-start\n'
+    )
+  );
+  console.log(chalk.gray('  Or use: aistack --offline search <query>'));
+}
+
+async function quickInit(
+  client: { type: string },
+  globalOpts: ReturnType<typeof getGlobalCliOptions>
+): Promise<void> {
+  const clientType = resolveInitClientType(
+    SUPPORTED_CLIENT_TYPES.has(client.type) ? client.type : 'cursor'
+  );
+  if (clientType !== client.type && client.type !== 'unknown') {
     console.log(
       chalk.gray(
-        `Note: init --yes chose client.type "${clientType}" (detected "${client.type}" has no built-in adapter — use interactive init to pick copilot, claude, or cursor).`
+        `Note: init -y chose client.type "${clientType}" (detected "${client.type}" has no built-in adapter).`
       )
     );
   }
@@ -999,11 +1154,18 @@ async function quickInit(client: { type: string }): Promise<void> {
       author: '',
     },
     client: clientType,
-    skills: ['canvas', 'typescript-helper'],
+    skills: [],
     settings: { autoSync: false, verifyChecksums: true },
   });
   await ensureDefaultSourcesConfig(process.cwd());
   await ensureProjectGitignoreForAistack(process.cwd());
+  console.log(chalk.green('✔ Created spec.yaml and sources.config.yaml'));
+  console.log(
+    chalk.gray(`  Add modules: ${CLI_COMMAND} search <query>  ·  Skill browser: https://deb-adarsh.github.io/ai-stack-kit/`)
+  );
+  if (!globalOpts.dryRun) {
+    console.log(chalk.gray(`  Then: ${CLI_COMMAND} sync`));
+  }
 }
 
 /**
