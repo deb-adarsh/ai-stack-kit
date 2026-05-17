@@ -1,6 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'node:path';
-import { VIEW_CATALOG, VIEW_MODULES, VIEW_OUTPUTS } from './constants.js';
+import {
+  SKILL_BROWSER_URL,
+  VIEW_CATALOG,
+  VIEW_CONTAINER,
+  VIEW_MODULES,
+  VIEW_OUTPUTS,
+} from './constants.js';
 import { ModulesTreeProvider, ModuleTreeItem } from './views/modulesTreeProvider.js';
 import { OutputsTreeProvider } from './views/outputsTreeProvider.js';
 import { CatalogWebviewProvider } from './views/catalogWebviewProvider.js';
@@ -80,9 +86,8 @@ export function activate(context: vscode.ExtensionContext): void {
   register('aistack.search', () => runSearch());
   register('aistack.add', () => runAdd());
   register('aistack.switchClient', () => runSwitchClient());
-  register('aistack.openCatalog', async () => {
-    await vscode.commands.executeCommand(`${VIEW_CATALOG}.focus`);
-  });
+  register('aistack.openCatalog', () => focusCatalogPanel());
+  register('aistack.openSkillBrowser', () => openSkillBrowserWeb());
   register('aistack.refreshCatalog', () => runRefreshCatalogList());
   register('aistack.openSpec', () => openSpec());
   register('aistack.modules.refresh', () => refreshAll());
@@ -140,6 +145,20 @@ async function updateStatusBar(): Promise<void> {
   } catch {
     statusClient.text = '$(warning) spec invalid';
   }
+}
+
+async function focusCatalogPanel(): Promise<void> {
+  try {
+    await vscode.commands.executeCommand(`workbench.view.extension.${VIEW_CONTAINER}`);
+    await vscode.commands.executeCommand(`${VIEW_CATALOG}.focus`);
+  } catch (e) {
+    log('error', e instanceof Error ? e.message : String(e));
+    void vscode.window.showErrorMessage('Could not open the Catalog panel.');
+  }
+}
+
+function openSkillBrowserWeb(): void {
+  void vscode.env.openExternal(vscode.Uri.parse(SKILL_BROWSER_URL));
 }
 
 function asModuleTreeItem(item: unknown): ModuleTreeItem | undefined {
