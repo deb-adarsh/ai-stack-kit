@@ -178,26 +178,16 @@ export const SpecSettingsSchema = z.object({
 /**
  * Main spec file schema
  */
-export const SpecFileSchema = z
-  .object({
-    version: z.string().regex(/^\d+\.\d+$/, 'Version must be in format X.Y'),
-    project: ProjectMetadataSchema.optional(),
-    client: ClientConfigSchema,
-    skills: z.array(SkillSchema).default([]),
-    modules: z.array(SkillSchema).default([]),
-    settings: SpecSettingsSchema.optional(),
-    hooks: LifecycleHooksSchema.optional(),
-    metadata: z.record(z.unknown()).optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.skills.length + data.modules.length < 1) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'At least one entry in skills or modules is required',
-        path: ['skills'],
-      });
-    }
-  });
+export const SpecFileSchema = z.object({
+  version: z.string().regex(/^\d+\.\d+$/, 'Version must be in format X.Y'),
+  project: ProjectMetadataSchema.optional(),
+  client: ClientConfigSchema,
+  skills: z.array(SkillSchema).default([]),
+  modules: z.array(SkillSchema).default([]),
+  settings: SpecSettingsSchema.optional(),
+  hooks: LifecycleHooksSchema.optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 /**
  * Skill manifest schema

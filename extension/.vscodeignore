@@ -1,0 +1,15 @@
+.vscode/**
+.vscode-test/**
+src/**
+webview-ui/**
+node_modules/**
+out/**
+test-workspace/**
+esbuild.js
+tsconfig.json
+tsconfig.test.json
+PUBLISHING.md
+**/*.ts
+**/*.map
+media/icon.svg
+*.vsix

@@ -16,6 +16,14 @@ CLI tool that reads `spec.yaml`, resolves **skills**, **subagents**, and **hooks
 4. **CLI-first**: kubectl-style UX (`aistack` / `ai-stack`).
 5. **Loose coupling**: Boundaries over concrete types; composition over inheritance.
 
+### VS Code extension host
+
+The [`extension/`](extension/) package is published as **[AI Stack Kit on the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** (`deb-adarsh.ai-stack-kit`). It bundles the **headless API** (`src/api/workspace-api.ts` → `AistackWorkspace`) via esbuild. The extension host sets `AISTACK_TEMPLATES_CLIENTS` and `AISTACK_SOURCES_CONFIG_TEMPLATE` to shipped `extension/templates/` so sync works without `import.meta.url` at runtime. UI (trees, catalog webview, commands) calls the same `apply()` pipeline as the CLI.
+
+```
+Activity Bar / commands / webview  →  extension services  →  AistackWorkspace  →  pipeline + adapters
+```
+
 ---
 
 ## System architecture (diagram)

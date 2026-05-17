@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type Skill = {
   id: string;
@@ -23,6 +23,11 @@ type Catalog = {
   skills: Skill[];
 };
 
+const MODULE_TYPES = ['skill', 'subagent', 'hook'] as const;
+type ModuleTypeFilter = (typeof MODULE_TYPES)[number] | '';
+
+const USER_GUIDE_URL = 'https://github.com/deb-adarsh/ai-stack-kit/blob/main/USER_GUIDE.md';
+
 function skillFamily(s: Skill): string {
   return s.publisherFamily ?? s.publisherLabel;
 }
@@ -37,6 +42,10 @@ function metaLine(s: Skill): string {
   else if (s.publisherLabel !== skillFamily(s)) parts.push(s.publisherLabel);
   if (s.repo) parts.push(s.repo);
   return parts.join(' · ');
+}
+
+function npxInit() {
+  return `npx ${CLI_NPX_SPEC} init`;
 }
 
 function npxAdd(id: string) {
@@ -55,27 +64,68 @@ async function loadCatalog(): Promise<Catalog> {
   return res.json() as Promise<Catalog>;
 }
 
-async function copyText(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    window.prompt('Copy:', text);
-  }
+function readFiltersFromUrl(): {
+  q: string;
+  client: string | null;
+  moduleType: ModuleTypeFilter;
+} {
+  const params = new URLSearchParams(window.location.search);
+  const mt = (params.get('type') ?? '').toLowerCase();
+  const moduleType = MODULE_TYPES.includes(mt as (typeof MODULE_TYPES)[number])
+    ? (mt as (typeof MODULE_TYPES)[number])
+    : '';
+  return {
+    q: params.get('q') ?? '',
+    client: params.get('client') || null,
+    moduleType,
+  };
+}
+
+function writeFiltersToUrl(q: string, clientPick: string | null, moduleType: ModuleTypeFilter) {
+  const params = new URLSearchParams();
+  const qt = q.trim();
+  if (qt) params.set('q', qt);
+  if (clientPick) params.set('client', clientPick);
+  if (moduleType) params.set('type', moduleType);
+  const next = params.toString();
+  const url = next ? `${window.location.pathname}?${next}` : window.location.pathname;
+  window.history.replaceState(null, '', url);
 }
 
 export default function App() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(() => readFiltersFromUrl().q);
   const [familyPick, setFamilyPick] = useState<Set<string>>(new Set());
   const [pubPick, setPubPick] = useState<Set<string>>(new Set());
-  const [clientPick, setClientPick] = useState<string | null>(null);
+  const [clientPick, setClientPick] = useState<string | null>(() => readFiltersFromUrl().client);
+  const [moduleTypePick, setModuleTypePick] = useState<ModuleTypeFilter>(() => readFiltersFromUrl().moduleType);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     loadCatalog()
       .then(setCatalog)
       .catch((e: Error) => setError(e.message));
   }, []);
+
+  useEffect(() => {
+    writeFiltersToUrl(q, clientPick, moduleTypePick);
+  }, [q, clientPick, moduleTypePick]);
+
+  const copyText = useCallback(async (text: string, label = 'Copied!') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setToast(label);
+    } catch {
+      window.prompt('Copy:', text);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 2000);
+    return () => window.clearTimeout(t);
+  }, [toast]);
 
   const families = useMemo(() => {
     if (!catalog?.publisherFamilies?.length) {
@@ -101,6 +151,7 @@ export default function App() {
     return catalog.skills.filter((s) => {
       if (familyPick.size && !familyPick.has(skillFamily(s))) return false;
       if (pubPick.size && !pubPick.has(s.publisherLabel)) return false;
+      if (moduleTypePick && (s.moduleType ?? 'skill').toLowerCase() !== moduleTypePick) return false;
       if (
         clientPick &&
         !(s.supportedClients ?? []).some((c) => c.toLowerCase() === clientPick.toLowerCase())
@@ -108,10 +159,10 @@ export default function App() {
         return false;
       if (!qt) return true;
       const blob =
-        `${s.id} ${s.skillFolder} ${s.description} ${s.repo} ${s.publisherLabel} ${skillFamily(s)} ${s.publisherChannel ?? ''}`.toLowerCase();
+        `${s.id} ${s.skillFolder} ${s.description} ${s.repo} ${s.publisherLabel} ${skillFamily(s)} ${s.publisherChannel ?? ''} ${s.moduleType}`.toLowerCase();
       return blob.includes(qt);
     });
-  }, [catalog, q, familyPick, pubPick, clientPick]);
+  }, [catalog, q, familyPick, pubPick, clientPick, moduleTypePick]);
 
   function toggleFamily(label: string) {
     setFamilyPick((prev) => {
@@ -129,6 +180,14 @@ export default function App() {
       else next.add(label);
       return next;
     });
+  }
+
+  function clearFilters() {
+    setQ('');
+    setFamilyPick(new Set());
+    setPubPick(new Set());
+    setClientPick(null);
+    setModuleTypePick('');
   }
 
   if (error) {
@@ -153,30 +212,60 @@ export default function App() {
 
   return (
     <div className="shell">
+      {toast && (
+        <div className="toast" role="status" aria-live="polite">
+          {toast}
+        </div>
+      )}
+
       <header className="hero">
-        <div className="hero-brand">
-          <img
-            className="hero-logo"
-            src={`${import.meta.env.BASE_URL}favicon.svg`}
-            alt=""
-            width={52}
-            height={52}
-            decoding="async"
-          />
-          <h1>
-            AI Stack Kit
-            <br />
-            <span className="hero-sub">Skill browser</span>
-          </h1>
+        <div className="hero-top">
+          <div className="hero-brand">
+            <img
+              className="hero-logo"
+              src={`${import.meta.env.BASE_URL}favicon.svg`}
+              alt=""
+              width={52}
+              height={52}
+              decoding="async"
+            />
+            <h1>
+              AI Stack Kit
+              <br />
+              <span className="hero-sub">Skill browser</span>
+            </h1>
+          </div>
+          <a className="docs-link" href={USER_GUIDE_URL} target="_blank" rel="noreferrer">
+            Docs
+          </a>
         </div>
         <p className="hero-lead">
           Curated GitHub skill trees: Copilot community, Anthropic, Microsoft, Azure, OpenAI, Google Cloud, Composio, and more.
-          Filter by <strong>ecosystem</strong> (Microsoft includes GitHub-hosted Copilot catalogs,{' '}
-          <code>microsoft/skills</code>, and <code>microsoft/azure-skills</code>; Google includes the Cloud subtree) or by GitHub org.
-          Copy <code>npx</code>, run in a project with{' '}
-          <code>aistack init</code>, then sync.
+          Filter by ecosystem or publisher, copy <code>npx</code> commands, then sync into your IDE.
         </p>
       </header>
+
+      <section className="getting-started" aria-label="Getting started">
+        <h2 className="getting-started-title">Getting started</h2>
+        <ol className="getting-started-steps">
+          <li>
+            <code>{npxInit()}</code>
+            <button type="button" className="copy copy-inline" onClick={() => copyText(npxInit(), 'Init command copied')}>
+              Copy
+            </button>
+          </li>
+          <li>
+            <code>{npxAdd('<module-id>')}</code>
+            <span className="step-hint"> — pick a module below</span>
+          </li>
+          <li>
+            <code>{npxSync()}</code>
+            <button type="button" className="copy copy-inline" onClick={() => copyText(npxSync(), 'Sync command copied')}>
+              Copy
+            </button>
+          </li>
+        </ol>
+      </section>
 
       <div className="toolbar">
         <div className="search">
@@ -188,6 +277,19 @@ export default function App() {
             aria-label="Search skills"
           />
         </div>
+        <select
+          className="select-client"
+          value={moduleTypePick}
+          onChange={(e) => setModuleTypePick(e.target.value as ModuleTypeFilter)}
+          aria-label="Filter by module type"
+        >
+          <option value="">All types</option>
+          {MODULE_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
         <select
           className="select-client"
           value={clientPick ?? ''}
@@ -236,54 +338,75 @@ export default function App() {
       </div>
 
       <p className="stats">
-        Showing <strong>{filtered.length}</strong> of <strong>{catalog.count}</strong> skills · Updated{' '}
+        Showing <strong>{filtered.length}</strong> of <strong>{catalog.count}</strong> modules · Updated{' '}
         {new Date(catalog.generatedAt).toLocaleString()}
       </p>
 
-      <div className="list list-grid">
-        {filtered.map((s) => (
-          <article key={s.id} className="card">
-            <div className="card-top">
-              <span className="skill-name">{s.skillFolder}</span>
-              <span className="publisher">{metaLine(s)}</span>
-            </div>
-            <p className="desc">{s.description}</p>
-            {!!s.supportedClients?.length && (
-              <div className="clients">
-                {(s.supportedClients ?? []).map((c) => (
-                  <span key={c} className="client-tag">
-                    {c}
-                  </span>
-                ))}
+      {filtered.length === 0 ? (
+        <div className="empty-state">
+          <p>No modules match your filters.</p>
+          <button type="button" className="copy" onClick={clearFilters}>
+            Clear filters
+          </button>
+        </div>
+      ) : (
+        <div className="list list-grid">
+          {filtered.map((s) => (
+            <article key={s.id} className="card">
+              <div className="card-top">
+                <span className="skill-name">{s.skillFolder}</span>
+                <span className="module-type-tag">{s.moduleType ?? 'skill'}</span>
+                <span className="publisher">{metaLine(s)}</span>
               </div>
-            )}
-            <div className="cmd-row">
-              <code className="cmd">{npxAdd(s.id)}</code>
-              <button type="button" className="copy" onClick={() => copyText(npxAdd(s.id))}>
-                Copy add
-              </button>
-            </div>
-            <div className="cmd-row">
-              <code className="cmd">{npxSync()}</code>
-              <button type="button" className="copy" onClick={() => copyText(npxSync())}>
-                Copy sync
-              </button>
-            </div>
-            {s.githubBrowse && (
-              <p className="card-link">
-                <a href={s.githubBrowse} target="_blank" rel="noreferrer">
-                  View on GitHub
-                </a>
-              </p>
-            )}
-          </article>
-        ))}
-      </div>
+              <p className="desc">{s.description}</p>
+              {!!s.supportedClients?.length && (
+                <div className="clients">
+                  {(s.supportedClients ?? []).map((c) => (
+                    <span key={c} className="client-tag">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="cmd-row">
+                <code className="cmd">{npxAdd(s.id)}</code>
+                <button
+                  type="button"
+                  className="copy"
+                  onClick={() => copyText(npxAdd(s.id), 'Add command copied')}
+                >
+                  Copy add
+                </button>
+              </div>
+              <div className="cmd-row">
+                <code className="cmd">{npxSync()}</code>
+                <button
+                  type="button"
+                  className="copy"
+                  onClick={() => copyText(npxSync(), 'Sync command copied')}
+                >
+                  Copy sync
+                </button>
+              </div>
+              {s.githubBrowse && (
+                <p className="card-link">
+                  <a href={s.githubBrowse} target="_blank" rel="noreferrer">
+                    View on GitHub
+                  </a>
+                </p>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
 
       <footer className="note">
         <strong>IDE targeting:</strong> set <code>client.type</code> in <code>spec.yaml</code> (<code>cursor</code>,{' '}
-        <code>copilot</code>, <code>claude</code>, …). Ecosystem filters group catalogs by maintainer relationship, not
-        install location.
+        <code>copilot</code>, <code>claude</code>). See the{' '}
+        <a href={USER_GUIDE_URL} target="_blank" rel="noreferrer">
+          user guide
+        </a>
+        .
         <br />
         <br />
         Microsoft skills:{' '}
@@ -301,10 +424,6 @@ export default function App() {
         . Google Cloud subtree:{' '}
         <a href="https://github.com/google/skills/tree/main/skills/cloud" target="_blank" rel="noreferrer">
           google/skills/skills/cloud
-        </a>
-        . Layout inspired by{' '}
-        <a href="https://officialskills.sh/" target="_blank" rel="noreferrer">
-          officialskills.sh
         </a>
         .
       </footer>

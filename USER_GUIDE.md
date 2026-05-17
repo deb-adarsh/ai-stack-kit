@@ -8,6 +8,8 @@ Hands-on install, **`spec.yaml`** patterns, the full command surface, and troubl
 
 Install with **`npm install -g ai-stack-kit`** (**npm registry**) or **`npm install -g @deb-adarsh/ai-stack-kit`** (**GitHub registry** — see **[GitHub Packages](#github-packages)** below), or **`npm link`** from a clone.
 
+Prefer VS Code or Cursor without a global CLI? **[Install the extension from the Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** — see **[VS Code / Cursor extension](#vs-code--cursor-extension)**.
+
 ```bash
 # Install (examples — pick one)
 # npm install -g ai-stack-kit                   # npm registry (public)
@@ -60,6 +62,33 @@ Browse and filter the default catalogs; copy-paste commands use **`npx github:de
 **[https://deb-adarsh.github.io/ai-stack-kit/](https://deb-adarsh.github.io/ai-stack-kit/)**
 
 The UI reflects **`templates/sources.config.yaml`**: each deploy **re-queries those upstream skill trees** (GitHub Contents API / npm layouts), regenerates **`catalog.json`**, and publishes — so the demo tracks **upstream repos**, not a manually edited skill list. Your project’s **`sources.config.yaml`** and cache stay **separate**; use **`aistack catalog refresh`** locally to pull newly discovered IDs into **`spec.yaml`**. To propose another **public** upstream for the shared template, see **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
+
+### VS Code / Cursor extension
+
+**[Install AI Stack Kit from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** (publisher **deb-adarsh**, id **`deb-adarsh.ai-stack-kit`**).
+
+- **Marketplace:** open the link above and click **Install**, or use Quick Open (`Ctrl+P` / `Cmd+P`) → `ext install deb-adarsh.ai-stack-kit`
+- **Local dev:** build a `.vsix` from this repo (`npm run build:extension` → `cd extension && npm run vsix`) and install via **Extensions: Install from VSIX…**
+
+| UI area | What it does |
+|---------|----------------|
+| **Modules** tree | Reads `spec.yaml` — skills, subagents, hooks; enable/disable or remove from context menu |
+| **Outputs** tree | On-disk paths for the active `client.type` (e.g. `.github/skills/`, `.cursor/skills/`) |
+| **Catalog** webview | Bundled catalog snapshot; search, **Add to spec**, copy module id |
+
+**Typical flow:** open a folder → **AI Stack Kit: Initialize Workspace** → browse **Catalog** or **Search Catalog…** → **Sync**. Status bar: click **$(sync) AI Stack** to sync; right side shows `client.type` and module count (opens **Doctor**).
+
+**Settings** (Settings → Extensions → AI Stack Kit):
+
+| Setting | Purpose |
+|---------|---------|
+| `aiStackKit.clientType` | Default `cursor` / `copilot` / `claude` on init and **Switch Client** |
+| `aiStackKit.installScope` | `project` or `user` install roots |
+| `aiStackKit.githubToken` | PAT for catalog search (same as `GITHUB_TOKEN` for CLI) |
+| `aiStackKit.dryRun` | Preview sync without writing files |
+| `aiStackKit.autoSyncOnSave` | Run sync when `spec.yaml` is saved |
+
+**Developers:** `npm run build:extension` from repo root; **F5** in `extension/` launches the Extension Development Host. Integration tests: `npm run test:extension`.
 
 ---
 

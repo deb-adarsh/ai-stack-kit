@@ -1,0 +1,41 @@
+body {
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  margin: 0;
+  padding: 12px;
+}
+input,
+select {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 6px 0;
+  padding: 6px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+}
+.card {
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  padding: 10px;
+  margin: 8px 0;
+}
+button {
+  margin-top: 6px;
+  margin-right: 6px;
+}
+.toast {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--vscode-notifications-background);
+  padding: 8px 14px;
+  border-radius: 6px;
+  display: none;
+}
+.muted {
+  color: var(--vscode-descriptionForeground);
+  font-size: 0.9em;
+}

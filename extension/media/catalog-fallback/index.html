@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Stack Kit Catalog</title>
+    <link rel="stylesheet" href="./catalog.css" />
+  </head>
+  <body>
+    <h2>Skill catalog</h2>
+    <p class="muted">Bundled snapshot. Run <code>npm run build:catalog</code> at repo root for the full index.</p>
+    <input type="search" id="q" placeholder="Search…" />
+    <select id="type">
+      <option value="">All types</option>
+      <option value="skill">skill</option>
+      <option value="subagent">subagent</option>
+      <option value="hook">hook</option>
+    </select>
+    <div id="list"></div>
+    <div id="toast" class="toast"></div>
+    <script src="./catalog.js"></script>
+  </body>
+</html>

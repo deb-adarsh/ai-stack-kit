@@ -1,0 +1,79 @@
+# Publish AI Stack Kit VS Code extension to the Marketplace on version tags.
+# See https://code.visualstudio.com/api/working-with-extensions/continuous-integration
+#
+# Setup: add repository secret VSCE_PAT (Azure DevOps PAT, Marketplace → Manage).
+# Release: bump extension/package.json version + CHANGELOG, commit, then:
+#   git tag v1.1.3 && git push origin v1.1.3
+
+name: Publish VS Code Extension
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Build VS Code extension
+        run: npm run build:extension
+
+      - name: Extension integration tests
+        run: xvfb-run -a npm run test:extension
+
+      - name: Check extension bundle size
+        run: test $(wc -c < extension/dist/extension.js) -lt 5242880
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension package
+        run: npm run build:extension
+
+      - name: Package VSIX artifact
+        working-directory: extension
+        run: npm run vsix
+
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-stack-kit-vsix
+          path: extension/*.vsix
+          if-no-files-found: error
+
+      - name: Publish to Visual Studio Marketplace
+        working-directory: extension
+        run: npm run deploy
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
