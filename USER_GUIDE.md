@@ -1,396 +1,74 @@
-# AI Stack Kit — User guide
+# AI Stack Kit — User guides
 
-Hands-on install, **`spec.yaml`** patterns, the full command surface, and troubleshooting. For repository layout, diagrams, and extension APIs, see **[ARCHITECTURE.md](./ARCHITECTURE.md)** and **[EXTENSIONS.md](./EXTENSIONS.md)**. High-level positioning stays in the root **[README.md](./README.md)**.
+AI Stack Kit is a **spec-driven** toolkit for installing and syncing **skills**, **subagents**, and **hooks** across **Cursor**, **GitHub Copilot**, and **Claude**. One **`spec.yaml`** per project; one sync pipeline — choose how you work:
 
----
+| Guide | Best for |
+|-------|----------|
+| **[CLI guide](./docs/CLI_GUIDE.md)** | Terminal, CI/CD, scripts, `aistack catalog refresh`, automation |
+| **[Extension guide](./docs/EXTENSION_GUIDE.md)** | VS Code / Cursor sidebar — Modules, Catalog, Sync without a global CLI |
 
-## Quick Start
-
-Install with **`npm install -g ai-stack-kit`** (**npm registry**) or **`npm install -g @deb-adarsh/ai-stack-kit`** (**GitHub registry** — see **[GitHub Packages](#github-packages)** below), or **`npm link`** from a clone.
-
-Prefer VS Code or Cursor without a global CLI? **[Install the extension from the Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** — see **[VS Code / Cursor extension](#vs-code--cursor-extension)**.
-
-```bash
-# Install (examples — pick one)
-# npm install -g ai-stack-kit                   # npm registry (public)
-# npm install -g @deb-adarsh/ai-stack-kit       # GitHub registry (+ ~/.npmrc)
-
-export GITHUB_TOKEN=ghp_…   # optional: higher GitHub REST limits for `search` / listings (fine-grained: Contents read on public repos)
-
-# Initialize (spec.yaml + sources.config.yaml; appends a managed `.gitignore` block — same block is ensured again on `sync` / `apply` / `install` if missing)
-aistack init
-
-# Edit spec.yaml to add skills / agents / hooks
-vim spec.yaml
-
-# Install and apply
-aistack sync
-```
-
-### Upgrade the CLI
-
-**`npm install -g …@latest`** only updates the **global CLI** (the `aistack` / `ai-stack` binaries). It does **not** rewrite **`spec.yaml`**, **`sources.config.yaml`**, your IDE skill folders, or caches — those stay until **you** change them or run commands that modify them.
-
-```bash
-npm install -g ai-stack-kit@latest
-# GitHub registry: npm install -g @deb-adarsh/ai-stack-kit@latest
-```
-
-Use **`aistack --version`** to confirm. Open projects keep working; run **`aistack sync`** when you want outputs regenerated under the new CLI.
-
-### GitHub Packages
-
-GitHub’s npm registry (**`npm.pkg.github.com`**) expects authentication even for public packages. Use a PAT with **`read:packages`** (classic) or fine‑grained **Packages** read.
-
-```ini
-@deb-adarsh:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_GITHUB_PAT
-```
-
-Then **`npm install -g @deb-adarsh/ai-stack-kit`**. **npm registry** installs (**`ai-stack-kit`**, unscoped) need **no** `.npmrc` for public packages.
-
-Fresh **`init`** drops a **`sources.config.yaml`** next to `spec.yaml` with curated GitHub catalogs ([Copilot awesome-copilot](https://github.com/github/awesome-copilot/tree/main/skills), [Anthropic skills](https://github.com/anthropics/skills/tree/main/skills), [Microsoft skills](https://github.com/microsoft/skills/tree/main/.github/skills), [Microsoft Azure skills](https://github.com/microsoft/azure-skills/tree/main/skills), [OpenAI curated skills](https://github.com/openai/skills/tree/main/skills/.curated), [Composio awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills), [Google Cloud skills](https://github.com/google/skills/tree/main/skills/cloud)). Override or trim sources anytime.
-
-**`init` client hint (optional):** the CLI inspects **your home directory only** (not the repo’s `.idea` or which window is focused). **`sync` / `apply` always follow `spec.yaml` → `client.type`**. **Rough order:** (1) **`~/.cursor`** → **`cursor`** (checked **before** VS Code because Cursor also uses **`~/.vscode`**); (2) **VS Code ecosystem** — if **`~/.vscode`** or **`~/.copilot`**: **`~/.copilot`** → **`copilot`**; else **`~/.claude`** → **`claude`**; else default **`copilot`**; (3) **`~/.claude`** if nothing matched earlier; (4) JetBrains paths under home. Override in the init prompt anytime.
-
-Skill packs from those trees are mostly **portable**: the same folder layout works across **Cursor**, **Copilot**, and **Claude** outputs — `client.type` in `spec.yaml` picks where files land. For a large curated index that is **README-only** (not a tree the CLI can crawl), see [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills).
-
-### Skill browser (GitHub Pages)
-
-Browse and filter the default catalogs; copy-paste commands use **`npx github:deb-adarsh/ai-stack-kit`** (no GitHub Packages PAT):
-
-**[https://deb-adarsh.github.io/ai-stack-kit/](https://deb-adarsh.github.io/ai-stack-kit/)**
-
-The UI reflects **`templates/sources.config.yaml`**: each deploy **re-queries those upstream skill trees** (GitHub Contents API / npm layouts), regenerates **`catalog.json`**, and publishes — so the demo tracks **upstream repos**, not a manually edited skill list. Your project’s **`sources.config.yaml`** and cache stay **separate**; use **`aistack catalog refresh`** locally to pull newly discovered IDs into **`spec.yaml`**. To propose another **public** upstream for the shared template, see **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
-
-### VS Code / Cursor extension
-
-**[Install AI Stack Kit from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** (publisher **deb-adarsh**, id **`deb-adarsh.ai-stack-kit`**).
-
-- **Marketplace:** open the link above and click **Install**, or use Quick Open (`Ctrl+P` / `Cmd+P`) → `ext install deb-adarsh.ai-stack-kit`
-- **Local dev:** build a `.vsix` from this repo (`npm run build:extension` → `cd extension && npm run vsix`) and install via **Extensions: Install from VSIX…**
-
-| UI area | What it does |
-|---------|----------------|
-| **Modules** tree | Reads `spec.yaml` — skills, subagents, hooks; enable/disable or remove from context menu |
-| **Outputs** tree | On-disk paths for the active `client.type` (e.g. `.github/skills/`, `.cursor/skills/`) |
-| **Catalog** webview | Bundled catalog snapshot; search, **Add to spec**, copy module id |
-
-**Typical flow:** open a folder → **AI Stack Kit: Initialize Workspace** → browse **Catalog** or **Search Catalog…** → **Sync**. Status bar: click **$(sync) AI Stack** to sync; right side shows `client.type` and module count (opens **Doctor**).
-
-**Settings** (Settings → Extensions → AI Stack Kit):
-
-| Setting | Purpose |
-|---------|---------|
-| `aiStackKit.clientType` | Default `cursor` / `copilot` / `claude` on init and **Switch Client** |
-| `aiStackKit.installScope` | `project` or `user` install roots |
-| `aiStackKit.githubToken` | PAT for catalog search (same as `GITHUB_TOKEN` for CLI) |
-| `aiStackKit.dryRun` | Preview sync without writing files |
-| `aiStackKit.autoSyncOnSave` | Run sync when `spec.yaml` is saved |
-
-**Developers:** `npm run build:extension` from repo root; **F5** in `extension/` launches the Extension Development Host. Integration tests: `npm run test:extension`.
+Product overview and install matrix: **[README.md](./README.md)**. Architecture and APIs: **[ARCHITECTURE.md](./ARCHITECTURE.md)**.
 
 ---
 
-## Example `spec.yaml`
+## Shared concepts (both surfaces)
 
-AI Stack Kit reads **`client.type`** to decide which **client adapter** runs at apply time. **Built-in adapters:** **`cursor`**, **`copilot`**, **`claude`**. Use **`copilot`** for VS Code + GitHub Copilot outputs. Other **`client.type`** values only work with a custom adapter.
+### Files in your project
 
-You normally declare **one** primary client per project; change **`type`** when you target a different editor or assistant surface.
+| File | Role |
+|------|------|
+| **`spec.yaml`** | What modules you use and which **client** receives generated files |
+| **`sources.config.yaml`** | Where to discover modules (GitHub trees, npm, etc.) |
+| **`.aistack/`** | Cache, lock file, install artifacts |
 
-Catalog discovery uses **`sources.config.yaml`** in the project root (`aistack init` seeds a default — see [Quick Start](#quick-start)). **`hooks`** at the bottom are **lifecycle shell steps** (pre/post install/apply), not the same thing as **`moduleType: hook`** AI modules in `modules:`.
+Created by **`aistack init`** or **AI Stack Kit: Initialize Workspace**.
 
-**`aistack search`** calls the GitHub REST API for each configured GitHub source (same listing traffic as catalog hydration). Without **`GITHUB_TOKEN`**, shared egress IPs often hit **rate limits** (403). Export a PAT with **contents read** on those repos for higher quotas; a failing source is skipped so results still merge from npm catalogs, other GitHub mirrors, disk cache, and **offline** hints.
+### Workflow
 
-```yaml
-version: "1.0"
+**search → add → sync**
 
-project:
-  name: my-ai-setup
-  description: Declarative skills and agents for your toolchain
+1. Discover modules (CLI **`search`**, extension **Catalog**, or [Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)).
+2. Add rows to **`spec.yaml`**.
+3. **Sync** — resolve sources, install, write IDE-specific outputs.
 
-# Pick the client that receives generated files (examples below — keep one active block).
-client:
-  type: cursor                    # also: copilot | claude | vscode | ...
-  # installScope: project        # default — repo paths (.cursor/…, .github/…, .claude/…)
-  # installScope: user          # global paths (~/.cursor/…, ~/.copilot/…, ~/.claude/…)
-  features:
-    - skills
-    - hooks
-  # adapter:
-  #   mergeStrategy: merge
+### Clients
 
-# Optional defaults (paths expand ~)
-settings:
-  cacheDir: ~/.aistack/cache
-  lockFile: .aistack/lock.yaml
+| `client.type` | Typical outputs |
+|---------------|-----------------|
+| **`cursor`** | `.cursor/skills/`, etc. |
+| **`copilot`** | `.github/skills/`, Copilot instructions |
+| **`claude`** | Claude project / user skill paths |
 
-skills:
-  - name: canvas
-    version: ^2.0.0
-    source: github
-    sourceConfig:
-      owner: your-org
-      repo: skills
-      path: canvas
-      branch: main
+### Skill browser (hosted)
 
-  - name: figma-agent
-    version: latest
-    source: npm
-    sourceConfig:
-      package: "@your-scope/skills-bundle"
-      path: skills # subdirectory inside the package (when applicable)
+**[https://deb-adarsh.github.io/ai-stack-kit/](https://deb-adarsh.github.io/ai-stack-kit/)** — browse upstream catalogs; copy `npx` commands. The extension **globe** button and **Full skill browser ↗** in Catalog open this site.
 
-  - name: my-custom-skill
-    source: local
-    sourceConfig:
-      localPath: ./skills/my-custom-skill
+### GitHub token
 
-# Same row shape as skills; use moduleType for subagents / hook manifests.
-modules:
-  - name: code-reviewer
-    moduleType: subagent
-    version: latest
-    source: github
-    sourceConfig:
-      owner: your-org
-      repo: agents
-      path: code-reviewer
-
-# Lifecycle commands (optional), not AI hook modules
-hooks:
-  postApply:
-    - echo "AI Stack Kit apply finished."
-```
+For GitHub-backed catalog search, set **`GITHUB_TOKEN`** (CLI) or **`aiStackKit.githubToken`** (extension). Fine-grained PAT: **Contents** read on public repos.
 
 ---
 
-## Core concepts
+## Pick a guide
 
-### 1. Skills
-Reusable IDE configurations (like Cursor skills, rules, hooks) packaged and distributed.
+### I use the terminal
 
-### 2. Sources
-Where skills come from: GitHub, npm, custom registries, or local files.
+→ **[CLI guide](./docs/CLI_GUIDE.md)** — install, command reference, env vars, troubleshooting.
 
-### 3. Registries
-Centralized repositories for discovering and fetching skills (like npm registry).
+### I use VS Code or Cursor
 
-### 4. Adapters
-IDE-specific implementations that apply skills to Cursor, VS Code / Copilot, Claude, etc.
+→ **[Extension guide](./docs/EXTENSION_GUIDE.md)** — Marketplace install, Activity Bar views, commands, settings.
 
-### 5. Spec file (`spec.yaml`)
-Declarative configuration defining which skills to install and how.
+### I use both
 
-### 6. Lock file (`.aistack/lock.yaml`)
-Optional reproducibility artifact with resolved versions (similar spirit to `package-lock.json`).
+Common pattern: **extension** for day-to-day add/sync; **CLI** in CI (`aistack sync`) or for **`catalog refresh --write`**.
 
 ---
 
-## Command reference
+## More documentation
 
-**`install`**, **`apply`**, and **`sync`** read **`spec.yaml`** (`skills:` + `modules:`); they do **not** take a skill name on the CLI. Add modules with **`skill add`**, **`add`**, or by editing **`spec.yaml`**, then run **`sync`**.
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** — catalogs, PRs
+- **[docs/CLI_UX_FLOWS.md](./docs/CLI_UX_FLOWS.md)** — CLI interaction targets
+- **[EXTENSIONS.md](./EXTENSIONS.md)** — custom sources and adapters
 
-For **`search`** against GitHub-backed catalogs, export **`GITHUB_TOKEN`** (see [Environment variables](#environment-variables)).
-
-```bash
-# Project Management
-aistack init                    # Initialize new project
-aistack validate                # Validate spec.yaml
-aistack status                  # Show installation status
-
-# Resolve spec → install → IDE (all module kinds in spec.yaml)
-aistack install                 # Fetch / install modules (skills, subagents, hooks, …)
-aistack apply                   # Apply generated config to IDE
-aistack sync                    # Install + apply
-aistack update [name]           # Update modules (placeholder / bump in spec)
-
-# Discovery (any kind — or use typed commands below)
-aistack search <query>          # Search catalogs
-aistack info <name>             # Show catalog metadata for a module
-aistack list                    # List modules declared in spec.yaml
-
-# Catalog vs spec (additive YAML merge — preserves comments better than full rewrite)
-aistack catalog refresh              # List catalog modules not yet in spec.yaml
-aistack catalog refresh --write      # Interactive: append selected rows under modules:
-aistack catalog refresh --write -y --max 50   # Non-interactive batch (disabled by default)
-aistack catalog refresh --refresh-sources       # Clear GitHub listing cache, then refresh
-
-# Typed catalogs (preferred): skill | subagent | hook
-# Optional --install-scope: user → client.installScope: user (~/.cursor, ~/.copilot, ~/.claude);
-#   project → remove installScope (repo-local trees). Omit → leave spec unchanged (resolver treats unset as project).
-aistack skill search <query>    # Search skills only
-aistack skill add [name] [--install-scope project|user]
-aistack skill info <name>       # Skill metadata
-aistack subagent search <query> # Search subagents only
-aistack subagent add [name] [--install-scope project|user]
-aistack subagent info <name>    # Subagent metadata
-aistack hook search <query>     # Search hooks only
-aistack hook add [name] [--install-scope project|user]       # Add a hook to spec.yaml
-aistack hook info <name>       # Hook metadata
-
-# Modification (legacy aliases — same spec.yaml rows as typed add)
-aistack add [name] [--install-scope project|user]   # Legacy (--type skill|subagent|hook)
-aistack remove <name>           # Remove a module from spec.yaml
-
-# Registry
-aistack login                  # Login to registry
-aistack publish                # Publish module
-
-# Maintenance
-aistack clean                  # Clean cache
-```
-
----
-
-## Skill reference formats
-
-| Format | Example | Description |
-|--------|---------|-------------|
-| GitHub | `github:official` | From configured GitHub source |
-| npm | `npm:npm-skills` | From configured npm source |
-| Registry | `registry:company` | From custom registry |
-| Local | `local:workspace` | From local filesystem |
-
----
-
-## Version specifiers
-
-| Specifier | Meaning | Example |
-|-----------|---------|---------|
-| `1.2.3` | Exact version | `1.2.3` |
-| `^1.2.3` | Compatible (minor) | `1.2.3` to `<2.0.0` |
-| `~1.2.3` | Patch updates | `1.2.3` to `<1.3.0` |
-| `>=1.2.3` | Minimum version | `1.2.3` and above |
-| `latest` | Latest version | Most recent |
-| `*` | Any version | Latest stable |
-
----
-
-## Environment variables
-
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `AISTACK_TOKEN` | Default registry token | `export AISTACK_TOKEN=abc123` |
-| `AISTACK_CACHE_DIR` | Override cache dir | `~/.cache/aistack` |
-| `AISTACK_LOG_LEVEL` | Log verbosity | `debug`, `info`, `warn`, `error` |
-| `GITHUB_TOKEN` | Higher GitHub **REST** limits for **`aistack search`** / catalog listing + **private** skill repos | `export GITHUB_TOKEN=ghp_…` (fine-grained: **Contents** read on public repos) |
-
----
-
-## Dependency resolution
-
-```
-spec.yaml
-    │
-    ├─ Skill A (^1.0.0)
-    │   └─ Skill C (^2.0.0)
-    │
-    └─ Skill B (~2.1.0)
-        └─ Skill C (^2.1.0)
-
-Resolution:
-  - Skill A: 1.2.3 (latest ^1.x)
-  - Skill B: 2.1.5 (latest ~2.1.x)
-  - Skill C: 2.1.8 (satisfies both ^2.0.0 and ^2.1.0)
-```
-
----
-
-## File locations
-
-| File/Directory | Purpose | Location |
-|----------------|---------|----------|
-| `spec.yaml` | Project configuration | Project root |
-| `.aistack/lock.yaml` | Lock file | Project root |
-| `~/.aistack/cache/` | Downloaded skills | User home |
-| `~/.aistack/config.yaml` | Global config | User home |
-| `~/.cursor/skills/` | Installed skills (Cursor) | User home |
-
----
-
-## Error codes
-
-| Code | Category | Description |
-|------|----------|-------------|
-| 0 | Success | Command completed successfully |
-| 1 | User Error | Invalid spec, missing files |
-| 2 | Network Error | Failed downloads, timeouts |
-| 3 | System Error | Permission denied, disk full |
-| 4 | IDE Error | IDE not found, version mismatch |
-| 5 | Registry Error | Registry unavailable |
-| 6 | Conflict Error | Dependency conflicts |
-
----
-
-## Workflow patterns
-
-### Pattern 1: Fresh install
-```bash
-git clone repo && cd repo
-aistack sync
-```
-
-### Pattern 2: Add new skill
-```bash
-export GITHUB_TOKEN=ghp_…   # recommended for search against GitHub catalogs
-aistack search figma
-aistack add github:official/figma-agent   # or: aistack skill add …
-aistack sync
-```
-
-### Pattern 3: Update skills
-```bash
-aistack update
-aistack update canvas
-aistack status
-```
-
-### Pattern 4: Share configuration
-```bash
-git add spec.yaml .aistack/lock.yaml
-git commit -m "Add aistack configuration"
-git push
-```
-
----
-
-## Best practices
-
-1. **Lock file** — Commit `.aistack/lock.yaml` when your team wants reproducible resolves.
-2. **Version constraints** — Use `^` for libraries (minor updates), exact versions for critical rows.
-3. **Secrets** — Use environment variables for tokens; never commit credentials.
-4. **Local development** — Use `local:` sources for WIP; switch to `github:` / `registry:` for shared setups.
-5. **Hooks** — Keep lifecycle hooks fast (notifications, not heavy jobs).
-6. **Validation** — Run **`aistack validate`** before committing spec changes.
-7. **Cache** — Prefer **`aistack clean`** when installs behave oddly.
-
----
-
-## Troubleshooting
-
-### Skills not applying
-```bash
-aistack status --verbose
-aistack validate
-aistack apply --force
-```
-
-### Network errors
-```bash
-aistack install --offline
-AISTACK_TIMEOUT=60000 aistack install
-aistack clean --cache
-aistack install
-```
-
-### Dependency conflicts
-```bash
-aistack list --tree
-# Pin versions in spec.yaml when needed
-```
-
----
-
-Back to **[README.md](./README.md)** for product overview, roadmap, and repo map.
+Back to **[README.md](./README.md)**.

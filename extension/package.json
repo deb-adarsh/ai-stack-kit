@@ -2,7 +2,7 @@
   "name": "ai-stack-kit",
   "displayName": "AI Stack Kit",
   "description": "Manage AI skills, subagents, and hooks from spec.yaml — search catalogs, sync to Cursor, Copilot, and Claude.",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "publisher": "deb-adarsh",
   "license": "Apache-2.0",
   "repository": {
@@ -24,14 +24,6 @@
   "categories": ["Other", "Machine Learning"],
   "keywords": ["ai", "copilot", "cursor", "claude", "skills", "agents"],
   "icon": "media/icon.png",
-  "activationEvents": [
-    "onView:aistack.modules",
-    "onView:aistack.catalog",
-    "onView:aistack.outputs",
-    "onCommand:aistack.openCatalog",
-    "onCommand:aistack.openSkillBrowser",
-    "workspaceContains:spec.yaml"
-  ],
   "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -39,10 +31,7 @@
         {
           "id": "aistack",
           "title": "AI Stack Kit",
-          "icon": {
-            "light": "media/activity-bar-icon-light.svg",
-            "dark": "media/activity-bar-icon-dark.svg"
-          }
+          "icon": "media/activity-bar-icon.svg"
         }
       ]
     },

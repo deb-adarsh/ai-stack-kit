@@ -2,6 +2,13 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
+## [1.1.7] - 2026-05-18
+
+### Fixed
+
+- **Extension not loading (1.1.6 regression)** — removed overly narrow `activationEvents` so commands and the Activity Bar work on install (VS Code auto-activates from contributed views/commands).
+- **Missing Activity Bar icon** — single compliant `activity-bar-icon.svg` instead of theme-specific SVG pair that failed on some hosts.
+
 ## [1.1.6] - 2026-05-18
 
 ### Fixed

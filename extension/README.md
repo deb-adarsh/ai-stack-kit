@@ -1,16 +1,10 @@
 # AI Stack Kit
 
-Manage **skills**, **subagents**, and **hooks** from `spec.yaml` inside VS Code — search catalogs, edit your spec, and sync outputs for **Cursor**, **GitHub Copilot**, or **Claude** without a global CLI install.
+Manage **skills**, **subagents**, and **hooks** from `spec.yaml` inside VS Code or Cursor — search catalogs, edit your spec, and sync outputs for **Cursor**, **GitHub Copilot**, or **Claude** without a global CLI install.
 
 ## Install
 
-**[Visual Studio Marketplace → AI Stack Kit](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)**
-
-Quick Open (`Ctrl+P` / `Cmd+P`):
-
-```text
-ext install deb-adarsh.ai-stack-kit
-```
+**[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** — use **Install** on that page (VS Code 1.85+ or Cursor).
 
 ## Features
 
@@ -26,6 +20,8 @@ ext install deb-adarsh.ai-stack-kit
 2. Run **AI Stack Kit: Initialize Workspace** from the Command Palette.
 3. Browse **Catalog** or run **Search Catalog…** to add modules.
 4. Run **Sync** (status bar: **$(sync) AI Stack**).
+
+Sidebar views default to **Modules → Catalog → Outputs** (drag to reorder). The globe on **Catalog** opens the [hosted skill browser](https://deb-adarsh.github.io/ai-stack-kit/).
 
 ## Settings
 
@@ -43,9 +39,10 @@ This extension bundles the same engine as the [AI Stack Kit CLI](https://github.
 
 ## Documentation
 
-- [User guide](https://github.com/deb-adarsh/ai-stack-kit/blob/main/USER_GUIDE.md)
+- [Extension guide](https://github.com/deb-adarsh/ai-stack-kit/blob/main/docs/EXTENSION_GUIDE.md)
+- [CLI guide](https://github.com/deb-adarsh/ai-stack-kit/blob/main/docs/CLI_GUIDE.md)
 - [Architecture](https://github.com/deb-adarsh/ai-stack-kit/blob/main/ARCHITECTURE.md)
 
 ## Issues
 
-Use **Help → Report Issue** (integrated with this extension) or [GitHub Issues](https://github.com/deb-adarsh/ai-stack-kit/issues).
+Use **Help → Report Issue** or [GitHub Issues](https://github.com/deb-adarsh/ai-stack-kit/issues).

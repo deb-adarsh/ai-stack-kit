@@ -1,7 +1,7 @@
 {
   "name": "@deb-adarsh/ai-stack-kit",
   "version": "1.1.2",
-  "description": "AI Stack Kit — CLI for managing IDE skills and configurations",
+  "description": "AI Stack Kit — spec-driven skills, subagents, and hooks for Cursor, Copilot, and Claude (CLI + VS Code extension)",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +21,9 @@
     "templates",
     "LICENSE",
     "README.md",
-    "USER_GUIDE.md"
+    "USER_GUIDE.md",
+    "docs/CLI_GUIDE.md",
+    "docs/EXTENSION_GUIDE.md"
   ],
   "scripts": {
     "build": "tsc",

@@ -9,6 +9,8 @@
 
 Stop copy-pasting AI workflows between repos. Install them like packages.
 
+Not a fan of the CLI? Use the [**VS Code / Cursor extension**](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit) from your IDE — same `spec.yaml` workflow, no global install required.
+
 A CLI to **discover, install, apply and sync reusable AI capabilities** from GitHub, npm, and registries - using a simple declarative spec.
 
 > Think: npm (distribution) + Terraform (setup) for AI dev environments
@@ -18,23 +20,19 @@ A CLI to **discover, install, apply and sync reusable AI capabilities** from Git
 | Method | Command |
 |--------|---------|
 | **npm registry** (public) | `npm install -g ai-stack-kit` |
-| **GitHub Packages** | `npm install -g @deb-adarsh/ai-stack-kit` (requires [`.npmrc` auth](https://github.com/deb-adarsh/ai-stack-kit/blob/main/USER_GUIDE.md#github-packages)) |
+| **GitHub Packages** | `npm install -g @deb-adarsh/ai-stack-kit` (requires [`.npmrc` auth](./docs/CLI_GUIDE.md#github-packages)) |
 | **No global install** | `npx github:deb-adarsh/ai-stack-kit <command>` (same as the [Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)) |
-| **VS Code / Cursor extension** | [**Install from Marketplace**](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit) — `ext install deb-adarsh.ai-stack-kit` — or build a `.vsix` with `npm run build:extension` then `cd extension && npm run vsix` |
+| **VS Code / Cursor extension** | [**Install from Marketplace**](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit) |
 
 ### VS Code extension
 
-**[Install AI Stack Kit on the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** (works in VS Code and Cursor). Quick Open (`Ctrl+P` / `Cmd+P`) → `ext install deb-adarsh.ai-stack-kit`.
+**[Install from the Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** (VS Code or Cursor) — same `spec.yaml` workflow as the CLI, no global install required.
 
-The bundled extension in [`extension/`](extension/) uses the same engine as the CLI (`AistackWorkspace` API) — no global `aistack` install required.
-
-- **Activity Bar** → **Modules**, **Outputs**, and **Catalog** (skill browser)
-- Commands: **Initialize**, **Sync**, **Doctor**, **Search/Add**, **Switch Client** (cursor / copilot / claude)
+- **Activity Bar** → **Modules**, **Catalog**, **Outputs**
+- Commands: **Initialize**, **Sync**, **Doctor**, **Search/Add**, **Switch Client**
 - Settings: `aiStackKit.clientType`, `aiStackKit.githubToken`, `aiStackKit.dryRun`, `aiStackKit.autoSyncOnSave`
 
-From the repo root: `npm run build:extension` bundles core + catalog snapshot. Press **F5** in the `extension/` folder to run the Extension Development Host. See **[USER_GUIDE.md](./USER_GUIDE.md#vs-code--cursor-extension)** for workflows.
-
-**Publish to Marketplace:** see **[extension/PUBLISHING.md](./extension/PUBLISHING.md)** — manual (`vsce` / VSIX upload) or CI on `git tag v1.x.x` with GitHub secret `VSCE_PAT` ([Continuous Integration](https://code.visualstudio.com/api/working-with-extensions/continuous-integration)).
+See **[Extension guide](./docs/EXTENSION_GUIDE.md)** for workflows.
 
 ---
 
@@ -134,7 +132,7 @@ aistack init
 aistack sync
 ```
 
-**[USER_GUIDE.md](./USER_GUIDE.md)** — install (**npm** vs **GitHub Packages**), upgrading the CLI, **`GITHUB_TOKEN`** for **`search`**, Skill browser, **`sources.config.yaml`** defaults, annotated **`spec.yaml`**, full command list, env vars, workflows, troubleshooting.
+**[User guides](./USER_GUIDE.md)** — **[CLI](./docs/CLI_GUIDE.md)** · **[Extension](./docs/EXTENSION_GUIDE.md)**
 
 ---
 
@@ -193,27 +191,9 @@ AI Stack Kit is designed for teams and developers managing reusable AI capabilit
 
 ---
 
-## Project Structure
+## Project structure
 
-```
-ai-stack-kit/
-├── src/
-│   ├── cli/              # CLI commands (including catalog refresh)
-│   ├── pipeline/         # spec load, apply
-│   ├── sources/          # GitHub, npm, registry, local
-│   ├── registry/         # Dynamic catalogs from sources.config.yaml
-│   ├── client-adapters/   # Cursor, Copilot, Claude outputs
-│   └── types/
-├── web/                  # Skill browser (Vite + React; static `dist/` for Pages)
-├── scripts/
-│   └── build-catalog.mjs # Builds web/public/catalog.json for the browser
-├── templates/
-│   ├── spec.yaml
-│   └── sources.config.yaml  # Default catalogs (also used by CI for Pages)
-├── .github/workflows/    # CI (e.g. Skill browser deploy)
-├── config/
-└── ...
-```
+Repository layout and module boundaries: **[ARCHITECTURE.md](./ARCHITECTURE.md)**.
 
 ---
 
@@ -290,7 +270,7 @@ aistack catalog refresh --write
 aistack sync
 ```
 
-For the **full command list** — **`skill` / `subagent` / `hook`**, **`catalog refresh`** flags, **`install` / `apply`**, registry, and maintenance — see **[Command reference](./USER_GUIDE.md#command-reference)** in **USER_GUIDE.md**.
+For the **full command list** — **`skill` / `subagent` / `hook`**, **`catalog refresh`** flags, **`install` / `apply`**, registry, and maintenance — see **[CLI guide](./docs/CLI_GUIDE.md#command-reference)**.
 
 ---
 
@@ -302,118 +282,21 @@ For the **full command list** — **`skill` / `subagent` / `hook`**, **`catalog 
 
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)**: How to contribute—including extending the **default catalog** (`templates/sources.config.yaml`) for the CLI and Skill browser.
 
-- **[USER_GUIDE.md](./USER_GUIDE.md)**: Install paths, **`spec.yaml`** example, full CLI reference, env vars, workflows, troubleshooting.
-- **[VS Code extension (Marketplace)](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)**: Activity Bar UI, catalog search, sync without a global CLI install.
+- **[USER_GUIDE.md](./USER_GUIDE.md)**: Hub — CLI and extension guides
+- **[CLI guide](./docs/CLI_GUIDE.md)**: Install, commands, env vars, troubleshooting
+- **[Extension guide](./docs/EXTENSION_GUIDE.md)**: VS Code / Cursor sidebar workflows
+- **[VS Code extension (Marketplace)](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)**: Install the sidebar UI
 
 ### 📝 Configuration
 
 - **[templates/spec.yaml](./templates/spec.yaml)**: Template spec file
-- **[config/schema.json](./config/schema.json)**: JSON schema for validation
-- **[config/default.yaml](./config/default.yaml)**: Default configuration
-
-### 🔧 Implementation
-
-- **[src/types/](./src/types/)**: TypeScript type definitions
-  - `skill.ts`: Skill types
-  - `spec.ts`: Spec file types
-  - `config.ts`: CLI config types
-  - `registry.ts`: Registry types
-
-- **[src/sources/base/](./src/sources/base/)**: SkillSource interface
-- **[src/registry/base/](./src/registry/base/)**: RegistryProvider interface
-- **[src/adapters/base/](./src/adapters/base/)**: IDEAdapter interface
+- **[templates/sources.config.yaml](./templates/sources.config.yaml)**: Default catalog sources
 
 ---
 
 ## Development
 
-### Prerequisites
-- Node.js >= 18
-- TypeScript >= 5.0
-
-### Setup
-
-```bash
-# Clone repository
-git clone https://github.com/deb-adarsh/ai-stack-kit.git
-cd ai-stack-kit
-
-# Install dependencies
-npm install
-
-# Build
-npm run build
-
-# Run tests
-npm test
-
-# Run CLI locally
-npm link
-aistack --help
-
-# Skill browser: TS build + catalog JSON + Vite dev
-npm run dev:web
-
-# Static web/dist (+ catalog) for hosting / parity with CI
-npm run build:web
-```
-
----
-
-## Extending AI Stack Kit
-
-### Add a New Source (e.g., GitLab)
-
-1. Create `src/sources/gitlab/gitlab-source.ts`
-2. Implement `SkillSource` interface
-3. Register in source factory
-4. Add to schema: `config/schema.json`
-
-**Example:**
-```typescript
-import { BaseSkillSource } from '../base/skill-source';
-
-export class GitLabSource extends BaseSkillSource {
-  constructor(name: string) {
-    super(name, 'gitlab');
-  }
-  
-  canHandle(ref: SkillReference): boolean {
-    return ref.source.startsWith('gitlab:');
-  }
-  
-  async resolve(ref: SkillReference): Promise<SkillMetadata> {
-    // Fetch from GitLab API
-  }
-  
-  // ... implement other methods
-}
-```
-
-### Add a New IDE client (e.g., Windsurf)
-
-1. Create `src/client-adapters/windsurf/windsurf-adapter.ts`
-2. Implement the `ClientAdapter` interface (see `src/client-adapters/client-adapter.ts`)
-3. Register in `AdapterFactory` (`src/client-adapters/adapter-factory.ts`)
-4. Add output paths in `src/client-adapters/client-paths.ts` if needed
-
-**Example:**
-```typescript
-import type { ClientAdapter } from '../client-adapter.js';
-
-export class WindsurfClientAdapter implements ClientAdapter {
-  readonly name = 'windsurf';
-  supports(clientType: string): boolean {
-    return clientType === 'windsurf';
-  }
-  generateConfig(input: NormalizedWorkspaceInput): AdapterOutput {
-    // Map skills, agents, prompts to Windsurf layout
-  }
-  async apply(output, projectRoot, options) {
-    // Write files under project or user scope
-  }
-}
-```
+Build from source, run tests, extend sources/adapters, or publish the extension: **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
 
 ---
 
@@ -462,7 +345,7 @@ Licensed under the **Apache License 2.0**. See [LICENSE](./LICENSE).
 
 ## Support
 
-- 📖 Documentation: **[USER_GUIDE.md](./USER_GUIDE.md)** · **[ARCHITECTURE.md](./ARCHITECTURE.md)**
+- 📖 Documentation: **[User guides](./USER_GUIDE.md)** · **[ARCHITECTURE.md](./ARCHITECTURE.md)**
 - 🧩 VS Code extension: **[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** (`deb-adarsh.ai-stack-kit`)
 - 🐛 Issues: [GitHub Issues](https://github.com/deb-adarsh/ai-stack-kit/issues)
 - ✉️ Maintainer: [debadarsh7@gmail.com](mailto:debadarsh7@gmail.com)

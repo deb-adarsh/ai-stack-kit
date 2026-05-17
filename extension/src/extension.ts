@@ -43,6 +43,16 @@ interface SearchPickItem extends vscode.QuickPickItem {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
+  try {
+    activateExtension(context);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    void vscode.window.showErrorMessage(`AI Stack Kit failed to activate: ${msg}`);
+    throw e;
+  }
+}
+
+function activateExtension(context: vscode.ExtensionContext): void {
   process.env.AISTACK_TEMPLATES_CLIENTS = path.join(context.extensionPath, 'templates', 'clients');
   process.env.AISTACK_SOURCES_CONFIG_TEMPLATE = path.join(
     context.extensionPath,
