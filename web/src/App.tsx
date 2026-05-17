@@ -223,7 +223,7 @@ export default function App() {
           <div className="hero-brand">
             <img
               className="hero-logo"
-              src={`${import.meta.env.BASE_URL}favicon.svg`}
+              src={`${import.meta.env.BASE_URL}logo.png`}
               alt=""
               width={52}
               height={52}

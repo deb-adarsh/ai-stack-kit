@@ -2,6 +2,12 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
+## [1.1.8] - 2026-05-18
+
+### Changed
+
+- **Branding** — Marketplace icon and web favicon use `assets/logo-transparent.svg` (official artwork); PNGs and Activity Bar icons regenerated from that SVG. `assets/logo.svg` for white-background use.
+
 ## [1.1.7] - 2026-05-18
 
 ### Fixed
