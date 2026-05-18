@@ -10,6 +10,7 @@ All notable changes to the **AI Stack Kit** VS Code extension are documented her
 
 ### Changed
 
+- **Marketplace description** — IDE-focused copy (no `spec.yaml` in the short summary).
 - **Catalog webview** — removed redundant “Full skill browser” link; hosted site opens only from the **globe** on the Catalog title bar.
 - **Show Sidebar** (`aistack.showSidebar`) and **Show Catalog Panel** — reliable sidebar/catalog focus with `WebviewView.show()` and fallbacks.
 

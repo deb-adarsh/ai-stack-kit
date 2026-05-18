@@ -1,6 +1,6 @@
 # AI Stack Kit
 
-Manage **skills**, **subagents**, and **hooks** from `spec.yaml` inside VS Code or Cursor — search catalogs, edit your spec, and sync outputs for **Cursor**, **GitHub Copilot**, or **Claude** without a global CLI install.
+Manage **skills**, **subagents**, and **hooks** from your IDE (VS Code or Cursor) — search catalogs, edit your stack, and sync to **Cursor**, **GitHub Copilot**, or **Claude** without a global CLI install.
 
 ## Install
 
