@@ -2,7 +2,7 @@
   "name": "ai-stack-kit",
   "displayName": "AI Stack Kit",
   "description": "Manage AI skills, subagents, and hooks from your IDE — search catalogs, sync to Cursor, Copilot, and Claude.",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "publisher": "deb-adarsh",
   "license": "Apache-2.0",
   "repository": {
@@ -24,11 +24,13 @@
   "categories": ["Machine Learning", "Data Science", "Other"],
   "keywords": [
     "ai",
+    "ai skills",
+    "agentic programming",
+    "agents",
     "copilot",
     "cursor",
     "claude",
     "skills",
-    "agents",
     "subagents",
     "hooks",
     "developer productivity"

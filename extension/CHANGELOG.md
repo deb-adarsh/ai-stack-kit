@@ -2,11 +2,23 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
+## [1.2.2] - 2026-05-18
+
+### Changed
+
+- **Marketplace categories** — `Machine Learning`, `Data Science`, `Other` (official values); AI-related terms in `keywords` (`ai skills`, `agentic programming`, etc.).
+
+## [1.2.1] - 2026-05-18
+
+### Changed
+
+- **Activity Bar icon** — two minimal chevron blocks (single-path SVG).
+
 ## [1.2.0] - 2026-05-18
 
 ### Fixed
 
-- **Activity Bar icon and container** — restored a single minimal SVG (`media/activity-bar.svg`) so **AI Stack Kit** appears in the Activity Bar and in the Activity Bar visibility menu (light/dark PNG pairs prevented registration on some hosts).
+- **Activity Bar icon and container** — restored a single minimal SVG (`media/activity-bar.svg`) so **AI Stack Kit** appears on the Activity Bar (light/dark PNG pairs prevented registration on some hosts).
 
 ### Changed
 
