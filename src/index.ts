@@ -5,6 +5,22 @@
 export { AistackWorkspace } from './api/workspace-api.js';
 export { runCatalogRefreshCore } from './api/catalog-refresh-core.js';
 export { createCallbackLogger } from './api/callback-logger.js';
+export { ensureProfileSpec } from './api/profile-spec.js';
+export {
+  addModuleWithTarget,
+  getProfileWorkspace,
+  getProjectWorkspace,
+  listAllOutputPaths,
+  listAllSpecModules,
+  resolveWorkspaceForTarget,
+  searchCatalog,
+  syncAllScopes,
+} from './api/workspace-facade.js';
+export {
+  hasProfileSpec,
+  userAistackRoot,
+  userSpecPath,
+} from './paths/aistack-paths.js';
 export * from './api/types.js';
 
 export { loadSpec } from './pipeline/spec-loader.js';

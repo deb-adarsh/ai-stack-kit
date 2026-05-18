@@ -1,6 +1,6 @@
 {
   "name": "@deb-adarsh/ai-stack-kit",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "AI Stack Kit — spec-driven skills, subagents, and hooks for Cursor, Copilot, and Claude (CLI + VS Code extension)",
   "type": "module",
   "main": "dist/index.js",
@@ -37,7 +37,7 @@
     "package:extension": "npm run build:extension && cd extension && npm run vsix",
     "dev": "tsc --watch",
     "start": "node dist/cli/index.js",
-    "test": "npm run build && node --test dist/cli/__tests__/get-module-versions.test.js dist/pipeline/__tests__/spec-loader.test.js dist/pipeline/__tests__/apply-dry-run.test.js dist/client-adapters/__tests__/adapter-factory.test.js dist/api/__tests__/workspace-api.test.js",
+    "test": "npm run build && node --test dist/cli/__tests__/get-module-versions.test.js dist/pipeline/__tests__/spec-loader.test.js dist/pipeline/__tests__/apply-dry-run.test.js dist/client-adapters/__tests__/adapter-factory.test.js dist/api/__tests__/workspace-api.test.js dist/api/__tests__/profile-spec.test.js",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\""
   },

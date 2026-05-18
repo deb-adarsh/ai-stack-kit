@@ -226,14 +226,18 @@ function render(): void {
       <div class="actions"></div>
     `;
     const actions = card.querySelector('.actions')!;
-    const add = document.createElement('button');
-    add.textContent = 'Add to spec';
-    add.onclick = () => vscode.postMessage({ type: 'add', id: s.id });
+    const addProject = document.createElement('button');
+    addProject.textContent = 'Add to project';
+    addProject.onclick = () => vscode.postMessage({ type: 'add', id: s.id, target: 'project' });
+    const addProfile = document.createElement('button');
+    addProfile.className = 'secondary';
+    addProfile.textContent = 'Add to profile';
+    addProfile.onclick = () => vscode.postMessage({ type: 'add', id: s.id, target: 'profile' });
     const copy = document.createElement('button');
     copy.className = 'secondary';
     copy.textContent = 'Copy id';
     copy.onclick = () => vscode.postMessage({ type: 'copy', text: s.id });
-    actions.append(add, copy);
+    actions.append(addProject, addProfile, copy);
     list.append(card);
   }
 }

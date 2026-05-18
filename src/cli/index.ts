@@ -19,7 +19,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { table } from 'table';
 import figures from 'figures';
-import { readFileSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CLI_COMMAND, PRODUCT_NAME } from '../branding.js';
@@ -55,9 +55,12 @@ import {
   ensureDefaultSourcesConfig,
   ensureProjectGitignoreForAistack,
   runStatus,
+  runSyncAllScopes,
   cleanAistackCache,
   type RunApplyOptions,
 } from './commands.js';
+import { ensureProfileSpec } from '../api/profile-spec.js';
+import { hasProfileSpec, userAistackRoot } from '../paths/aistack-paths.js';
 import { getGlobalCliOptions, dryRunSuffix } from './cli-options.js';
 import { promptSkillConfig } from './prompts.js';
 import { printDoctorReport, runDoctor } from './doctor.js';
@@ -210,6 +213,7 @@ export function createCLI(): Command {
   registerValidateCommand(program);
   registerCleanCommand(program);
   registerDoctorCommand(program);
+  registerProfileCommand(program);
   registerCatalogCommands(program);
 
   program.addHelpText(
@@ -242,8 +246,15 @@ function resolveInitClientType(raw: string): string {
 function installScopeCliOption(): Option {
   return new Option(
     '--install-scope <scope>',
-    'Set client.installScope in spec.yaml: project (repo-local .cursor/.github/.claude) or user (global home dirs). Omit to leave client.installScope unchanged (unset means project-level apply).'
+    'Set client.installScope in project spec.yaml: project (repo-local) or user (home dirs). Ignored with --profile (profile uses ~/.aistack/spec.yaml with installScope: user).'
   ).choices(['project', 'user']);
+}
+
+function profileCliOption(): Option {
+  return new Option(
+    '--profile, --global',
+    'Add to ~/.aistack/spec.yaml (global profile) instead of the project spec in the current directory'
+  );
 }
 
 /**
@@ -396,8 +407,10 @@ type AddCliOptions = {
   type?: string;
   source?: string;
   saveDev?: boolean;
-  /** Passed through from `--install-scope`; updates spec client.installScope when set. */
+  /** Passed through from `--install-scope`; updates spec client.installScope when set (project spec only). */
   installScope?: 'project' | 'user';
+  /** Add to ~/.aistack/spec.yaml instead of project spec.yaml */
+  profile?: boolean;
 };
 
 async function executeAddModuleFlow(params: {
@@ -537,23 +550,46 @@ async function executeAddModuleFlow(params: {
     }
   }
 
-  const addSpinner = ora('Adding to spec.yaml...').start();
-  const moduleType = explicitType ?? selected.moduleType ?? DEFAULT_MODULE_TYPE;
-  await addModuleToSpec({
-    name: selected.name,
-    version: versionAnswer.version,
-    source: selected.source,
-    sourceConfig: selected.sourceConfig,
-    config,
-    moduleType,
-    clientInstallScope: options.installScope,
-  });
-  addSpinner.succeed('Added to spec.yaml');
+  const useProfile = Boolean(options.profile);
+  let specRoot = process.cwd();
 
-  if (options.installScope === 'user') {
-    console.log(chalk.gray('Set client.installScope: user (skills/agents under home directory).'));
-  } else if (options.installScope === 'project') {
-    console.log(chalk.gray('Set client.installScope: project (repo-local skill/agent trees).'));
+  if (useProfile) {
+    let projectSpec;
+    try {
+      projectSpec = await readSpec();
+    } catch {
+      /* no project spec */
+    }
+    await ensureProfileSpec({ projectSpec });
+    specRoot = userAistackRoot();
+  }
+
+  const addSpinner = ora(
+    useProfile ? 'Adding to profile spec (~/.aistack/spec.yaml)...' : 'Adding to spec.yaml...'
+  ).start();
+  const moduleType = explicitType ?? selected.moduleType ?? DEFAULT_MODULE_TYPE;
+  await addModuleToSpec(
+    {
+      name: selected.name,
+      version: versionAnswer.version,
+      source: selected.source,
+      sourceConfig: selected.sourceConfig,
+      config,
+      moduleType,
+      clientInstallScope: useProfile ? undefined : options.installScope,
+    },
+    specRoot
+  );
+  addSpinner.succeed(useProfile ? 'Added to profile spec' : 'Added to spec.yaml');
+
+  if (!useProfile) {
+    if (options.installScope === 'user') {
+      console.log(chalk.gray('Set client.installScope: user (skills/agents under home directory).'));
+    } else if (options.installScope === 'project') {
+      console.log(chalk.gray('Set client.installScope: project (repo-local skill/agent trees).'));
+    }
+  } else {
+    console.log(chalk.gray('Profile spec uses client.installScope: user (~/.cursor, etc.).'));
   }
 
   const installAnswer = await inquirer.prompt([
@@ -566,7 +602,11 @@ async function executeAddModuleFlow(params: {
   ]);
 
   if (installAnswer.install) {
-    await runApply(process.cwd(), runApplyOptionsFromGlobal(globalOpts));
+    if (useProfile) {
+      await runApply(specRoot, runApplyOptionsFromGlobal(globalOpts));
+    } else {
+      await runSyncAllScopes(process.cwd(), runApplyOptionsFromGlobal(globalOpts));
+    }
   }
 
   console.log(chalk.green(`\n✓ ${selected.name} added successfully!`));
@@ -585,9 +625,14 @@ function registerAddCommand(program: Command) {
     .option('--type <kind>', 'Module type: skill | subagent | hook (when not using a typed subcommand)')
     .option('--save-dev', 'Add as dev dependency')
     .addOption(installScopeCliOption())
+    .addOption(profileCliOption())
     .action(async (nameArg, options, cmd) => {
       try {
-        await executeAddModuleFlow({ nameArg, options, globalOpts: getGlobalCliOptions(cmd) });
+        await executeAddModuleFlow({
+          nameArg,
+          options: { ...options, profile: options.profile },
+          globalOpts: getGlobalCliOptions(cmd),
+        });
       } catch (error) {
         handleError(error);
       }
@@ -887,7 +932,7 @@ function registerApplyCommand(program: Command) {
 function registerSyncCommand(program: Command) {
   program
     .command('sync')
-    .description('Sync skills (install + apply)')
+    .description('Sync skills (install + apply) for project and/or profile specs')
     .option('-f, --force', 'Force reinstall')
     .action(async (options, cmd) => {
       const globalOpts = getGlobalCliOptions(cmd);
@@ -895,40 +940,111 @@ function registerSyncCommand(program: Command) {
       console.log(chalk.cyan(`Syncing skills…${dryLabel}\n`));
 
       try {
-        const spinner = ora('Validating spec.yaml...').start();
-        const validation = await validateSpecFile();
-        if (!validation.valid) {
-          spinner.fail('Spec validation failed');
-          throw { code: 'VALIDATION_ERROR', errors: validation.errors };
+        const spinner = ora('Validating spec files...').start();
+        const projectValidation = await validateSpecFile(process.cwd());
+        if (!projectValidation.valid && existsSync(path.join(process.cwd(), 'spec.yaml'))) {
+          spinner.fail('Project spec validation failed');
+          throw { code: 'VALIDATION_ERROR', errors: projectValidation.errors };
+        }
+        if (hasProfileSpec()) {
+          const profileValidation = await validateSpecFile(userAistackRoot());
+          if (!profileValidation.valid) {
+            spinner.fail('Profile spec validation failed');
+            throw { code: 'VALIDATION_ERROR', errors: profileValidation.errors };
+          }
         }
         spinner.succeed('Spec validated');
 
         spinner.start(`Running apply pipeline (resolve → install → adapter)…${dryLabel}`);
-        const applyResult = await runApply(
+        const dual = await runSyncAllScopes(
           process.cwd(),
           runApplyOptionsFromGlobal(globalOpts, { forceReinstall: Boolean(options.force) })
         );
+
+        if (dual.project) {
+          const r = dual.project;
+          console.log(
+            chalk.gray(
+              `  Project: resolved ${r.skillsResolved}, written ${r.adapterReport?.written.length ?? 0}`
+            )
+          );
+          if (!r.success) {
+            r.errors.forEach((e) =>
+              console.log(chalk.yellow(`    ${e.skill ?? e.phase}: ${e.message}`))
+            );
+          }
+        }
+        if (dual.profile) {
+          const r = dual.profile;
+          console.log(
+            chalk.gray(
+              `  Profile: resolved ${r.skillsResolved}, written ${r.adapterReport?.written.length ?? 0}`
+            )
+          );
+          if (!r.success) {
+            r.errors.forEach((e) =>
+              console.log(chalk.yellow(`    ${e.skill ?? e.phase}: ${e.message}`))
+            );
+          }
+        }
+
+        const primary = dual.project ?? dual.profile;
         spinner.succeed(
-          `Done — skills processed: ${applyResult.skillsResolved}, files written: ${applyResult.adapterReport?.written.length ?? 0}${dryLabel}`
+          primary
+            ? `Done — skills processed: ${primary.skillsResolved}, files written: ${primary.adapterReport?.written.length ?? 0}${dryLabel}`
+            : `No spec.yaml found (project or ~/.aistack)${dryLabel}`
         );
 
-        if (!applyResult.success) {
-          console.log(chalk.yellow('\nCompleted with warnings (see errors below).'));
-          applyResult.errors.forEach((e) =>
-            console.log(chalk.yellow(`  ${e.skill ?? e.phase}: ${e.message}`))
-          );
+        if (!dual.project && !dual.profile) {
+          console.log(chalk.yellow('\nNothing to sync — run aistack init or add with --profile'));
+          process.exit(1);
+        }
+
+        const anyFailed =
+          dual.project?.success === false || dual.profile?.success === false;
+        if (anyFailed) {
+          console.log(chalk.yellow('\nCompleted with warnings (see errors above).'));
         }
 
         console.log(chalk.green('\n✓ Sync complete!'));
 
-        displaySyncSummary({
-          installed: applyResult.skillsInstalled,
-          updated: 0,
-          applied: applyResult.adapterReport?.written.length ?? 0,
-        });
+        const installed =
+          (dual.project?.skillsInstalled ?? 0) + (dual.profile?.skillsInstalled ?? 0);
+        const applied =
+          (dual.project?.adapterReport?.written.length ?? 0) +
+          (dual.profile?.adapterReport?.written.length ?? 0);
+        displaySyncSummary({ installed, updated: 0, applied });
 
       } catch (error) {
         handleError(error);
+      }
+    });
+}
+
+function registerProfileCommand(program: Command) {
+  const profile = program
+    .command('profile')
+    .description('Manage the global profile spec at ~/.aistack/spec.yaml');
+
+  profile
+    .command('init')
+    .description('Create ~/.aistack/spec.yaml and sources.config.yaml (installScope: user)')
+    .action(async () => {
+      const spinner = ora('Initializing profile…').start();
+      try {
+        let projectSpec;
+        try {
+          projectSpec = await readSpec();
+        } catch {
+          /* no project spec */
+        }
+        const root = await ensureProfileSpec({ projectSpec });
+        spinner.succeed(`Profile ready at ${root}/spec.yaml`);
+        console.log(chalk.gray('\n  Add modules: aistack skill add <name> --profile'));
+        console.log(chalk.gray(`  Sync: ${CLI_COMMAND} sync\n`));
+      } catch (e) {
+        spinner.fail('Profile init failed');
+        handleError(e);
       }
     });
 }
@@ -1012,6 +1128,7 @@ function registerModuleKindCommandGroups(program: Command) {
       .option('-s, --source <type>', 'Source type (github, npm, registry)')
       .option('--save-dev', 'Add as dev dependency')
       .addOption(installScopeCliOption())
+      .addOption(profileCliOption())
       .action(async (name, options, cmd) => {
         try {
           await executeAddModuleFlow({
@@ -1020,6 +1137,7 @@ function registerModuleKindCommandGroups(program: Command) {
               source: options.source,
               saveDev: options.saveDev,
               installScope: options.installScope,
+              profile: options.profile,
             },
             lockedKind: g.kind,
             globalOpts: getGlobalCliOptions(cmd),

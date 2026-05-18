@@ -25,8 +25,8 @@ Works in **VS Code** and **Cursor**. After updating, run **Developer: Reload Win
 | Area | Purpose |
 |------|---------|
 | **Activity Bar → AI Stack Kit** | Sidebar container for all views |
-| **Modules** | Skills, subagents, hooks in **`spec.yaml`** — enable, disable, remove |
-| **Catalog** | Bundled catalog snapshot — search, **Add to spec**, copy id. **Globe** on the Catalog title bar opens the [hosted skill browser](https://deb-adarsh.github.io/ai-stack-kit/) in your browser. |
+| **Modules** | **Project** and **Profile** groups — skills, subagents, hooks from repo **`spec.yaml`** and **`~/.aistack/spec.yaml`** |
+| **Catalog** | Bundled catalog snapshot — search, **Add to project** / **Add to profile**, copy id. **Globe** on the Catalog title bar opens the [hosted skill browser](https://deb-adarsh.github.io/ai-stack-kit/) in your browser. |
 | **Outputs** | Generated paths for active **`client.type`** (open in editor) |
 
 Default view order: **Modules → Catalog → Outputs** (you can drag to reorder; that layout is saved per machine).
@@ -37,10 +37,12 @@ Default view order: **Modules → Catalog → Outputs** (you can drag to reorder
 
 1. **File → Open Folder** (a project root).
 2. Command Palette → **AI Stack Kit: Initialize Workspace** (`aistack.init`).
-3. Open **Catalog** — search and **Add to spec**, or **AI Stack Kit: Search Catalog…**.
-4. **Sync** — status bar **$(sync) AI Stack**, or Command Palette → **AI Stack Kit: Sync**.
+3. Open **Catalog** — **Add to project** (repo spec) or **Add to profile** (`~/.aistack/spec.yaml`, no folder required), or **AI Stack Kit: Search Catalog…**.
+4. **Sync** — status bar **$(sync) AI Stack**, or Command Palette → **AI Stack Kit: Sync** (applies project and profile specs when both exist).
 
-Right side of the status bar shows **`client.type`** and module count (click for **Doctor**).
+Right side of the status bar shows **`client.type`** and module count across both specs (click for **Doctor**).
+
+**Profile-only:** use **Add to profile** in Catalog without opening a folder; run **`aistack profile init`** or let the first profile add create **`~/.aistack/spec.yaml`**.
 
 ---
 
@@ -51,7 +53,7 @@ Right side of the status bar shows **`client.type`** and module count (click for
 | **Initialize Workspace** | Create **`spec.yaml`** + **`sources.config.yaml`** |
 | **Sync** | Run install + apply pipeline (respects dry-run setting) |
 | **Doctor** | Health checks → Output panel |
-| **Search Catalog…** | Quick pick from catalog → add to spec |
+| **Search Catalog…** | Quick pick from catalog → choose project or profile target |
 | **Switch Client** | Set **`cursor`** / **`copilot`** / **`claude`** + install scope |
 | **Show Catalog Panel** | Focus sidebar **Catalog** webview |
 | **Open Skill Browser (Web)** | Open [hosted skill browser](https://deb-adarsh.github.io/ai-stack-kit/) in your browser |
@@ -69,7 +71,7 @@ Globe (**$(globe)**) on the **Catalog** title bar opens the **web** skill browse
 | Setting | Purpose |
 |---------|---------|
 | `aiStackKit.clientType` | Default client on init / **Switch Client** |
-| `aiStackKit.installScope` | `project` (repo) or `user` (home dirs) |
+| `aiStackKit.installScope` | Default for **Initialize Workspace** only (`project` = repo, `user` = home dirs on that spec) |
 | `aiStackKit.githubToken` | GitHub PAT for catalog search (like **`GITHUB_TOKEN`** for CLI) |
 | `aiStackKit.dryRun` | Sync previews only — no writes |
 | `aiStackKit.autoSyncOnSave` | Sync when **`spec.yaml`** is saved |
@@ -84,7 +86,20 @@ Globe (**$(globe)**) on the **Catalog** title bar opens the **web** skill browse
 | **Data** | Bundled snapshot at publish time | Live rebuild from upstream on deploy |
 | **Best for** | Add modules while coding | Browse ecosystem, copy `npx` commands |
 
-In the Catalog panel, use **Full skill browser ↗** to open the hosted site.
+Use the **globe** on the Catalog title bar to open the hosted site.
+
+---
+
+## Project vs profile specs
+
+| | **Project** | **Profile** |
+|--|-------------|-------------|
+| **Spec file** | `{workspace}/spec.yaml` | `~/.aistack/spec.yaml` |
+| **Sync output** | `.cursor`, `.github`, `.claude` under the repo | `~/.cursor`, `~/.copilot`, `~/.claude` |
+| **Catalog action** | **Add to project** | **Add to profile** |
+| **CLI** | `aistack skill add …` (default) | `aistack skill add … --profile` · `aistack profile init` |
+
+Profile spec always uses **`client.installScope: user`**. Project spec defaults to repo-local paths (omit `installScope` or set **`project`**).
 
 ---
 
@@ -93,9 +108,9 @@ In the Catalog panel, use **Full skill browser ↗** to open the hosted site.
 Same engine (**`AistackWorkspace`** / apply pipeline). Use either or both:
 
 - **Extension** — visual trees, catalog UI, sync from status bar.
-- **CLI** — scripts, CI, `aistack catalog refresh --write`, terminal search.
+- **CLI** — scripts, CI, `aistack catalog refresh --write`, terminal search, `aistack sync` for both specs.
 
-Changes to **`spec.yaml`** from either surface are picked up by both after **Sync**.
+Changes to either **`spec.yaml`** are picked up after **Sync**.
 
 ---
 

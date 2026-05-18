@@ -2,6 +2,19 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
+## [1.3.0] - 2026-05-18
+
+### Added
+
+- **Dual-scope catalog add** — **Add to project** (repo `spec.yaml`) and **Add to profile** (`~/.aistack/spec.yaml`) in the Catalog webview.
+- **Modules tree** — **Project** and **Profile** groups for modules from each spec.
+- **Sync / Doctor / Outputs** — apply and health checks for both project and profile specs when present.
+- **Open spec.yaml** — choose project or profile spec when both exist.
+
+### Changed
+
+- **Search Catalog…** — prompts for project vs profile target before adding.
+
 ## [1.2.2] - 2026-05-18
 
 ### Changed

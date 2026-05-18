@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { requireWorkspace } from '../services/workspaceService.js';
+import { addModuleWithTarget, getProjectRoot, type SpecTarget } from '../services/workspaceService.js';
 import { applyGithubTokenFromSettings } from '../services/configService.js';
 import { prepareWebviewHtml } from '../utils/webview.js';
 
@@ -45,24 +45,31 @@ export class CatalogWebviewProvider implements vscode.WebviewViewProvider {
       webviewView.webview.html = this.loadFallbackWebview(webviewView.webview, fallbackDir);
     }
 
-    webviewView.webview.onDidReceiveMessage(async (msg: { type: string; id?: string; text?: string }) => {
+    webviewView.webview.onDidReceiveMessage(
+      async (msg: { type: string; id?: string; text?: string; target?: SpecTarget }) => {
       if (msg.type === 'copy' && msg.text) {
         await vscode.env.clipboard.writeText(msg.text);
         void webviewView.webview.postMessage({ type: 'toast', text: 'Copied!' });
         return;
       }
       if (msg.type === 'add' && msg.id) {
+        const target: SpecTarget = msg.target === 'profile' ? 'profile' : 'project';
         try {
           applyGithubTokenFromSettings();
-          const ws = requireWorkspace();
-          await ws.addModule({ name: msg.id });
-          void vscode.window.showInformationMessage(`Added "${msg.id}" to spec.yaml`);
+          await addModuleWithTarget({ name: msg.id, specTarget: target }, getProjectRoot());
+          const label = target === 'profile' ? 'profile spec' : 'project spec';
+          void vscode.window.showInformationMessage(`Added "${msg.id}" to ${label}`);
+          void webviewView.webview.postMessage({
+            type: 'toast',
+            text: `Added to ${target} spec`,
+          });
           void vscode.commands.executeCommand('aistack.modules.refresh');
         } catch (e) {
           void vscode.window.showErrorMessage(e instanceof Error ? e.message : String(e));
         }
       }
-    });
+    }
+    );
   }
 
   private loadBuiltWebview(webview: vscode.Webview, catalogDir: string): string {

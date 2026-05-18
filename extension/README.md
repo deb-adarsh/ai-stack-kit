@@ -8,9 +8,9 @@ Manage **skills**, **subagents**, and **hooks** from your IDE (VS Code or Cursor
 
 ## Features
 
-- **Modules** tree — view and toggle modules in `spec.yaml`
-- **Outputs** tree — open generated paths for the active `client.type`
-- **Catalog** webview — search the bundled skill index and add modules to your spec
+- **Modules** tree — **Project** and **Profile** groups (`spec.yaml` and `~/.aistack/spec.yaml`)
+- **Outputs** tree — generated paths for project and profile specs
+- **Catalog** webview — **Add to project** or **Add to profile** from the bundled skill index
 - **Commands** — Initialize, Sync, Doctor, Search/Add, Switch Client
 - **Settings** — `aiStackKit.clientType`, `aiStackKit.githubToken`, `aiStackKit.dryRun`, `aiStackKit.autoSyncOnSave`
 
@@ -18,8 +18,8 @@ Manage **skills**, **subagents**, and **hooks** from your IDE (VS Code or Cursor
 
 1. Open a project folder.
 2. Run **AI Stack Kit: Initialize Workspace** from the Command Palette.
-3. Browse **Catalog** or run **Search Catalog…** to add modules.
-4. Run **Sync** (status bar: **$(sync) AI Stack**).
+3. Browse **Catalog** — **Add to project** or **Add to profile** — or run **Search Catalog…**.
+4. Run **Sync** (status bar: **$(sync) AI Stack**) — syncs project and profile specs when both exist.
 
 Open the **AI Stack Kit** icon on the **Activity Bar** (far left) for **Modules → Catalog → Outputs**. The globe on **Catalog** opens the [hosted skill browser](https://deb-adarsh.github.io/ai-stack-kit/) in your browser.
 
@@ -28,7 +28,7 @@ Open the **AI Stack Kit** icon on the **Activity Bar** (far left) for **Modules 
 | Setting | Description |
 |---------|-------------|
 | `aiStackKit.clientType` | Default `cursor`, `copilot`, or `claude` on init |
-| `aiStackKit.installScope` | `project` or `user` install roots |
+| `aiStackKit.installScope` | Default install scope for **Initialize Workspace** (`project` or `user`) |
 | `aiStackKit.githubToken` | GitHub PAT for catalog search (same role as `GITHUB_TOKEN` for the CLI) |
 | `aiStackKit.dryRun` | Preview sync without writing files |
 | `aiStackKit.autoSyncOnSave` | Sync when `spec.yaml` is saved |

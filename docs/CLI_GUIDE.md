@@ -118,7 +118,8 @@ aistack doctor
 # Resolve → install → IDE
 aistack install
 aistack apply
-aistack sync              # install + apply (--dry-run, -v, --offline, --force)
+aistack sync              # project + ~/.aistack profile specs (--dry-run, -v, --offline, --force)
+aistack profile init      # create ~/.aistack/spec.yaml (installScope: user)
 
 # Discovery
 aistack search <query>
@@ -133,7 +134,7 @@ aistack catalog refresh --refresh-sources
 
 # Typed: skill | subagent | hook
 aistack skill search <query>
-aistack skill add [name] [--install-scope project|user]
+aistack skill add [name] [--profile] [--install-scope project|user]
 aistack subagent search <query>
 aistack subagent add [name]
 aistack hook search <query>

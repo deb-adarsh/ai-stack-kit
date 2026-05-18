@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { getAistackWorkspace } from '../services/workspaceService.js';
+import { getProjectRoot, listAllOutputPaths } from '../services/workspaceService.js';
+import { hasProfileSpec } from 'ai-stack-kit-core';
 
 export class OutputsTreeProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
   private _onDidChange = new vscode.EventEmitter<void>();
@@ -15,15 +15,16 @@ export class OutputsTreeProvider implements vscode.TreeDataProvider<vscode.TreeI
   }
 
   async getChildren(): Promise<vscode.TreeItem[]> {
-    const ws = getAistackWorkspace();
-    if (!ws) {
-      return [new vscode.TreeItem('Open a folder to use AI Stack Kit')];
-    }
-    if (!ws.hasSpec()) {
-      return [new vscode.TreeItem('No spec.yaml')];
+    const projectRoot = getProjectRoot();
+    if (!projectRoot && !hasProfileSpec()) {
+      return [new vscode.TreeItem('Open a folder or add profile modules')];
     }
 
-    const paths = await ws.listOutputPaths();
+    const paths = await listAllOutputPaths(projectRoot);
+    if (!paths.length) {
+      return [new vscode.TreeItem('No spec — initialize or add profile modules')];
+    }
+
     return paths.map((p) => {
       const item = new vscode.TreeItem(p.label, vscode.TreeItemCollapsibleState.None);
       item.description = p.relativePath;

@@ -231,7 +231,14 @@ export class AistackWorkspace {
   }
 
   listSpecModules(): Promise<
-    { name: string; moduleType: string; enabled: boolean; version: string; source: string; section: 'skills' | 'modules' }[]
+    {
+      name: string;
+      moduleType: string;
+      enabled: boolean;
+      version: string;
+      source: string;
+      section: 'skills' | 'modules';
+    }[]
   > {
     return this.readSpec().then((spec) => {
       const rows: {

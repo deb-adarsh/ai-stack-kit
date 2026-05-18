@@ -11,10 +11,17 @@ import { ModulesTreeProvider, ModuleTreeItem } from './views/modulesTreeProvider
 import { OutputsTreeProvider } from './views/outputsTreeProvider.js';
 import { CatalogWebviewProvider } from './views/catalogWebviewProvider.js';
 import {
+  addModuleWithTarget,
   getAistackWorkspace,
+  getProjectRoot,
+  hasProfileSpec,
+  listAllSpecModules,
   requireWorkspace,
   resetWorkspaceCache,
+  searchCatalog,
+  type SpecTarget,
 } from './services/workspaceService.js';
+import { getProfileWorkspace, userSpecPath, type ApplyPipelineResult } from 'ai-stack-kit-core';
 import {
   applyGithubTokenFromSettings,
   getExtensionConfig,
@@ -102,12 +109,13 @@ function activateExtension(context: vscode.ExtensionContext): void {
   register('aistack.refreshCatalog', () => runRefreshCatalogList());
   register('aistack.openSpec', () => openSpec());
   register('aistack.modules.refresh', () => refreshAll());
-  register('aistack.removeModule', (item?: unknown) =>
-    runRemoveModule(asModuleTreeItem(item)?.moduleName)
-  );
+  register('aistack.removeModule', (item?: unknown) => {
+    const mod = asModuleTreeItem(item);
+    return runRemoveModule(mod?.moduleName, mod?.specTarget);
+  });
   register('aistack.toggleModule', (item?: unknown) => {
     const mod = asModuleTreeItem(item);
-    return runToggleModule(mod?.moduleName, mod?.enabled);
+    return runToggleModule(mod?.moduleName, mod?.enabled, mod?.specTarget);
   });
   register('aistack.reportIssue', () => openReportIssue(context));
 
@@ -139,20 +147,35 @@ async function onSpecChanged(): Promise<void> {
   const cfg = getExtensionConfig();
   if (!cfg.autoSyncOnSave) return;
   const ws = getAistackWorkspace();
-  if (!ws?.hasSpec()) return;
+  if (!ws?.hasSpec() && !hasProfileSpec()) return;
   await runSync(true);
 }
 
 async function updateStatusBar(): Promise<void> {
-  const ws = getAistackWorkspace();
-  if (!ws?.hasSpec()) {
+  const projectRoot = getProjectRoot();
+  const projectWs = getAistackWorkspace();
+  const hasProject = Boolean(projectWs?.hasSpec());
+  const hasProfile = hasProfileSpec();
+
+  if (!hasProject && !hasProfile) {
     statusClient.text = '$(info) no spec';
     return;
   }
+
   try {
-    const spec = await ws.readSpec();
-    const modules = await ws.listSpecModules();
-    statusClient.text = `$(hubot) ${spec.client.type} · ${modules.length} modules`;
+    const modules = await listAllSpecModules(projectRoot);
+    let clientType = 'copilot';
+    if (hasProject && projectWs) {
+      const spec = await projectWs.readSpec();
+      clientType = spec.client.type;
+    } else if (hasProfile) {
+      const spec = await getProfileWorkspace().readSpec();
+      clientType = spec.client.type;
+    }
+    const parts: string[] = [];
+    if (hasProject) parts.push('project');
+    if (hasProfile) parts.push('profile');
+    statusClient.text = `$(hubot) ${clientType} · ${modules.length} (${parts.join('+')})`;
   } catch {
     statusClient.text = '$(warning) spec invalid';
   }
@@ -266,13 +289,23 @@ function formatError(e: unknown): string {
 async function runSync(silent = false): Promise<void> {
   try {
     applyGithubTokenFromSettings();
-    const ws = requireWorkspace();
-    if (!ws.hasSpec()) {
-      void vscode.window.showWarningMessage('Run Initialize Workspace first.');
+    const projectRoot = getProjectRoot();
+    const projectWs = getAistackWorkspace();
+    const hasProject = Boolean(projectWs?.hasSpec());
+    const hasProfile = hasProfileSpec();
+
+    if (!hasProject && !hasProfile) {
+      void vscode.window.showWarningMessage(
+        'No spec found — run Initialize Workspace or add modules to your profile.'
+      );
       return;
     }
+
     const cfg = getExtensionConfig();
-    let result: Awaited<ReturnType<typeof ws.syncWithLogger>> | undefined;
+    const syncOpts = { dryRun: cfg.dryRun, verbose: false };
+    let projectResult: ApplyPipelineResult | undefined;
+    let profileResult: ApplyPipelineResult | undefined;
+
     await vscode.window.withProgress(
       {
         location: silent ? vscode.ProgressLocation.Window : vscode.ProgressLocation.Notification,
@@ -280,25 +313,26 @@ async function runSync(silent = false): Promise<void> {
         cancellable: false,
       },
       async () => {
-        result = await ws.syncWithLogger(
-          { dryRun: cfg.dryRun, verbose: false },
-          (level: LogLevel, message: string, meta?: Record<string, unknown>) =>
-            log(level, message, meta)
-        );
-        log(
-          result.success ? 'info' : 'error',
-          `Sync ${result.success ? 'complete' : 'failed'} — resolved: ${result.skillsResolved}, written: ${result.adapterReport?.written.length ?? 0}`
-        );
-        if (!result.success) {
-          for (const err of result.errors) {
-            log('error', `${err.skill ?? err.phase}: ${err.message}`);
-          }
+        if (hasProject && projectWs) {
+          log('info', 'Syncing project spec…');
+          projectResult = await projectWs.syncWithLogger(syncOpts, log);
+          logScopeResult('project', projectResult);
+        }
+        if (hasProfile) {
+          log('info', 'Syncing profile spec…');
+          const profileWs = getProfileWorkspace();
+          profileResult = await profileWs.syncWithLogger(syncOpts, log);
+          logScopeResult('profile', profileResult);
         }
       }
     );
+
+    const anyFailed =
+      projectResult?.success === false || profileResult?.success === false;
     if (!silent) {
-      if (result && !result.success) {
-        const first = result.errors[0];
+      if (anyFailed) {
+        const first =
+          projectResult?.errors[0] ?? profileResult?.errors[0];
         void vscode.window.showErrorMessage(
           first
             ? `Sync failed: ${first.message}`
@@ -317,20 +351,51 @@ async function runSync(silent = false): Promise<void> {
   }
 }
 
+function logScopeResult(
+  scope: string,
+  result: { success: boolean; skillsResolved: number; errors: { skill?: string; phase?: string; message: string }[]; adapterReport?: { written: string[] } }
+): void {
+  log(
+    result.success ? 'info' : 'error',
+    `[${scope}] Sync ${result.success ? 'complete' : 'failed'} — resolved: ${result.skillsResolved}, written: ${result.adapterReport?.written.length ?? 0}`
+  );
+  if (!result.success) {
+    for (const err of result.errors) {
+      log('error', `[${scope}] ${err.skill ?? err.phase}: ${err.message}`);
+    }
+  }
+}
+
 async function runDoctor(): Promise<void> {
   try {
     applyGithubTokenFromSettings();
-    const ws = requireWorkspace();
-    const { checks, ok } = await ws.doctor();
+    const projectWs = getAistackWorkspace();
+    const profileWs = hasProfileSpec() ? getProfileWorkspace() : undefined;
+    if (!projectWs?.hasSpec() && !profileWs) {
+      void vscode.window.showWarningMessage('No project or profile spec found.');
+      return;
+    }
+
     outputChannel.clear();
     outputChannel.appendLine('AI Stack Kit doctor\n');
-    for (const c of checks) {
-      const mark = !c.ok ? '✗' : c.warn ? '!' : '✓';
-      outputChannel.appendLine(`  ${mark}  ${c.message}`);
-      if (c.hint) outputChannel.appendLine(`      ${c.hint}`);
+    let allOk = true;
+
+    if (projectWs?.hasSpec()) {
+      outputChannel.appendLine('Project spec\n');
+      const { checks, ok } = await projectWs.doctor();
+      allOk = allOk && ok;
+      appendDoctorChecks(checks);
     }
+
+    if (profileWs) {
+      outputChannel.appendLine('\nProfile spec (~/.aistack)\n');
+      const { checks, ok } = await profileWs.doctor();
+      allOk = allOk && ok;
+      appendDoctorChecks(checks);
+    }
+
     outputChannel.show(true);
-    if (ok) {
+    if (allOk) {
       void vscode.window.showInformationMessage('Doctor: all checks passed');
     } else {
       void vscode.window.showWarningMessage('Doctor: see Output panel for issues');
@@ -340,13 +405,44 @@ async function runDoctor(): Promise<void> {
   }
 }
 
+function appendDoctorChecks(
+  checks: { ok: boolean; warn?: boolean; message: string; hint?: string }[]
+): void {
+  for (const c of checks) {
+    const mark = !c.ok ? '✗' : c.warn ? '!' : '✓';
+    outputChannel.appendLine(`  ${mark}  ${c.message}`);
+    if (c.hint) outputChannel.appendLine(`      ${c.hint}`);
+  }
+}
+
+async function pickAddTarget(): Promise<SpecTarget | undefined> {
+  const projectRoot = getProjectRoot();
+  const projectWs = getAistackWorkspace();
+  const canProject = Boolean(projectRoot && projectWs?.hasSpec());
+  const canProfile = true;
+
+  if (canProject && canProfile) {
+    const pick = await vscode.window.showQuickPick(
+      [
+        { label: 'Add to project', description: 'repo spec.yaml', value: 'project' as const },
+        { label: 'Add to profile', description: '~/.aistack/spec.yaml', value: 'profile' as const },
+      ],
+      { placeHolder: 'Where should this module be recorded?' }
+    );
+    return pick?.value;
+  }
+  if (canProject) return 'project';
+  if (canProfile) return 'profile';
+  void vscode.window.showWarningMessage('Open a folder and initialize, or use Catalog → Add to profile.');
+  return undefined;
+}
+
 async function runSearch(): Promise<void> {
   try {
     applyGithubTokenFromSettings();
-    const ws = requireWorkspace();
     const q = await vscode.window.showInputBox({ prompt: 'Search catalog', placeHolder: 'react' });
     if (!q) return;
-    const hits = await ws.search(q, { limit: 30 });
+    const hits = await searchCatalog(q, { limit: 30 }, getProjectRoot());
     if (!hits.length) {
       void vscode.window.showInformationMessage('No modules found');
       return;
@@ -361,13 +457,23 @@ async function runSearch(): Promise<void> {
       { placeHolder: 'Select a module' }
     );
     if (!picked) return;
-    await ws.addModule({
-      name: picked.hit.name,
-      version: 'latest',
-      source: picked.hit.source,
-      moduleType: picked.hit.moduleType,
-    });
-    void vscode.window.showInformationMessage(`Added ${picked.hit.name}`);
+
+    const target = await pickAddTarget();
+    if (!target) return;
+
+    await addModuleWithTarget(
+      {
+        name: picked.hit.name,
+        version: 'latest',
+        source: picked.hit.source,
+        moduleType: picked.hit.moduleType,
+        specTarget: target,
+      },
+      getProjectRoot()
+    );
+    void vscode.window.showInformationMessage(
+      `Added ${picked.hit.name} to ${target} spec`
+    );
     refreshAll();
   } catch (e) {
     void vscode.window.showErrorMessage(e instanceof Error ? e.message : String(e));
@@ -420,19 +526,45 @@ async function runRefreshCatalogList(): Promise<void> {
 }
 
 async function openSpec(): Promise<void> {
-  const ws = getAistackWorkspace();
-  if (!ws?.hasSpec()) {
-    void vscode.window.showWarningMessage('No spec.yaml');
+  const projectWs = getAistackWorkspace();
+  const hasProject = Boolean(projectWs?.hasSpec());
+  const hasProfile = hasProfileSpec();
+
+  if (!hasProject && !hasProfile) {
+    void vscode.window.showWarningMessage('No project or profile spec.yaml');
     return;
   }
-  const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(ws.specPath));
+
+  let specPath: string;
+  if (hasProject && hasProfile) {
+    const pick = await vscode.window.showQuickPick(
+      [
+        { label: 'Project spec', description: projectWs!.specPath, value: projectWs!.specPath },
+        { label: 'Profile spec', description: userSpecPath(), value: userSpecPath() },
+      ],
+      { placeHolder: 'Open spec.yaml' }
+    );
+    if (!pick) return;
+    specPath = pick.value;
+  } else if (hasProject) {
+    specPath = projectWs!.specPath;
+  } else {
+    specPath = userSpecPath();
+  }
+
+  const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(specPath));
   await vscode.window.showTextDocument(doc);
 }
 
-async function runRemoveModule(name?: string): Promise<void> {
+function workspaceForTarget(target: SpecTarget = 'project') {
+  if (target === 'profile') return getProfileWorkspace();
+  return requireWorkspace();
+}
+
+async function runRemoveModule(name?: string, target: SpecTarget = 'project'): Promise<void> {
   if (!name) return;
   try {
-    const ws = requireWorkspace();
+    const ws = workspaceForTarget(target);
     await ws.removeModule(name);
     refreshAll();
   } catch (e) {
@@ -440,10 +572,14 @@ async function runRemoveModule(name?: string): Promise<void> {
   }
 }
 
-async function runToggleModule(name?: string, currentlyEnabled?: boolean): Promise<void> {
+async function runToggleModule(
+  name?: string,
+  currentlyEnabled?: boolean,
+  target: SpecTarget = 'project'
+): Promise<void> {
   if (!name) return;
   try {
-    const ws = requireWorkspace();
+    const ws = workspaceForTarget(target);
     await ws.setModuleEnabled(name, currentlyEnabled === undefined ? true : !currentlyEnabled);
     refreshAll();
   } catch (e) {

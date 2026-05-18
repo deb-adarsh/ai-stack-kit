@@ -9,6 +9,9 @@ import type { ProjectStatusRow } from '../cli/commands.js';
 export type { ApplyPipelineResult, SpecFile, AIModuleType, ClientInstallScope };
 export type { DoctorCheck, ModuleSearchHit, ProjectStatusRow };
 
+/** Which spec file to target: repo `spec.yaml` vs `~/.aistack/spec.yaml`. */
+export type SpecTarget = 'project' | 'profile';
+
 export interface AistackInitOptions {
   clientType: 'cursor' | 'copilot' | 'claude';
   installScope?: 'project' | 'user';
@@ -40,7 +43,10 @@ export interface AddModuleOptions {
   sourceConfig?: Record<string, unknown>;
   config?: Record<string, unknown>;
   moduleType?: AIModuleType;
+  /** @deprecated Prefer `specTarget: 'profile'` (separate ~/.aistack/spec.yaml). */
   clientInstallScope?: ClientInstallScope;
+  /** `project` = workspace spec.yaml; `profile` = ~/.aistack/spec.yaml */
+  specTarget?: SpecTarget;
 }
 
 export interface CatalogRefreshOptions {
@@ -61,4 +67,19 @@ export interface OutputPathEntry {
   relativePath: string;
   absolutePath: string;
   exists: boolean;
+}
+
+export interface SpecModuleRow {
+  name: string;
+  moduleType: string;
+  enabled: boolean;
+  version: string;
+  source: string;
+  section: 'skills' | 'modules';
+  specTarget: SpecTarget;
+}
+
+export interface DualSyncResult {
+  project?: ApplyPipelineResult;
+  profile?: ApplyPipelineResult;
 }

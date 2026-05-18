@@ -1,24 +1,39 @@
 import * as vscode from 'vscode';
-import { AistackWorkspace } from 'ai-stack-kit-core';
+import {
+  AistackWorkspace,
+  addModuleWithTarget,
+  getProfileWorkspace,
+  getProjectWorkspace,
+  hasProfileSpec,
+  listAllOutputPaths,
+  listAllSpecModules,
+  searchCatalog,
+  type SpecTarget,
+} from 'ai-stack-kit-core';
 
-let cached: AistackWorkspace | undefined;
+let cachedProject: AistackWorkspace | undefined;
+
+export type { SpecTarget };
 
 export function getWorkspaceFolder(): vscode.Uri | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri;
 }
 
+export function getProjectRoot(): string | undefined {
+  return getWorkspaceFolder()?.fsPath;
+}
+
 export function getAistackWorkspace(): AistackWorkspace | undefined {
-  const folder = getWorkspaceFolder();
-  if (!folder) return undefined;
-  const root = folder.fsPath;
-  if (!cached || cached.projectRoot !== root) {
-    cached = new AistackWorkspace(root);
+  const root = getProjectRoot();
+  if (!root) return undefined;
+  if (!cachedProject || cachedProject.projectRoot !== root) {
+    cachedProject = getProjectWorkspace(root);
   }
-  return cached;
+  return cachedProject;
 }
 
 export function resetWorkspaceCache(): void {
-  cached = undefined;
+  cachedProject = undefined;
 }
 
 export function requireWorkspace(): AistackWorkspace {
@@ -28,3 +43,12 @@ export function requireWorkspace(): AistackWorkspace {
   }
   return ws;
 }
+
+export {
+  addModuleWithTarget,
+  getProfileWorkspace,
+  hasProfileSpec,
+  listAllOutputPaths,
+  listAllSpecModules,
+  searchCatalog,
+};

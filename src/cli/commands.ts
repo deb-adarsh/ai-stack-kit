@@ -492,6 +492,28 @@ export async function runApply(cwd: string, options?: RunApplyOptions) {
   });
 }
 
+export interface DualApplyResult {
+  project?: Awaited<ReturnType<typeof apply>>;
+  profile?: Awaited<ReturnType<typeof apply>>;
+}
+
+/** Apply project spec (if present) then profile spec at ~/.aistack (if present). */
+export async function runSyncAllScopes(
+  projectCwd: string,
+  options?: RunApplyOptions
+): Promise<DualApplyResult> {
+  const { hasProfileSpec, userAistackRoot } = await import('../paths/aistack-paths.js');
+  const out: DualApplyResult = {};
+  const specPath = path.join(path.resolve(projectCwd), 'spec.yaml');
+  if (existsSync(specPath)) {
+    out.project = await runApply(projectCwd, options);
+  }
+  if (hasProfileSpec()) {
+    out.profile = await runApply(userAistackRoot(), options);
+  }
+  return out;
+}
+
 export interface ProjectStatusRow {
   label: string;
   ok: boolean;

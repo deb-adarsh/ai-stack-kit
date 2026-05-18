@@ -27,13 +27,17 @@ function render() {
     const div = document.createElement('div');
     div.className = 'card';
     div.innerHTML = `<strong>${s.skillFolder}</strong> <span class="muted">${s.moduleType || 'skill'}</span><p>${s.description || ''}</p>`;
-    const add = document.createElement('button');
-    add.textContent = 'Add to spec';
-    add.onclick = () => vscode.postMessage({ type: 'add', id: s.id });
+    const addProject = document.createElement('button');
+    addProject.textContent = 'Add to project';
+    addProject.onclick = () => vscode.postMessage({ type: 'add', id: s.id, target: 'project' });
+    const addProfile = document.createElement('button');
+    addProfile.textContent = 'Add to profile';
+    addProfile.onclick = () => vscode.postMessage({ type: 'add', id: s.id, target: 'profile' });
     const copy = document.createElement('button');
     copy.textContent = 'Copy id';
     copy.onclick = () => vscode.postMessage({ type: 'copy', text: s.id });
-    div.appendChild(add);
+    div.appendChild(addProject);
+    div.appendChild(addProfile);
     div.appendChild(copy);
     list.appendChild(div);
   }
