@@ -107,9 +107,9 @@ Changes to **`spec.yaml`** from either surface are picked up by both after **Syn
 | Catalog empty / no search hits | Reload window; update extension (≥ 1.1.4 fixes catalog bundle) |
 | Sync failed | **View → Output → AI Stack Kit**; set **`aiStackKit.githubToken`** if GitHub sources fail |
 | Globe does nothing | Update to latest extension; opens https://deb-adarsh.github.io/ai-stack-kit/ |
-| No Activity Bar icon; views under **Explorer** | Not intended. Command Palette → **AI Stack Kit: Show Sidebar** or **View: Reset View Locations**, then reload. Update to **1.1.9**. |
-| “Could not open the Catalog panel” | Update to **1.1.9**; run **View: Reset View Locations**, then **AI Stack Kit: Show Catalog Panel**. |
-| Gray / wrong Activity Bar icon | Update to **1.1.9**; reload window |
+| No Activity Bar icon; views under **Explorer** | Update to **1.2.0**, **View: Reset View Locations**, reload. Enable **AI Stack Kit** in the Activity Bar right-click menu if needed. |
+| “Could not open the Catalog panel” | Update to **1.2.0**; **View: Reset View Locations**, then **AI Stack Kit: Show Catalog Panel**. |
+| Activity Bar icon missing from visibility menu | Update to **1.2.0** (single SVG icon fix); reinstall extension and reload window. |
 
 ---
 

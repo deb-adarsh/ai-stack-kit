@@ -21,7 +21,7 @@ Manage **skills**, **subagents**, and **hooks** from `spec.yaml` inside VS Code 
 3. Browse **Catalog** or run **Search Catalog…** to add modules.
 4. Run **Sync** (status bar: **$(sync) AI Stack**).
 
-Sidebar views default to **Modules → Catalog → Outputs** (drag to reorder). The globe on **Catalog** opens the [hosted skill browser](https://deb-adarsh.github.io/ai-stack-kit/).
+Open the **AI Stack Kit** icon on the **Activity Bar** (far left) for **Modules → Catalog → Outputs**. The globe on **Catalog** opens the [hosted skill browser](https://deb-adarsh.github.io/ai-stack-kit/) in your browser.
 
 ## Settings
 

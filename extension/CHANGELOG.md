@@ -2,17 +2,16 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
-## [1.1.9] - 2026-05-18
-
-### Changed
-
-- **Catalog webview** — removed redundant “Full skill browser” link; the hosted site opens only from the **globe** on the Catalog title bar. **Show Catalog Panel** focuses the in-sidebar catalog (search, Add to spec).
+## [1.2.0] - 2026-05-18
 
 ### Fixed
 
-- **Activity Bar** — grayscale chevron logo (16×16 PNG from official artwork); complex SVG icons no longer used so the **AI Stack Kit** icon registers on the Activity Bar instead of views appearing only under Explorer.
-- **Show Sidebar** (`aistack.showSidebar`) — focuses the AI Stack Kit view container.
-- **Show Catalog Panel** — uses `WebviewView.show()` with retries and `workbench.action.openView` fallback when `aistack.catalog.focus` is unavailable.
+- **Activity Bar icon and container** — restored a single minimal SVG (`media/activity-bar.svg`) so **AI Stack Kit** appears in the Activity Bar and in the Activity Bar visibility menu (light/dark PNG pairs prevented registration on some hosts).
+
+### Changed
+
+- **Catalog webview** — removed redundant “Full skill browser” link; hosted site opens only from the **globe** on the Catalog title bar.
+- **Show Sidebar** (`aistack.showSidebar`) and **Show Catalog Panel** — reliable sidebar/catalog focus with `WebviewView.show()` and fallbacks.
 
 ## [1.1.8] - 2026-05-18
 
