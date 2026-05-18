@@ -1,19 +1,34 @@
 import * as vscode from 'vscode';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { SKILL_BROWSER_URL } from '../constants.js';
 import { requireWorkspace } from '../services/workspaceService.js';
 import { applyGithubTokenFromSettings } from '../services/configService.js';
 import { prepareWebviewHtml } from '../utils/webview.js';
 
 export class CatalogWebviewProvider implements vscode.WebviewViewProvider {
+  private view?: vscode.WebviewView;
+
   constructor(private readonly extensionUri: vscode.Uri) {}
+
+  /** Reveal the Catalog webview in the sidebar (after the view container is visible). */
+  reveal(preserveFocus = false): boolean {
+    if (!this.view) {
+      return false;
+    }
+    this.view.show?.(!preserveFocus);
+    return true;
+  }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void {
+    this.view = webviewView;
+    webviewView.onDidDispose(() => {
+      this.view = undefined;
+    });
+
     const mediaRoot = vscode.Uri.joinPath(this.extensionUri, 'media');
     webviewView.webview.options = {
       enableScripts: true,
@@ -31,10 +46,6 @@ export class CatalogWebviewProvider implements vscode.WebviewViewProvider {
     }
 
     webviewView.webview.onDidReceiveMessage(async (msg: { type: string; id?: string; text?: string }) => {
-      if (msg.type === 'openSkillBrowser') {
-        await vscode.env.openExternal(vscode.Uri.parse(SKILL_BROWSER_URL));
-        return;
-      }
       if (msg.type === 'copy' && msg.text) {
         await vscode.env.clipboard.writeText(msg.text);
         void webviewView.webview.postMessage({ type: 'toast', text: 'Copied!' });

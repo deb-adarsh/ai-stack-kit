@@ -57,22 +57,6 @@ app.innerHTML = `
       border-color: var(--vscode-focusBorder, #007fd4);
     }
     select { min-width: 7.5rem; }
-    .header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-    .header-row a {
-      font-size: 0.85em;
-      color: var(--vscode-textLink-foreground);
-      text-decoration: none;
-      white-space: nowrap;
-    }
-    .header-row a:hover {
-      text-decoration: underline;
-    }
     .meta {
       display: flex;
       justify-content: space-between;
@@ -144,10 +128,7 @@ app.innerHTML = `
       box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
   </style>
-  <div class="header-row">
-    <h2>Catalog</h2>
-    <a href="#" id="open-web">Full skill browser ↗</a>
-  </div>
+  <h2>Catalog</h2>
   <div class="toolbar">
     <div class="search-row">
       <input type="search" id="q" placeholder="Search by name, publisher, description…" autocomplete="off" spellcheck="false" />
@@ -285,11 +266,6 @@ document.getElementById('q')!.addEventListener('input', () => {
   debounce = setTimeout(render, 120);
 });
 document.getElementById('type')!.addEventListener('change', render);
-
-document.getElementById('open-web')!.addEventListener('click', (e) => {
-  e.preventDefault();
-  vscode.postMessage({ type: 'openSkillBrowser' });
-});
 
 window.addEventListener('message', (e) => {
   if (e.data?.type === 'toast') {

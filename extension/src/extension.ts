@@ -63,15 +63,15 @@ function activateExtension(context: vscode.ExtensionContext): void {
   outputChannel = vscode.window.createOutputChannel('AI Stack Kit');
   modulesTree = new ModulesTreeProvider();
   outputsTree = new OutputsTreeProvider();
+  const catalogProvider = new CatalogWebviewProvider(context.extensionUri);
 
   context.subscriptions.push(
     outputChannel,
     vscode.window.registerTreeDataProvider(VIEW_MODULES, modulesTree),
     vscode.window.registerTreeDataProvider(VIEW_OUTPUTS, outputsTree),
-    vscode.window.registerWebviewViewProvider(
-      VIEW_CATALOG,
-      new CatalogWebviewProvider(context.extensionUri)
-    )
+    vscode.window.registerWebviewViewProvider(VIEW_CATALOG, catalogProvider, {
+      webviewOptions: { retainContextWhenHidden: true },
+    })
   );
 
   statusSync = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
@@ -96,7 +96,8 @@ function activateExtension(context: vscode.ExtensionContext): void {
   register('aistack.search', () => runSearch());
   register('aistack.add', () => runAdd());
   register('aistack.switchClient', () => runSwitchClient());
-  register('aistack.openCatalog', () => focusCatalogPanel());
+  register('aistack.showSidebar', () => showAistackSidebar());
+  register('aistack.openCatalog', () => focusCatalogPanel(catalogProvider));
   register('aistack.openSkillBrowser', () => openSkillBrowserWeb());
   register('aistack.refreshCatalog', () => runRefreshCatalogList());
   register('aistack.openSpec', () => openSpec());
@@ -157,14 +158,47 @@ async function updateStatusBar(): Promise<void> {
   }
 }
 
-async function focusCatalogPanel(): Promise<void> {
+async function showAistackSidebar(): Promise<void> {
   try {
     await vscode.commands.executeCommand(`workbench.view.extension.${VIEW_CONTAINER}`);
-    await vscode.commands.executeCommand(`${VIEW_CATALOG}.focus`);
   } catch (e) {
     log('error', e instanceof Error ? e.message : String(e));
-    void vscode.window.showErrorMessage('Could not open the Catalog panel.');
+    void vscode.window.showWarningMessage(
+      'Could not open the AI Stack Kit sidebar. Run "View: Reset View Locations", reload the window, then click the AI Stack Kit icon on the Activity Bar (far left).'
+    );
   }
+}
+
+async function focusCatalogPanel(catalog: CatalogWebviewProvider): Promise<void> {
+  await showAistackSidebar();
+
+  // View may not be resolved until the container is visible; retry briefly.
+  for (let attempt = 0; attempt < 5; attempt++) {
+    if (catalog.reveal()) {
+      return;
+    }
+    try {
+      await vscode.commands.executeCommand(`${VIEW_CATALOG}.focus`);
+      return;
+    } catch {
+      /* focus command unavailable until view container exists */
+    }
+    try {
+      await vscode.commands.executeCommand('workbench.action.openView', VIEW_CATALOG);
+      if (catalog.reveal()) {
+        return;
+      }
+      return;
+    } catch {
+      /* openView not available on older hosts */
+    }
+    await new Promise((r) => setTimeout(r, 80));
+  }
+
+  log('warn', 'Catalog panel could not be focused; view container may be missing from Activity Bar.');
+  void vscode.window.showWarningMessage(
+    'Open the **Catalog** section in the sidebar. If AI Stack Kit views appear under Explorer, run **View: Reset View Locations** and reload the window, or use **AI Stack Kit: Show Sidebar**.'
+  );
 }
 
 function openSkillBrowserWeb(): void {

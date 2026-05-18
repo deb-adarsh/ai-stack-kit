@@ -2,7 +2,7 @@
   "name": "ai-stack-kit",
   "displayName": "AI Stack Kit",
   "description": "Manage AI skills, subagents, and hooks from spec.yaml — search catalogs, sync to Cursor, Copilot, and Claude.",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "publisher": "deb-adarsh",
   "license": "Apache-2.0",
   "repository": {
@@ -95,6 +95,11 @@
         "command": "aistack.switchClient",
         "title": "AI Stack Kit: Switch Client",
         "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "aistack.showSidebar",
+        "title": "AI Stack Kit: Show Sidebar",
+        "icon": "$(layout-sidebar-left)"
       },
       {
         "command": "aistack.openCatalog",
