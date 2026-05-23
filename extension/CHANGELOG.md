@@ -2,6 +2,12 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
+## [1.3.2] - 2026-05-23
+
+### Docs
+
+- Refreshed the extension README with clearer developer-focused positioning, tighter install copy, and a cleaner **Project vs Profile** explanation for Cursor / VS Code users.
+
 ## [1.3.1] - 2026-05-23
 
 ### Added
