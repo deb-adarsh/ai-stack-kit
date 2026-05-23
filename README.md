@@ -1,7 +1,8 @@
 # AI Stack Kit
 
 [![npm](https://img.shields.io/npm/v/ai-stack-kit)](https://www.npmjs.com/package/ai-stack-kit)
-[![VS Code extension](https://img.shields.io/badge/VS%20Code%20extension-Install%20on%20Marketplace-007ACC?style=flat&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)
+[![VS Code extension](https://img.shields.io/badge/VS%20Code-Install%20from%20Marketplace-007ACC?style=flat&logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)
+[![Cursor extension](https://img.shields.io/badge/Cursor-Install%20from%20Open%20VSX-000000?style=flat&logo=cursor&logoColor=white)](https://open-vsx.org/extension/deb-adarsh/ai-stack-kit)
 [![license](https://img.shields.io/github/license/deb-adarsh/ai-stack-kit)](https://github.com/deb-adarsh/ai-stack-kit/blob/main/LICENSE)
 [![Skill browser](https://img.shields.io/badge/skill%20browser-live-informational)](https://deb-adarsh.github.io/ai-stack-kit/)
 
@@ -9,7 +10,10 @@
 
 Stop copy-pasting AI workflows between repos. Install them like packages.
 
-Not a fan of the CLI? Use the [**VS Code / Cursor extension**](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit) from your IDE — same `spec.yaml` workflow, no global install required.
+Not a fan of the CLI? Install the IDE extension — same `spec.yaml` workflow, no global install required:
+
+- **VS Code** → [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)
+- **Cursor / VSCodium** → [Open VSX Registry](https://open-vsx.org/extension/deb-adarsh/ai-stack-kit) (search **"AI Stack Kit"** in the Extensions panel)
 
 A CLI to **discover, install, apply and sync reusable AI capabilities** from GitHub, npm, and registries - using a simple declarative spec.
 
@@ -22,11 +26,15 @@ A CLI to **discover, install, apply and sync reusable AI capabilities** from Git
 | **npm registry** (public) | `npm install -g ai-stack-kit` |
 | **GitHub Packages** | `npm install -g @deb-adarsh/ai-stack-kit` (requires [`.npmrc` auth](./docs/CLI_GUIDE.md#github-packages)) |
 | **No global install** | `npx github:deb-adarsh/ai-stack-kit <command>` (same as the [Skill browser](https://deb-adarsh.github.io/ai-stack-kit/)) |
-| **VS Code / Cursor extension** | [**Install from Marketplace**](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit) |
+| **VS Code extension** | [Install from Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit) |
+| **Cursor / VSCodium extension** | [Install from Open VSX](https://open-vsx.org/extension/deb-adarsh/ai-stack-kit) — or search **"AI Stack Kit"** in Cursor's Extensions panel |
 
-### VS Code extension
+### VS Code / Cursor extension
 
-**[Install from the Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** (VS Code or Cursor) — same `spec.yaml` workflow as the CLI, no global install required.
+Same `spec.yaml` workflow as the CLI, no global install required.
+
+- **VS Code** → [Install from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)
+- **Cursor** → [Install from Open VSX](https://open-vsx.org/extension/deb-adarsh/ai-stack-kit) (or search **"AI Stack Kit"** in the Extensions panel — Cursor uses the Open VSX registry, not the Visual Studio Marketplace)
 
 - **Activity Bar** → **Modules**, **Catalog**, **Outputs**
 - Commands: **Initialize**, **Sync**, **Doctor**, **Search/Add**, **Switch Client**

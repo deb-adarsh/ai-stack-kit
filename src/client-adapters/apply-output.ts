@@ -10,6 +10,7 @@ import { deepMerge, parseJsonSafe, stringifyJsonSorted } from './merge-json.js';
 const CONFLICT = '<<<<<<< AISTACK_CONFLICT\n';
 const MID = '\n=======\n';
 const END = '\n>>>>>>> AISTACK_CONFLICT\n';
+const CONFLICT_SAFE_EXTENSIONS = new Set(['.md', '.markdown', '.txt']);
 
 export async function applyAdapterOutput(
   output: AdapterOutput,
@@ -48,12 +49,16 @@ export async function applyAdapterOutput(
         const base = parseJsonSafe(existing);
         const patch = parseJsonSafe(file.content);
         if (!base || !patch) {
-          if (options.strictConflicts) {
-            conflicts.push({ path: file.path, message: 'Invalid JSON for merge' });
-            continue;
-          }
-          await writeFile(abs, CONFLICT + existing + MID + file.content + END, 'utf-8');
-          merged.push(file.path);
+          // Writing conflict markers into a .json file would break clients that
+          // parse it (e.g. VS Code's settings.json). Record as a conflict and
+          // skip the write instead so the user can resolve it manually.
+          conflicts.push({
+            path: file.path,
+            message: !base
+              ? `Existing ${file.path} is not valid JSON (or JSONC) — refusing to overwrite. Fix the file and run Sync again.`
+              : 'Generated patch is not valid JSON',
+          });
+          skipped.push(file.path);
           continue;
         }
         await writeFile(abs, stringifyJsonSorted(deepMerge(base, patch)), 'utf-8');
@@ -64,8 +69,17 @@ export async function applyAdapterOutput(
         } else if (options.strictConflicts) {
           conflicts.push({ path: file.path, message: 'File exists and mergeStrategy is not merge' });
         } else {
-          await writeFile(abs, CONFLICT + existing + MID + file.content + END, 'utf-8');
-          merged.push(file.path);
+          const ext = path.extname(abs).toLowerCase();
+          if (CONFLICT_SAFE_EXTENSIONS.has(ext)) {
+            await writeFile(abs, CONFLICT + existing + MID + file.content + END, 'utf-8');
+            merged.push(file.path);
+          } else {
+            conflicts.push({
+              path: file.path,
+              message: `Existing file differs and the format is not safe for conflict markers (${ext || 'no extension'}). Skipping write.`,
+            });
+            skipped.push(file.path);
+          }
         }
       }
     } catch {

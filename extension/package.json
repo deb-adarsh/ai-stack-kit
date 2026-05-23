@@ -2,7 +2,7 @@
   "name": "ai-stack-kit",
   "displayName": "AI Stack Kit",
   "description": "Manage AI skills, subagents, and hooks from your IDE — search catalogs, sync to Cursor, Copilot, and Claude.",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "publisher": "deb-adarsh",
   "license": "Apache-2.0",
   "repository": {
@@ -21,7 +21,11 @@
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Machine Learning", "Data Science", "Other"],
+  "categories": [
+    "Machine Learning",
+    "Data Science",
+    "Other"
+  ],
   "keywords": [
     "ai",
     "ai skills",
@@ -181,13 +185,20 @@
       "properties": {
         "aiStackKit.clientType": {
           "type": "string",
-          "enum": ["cursor", "copilot", "claude"],
+          "enum": [
+            "cursor",
+            "copilot",
+            "claude"
+          ],
           "default": "copilot",
           "description": "Default client.type written to spec.yaml on init and used when switching client."
         },
         "aiStackKit.installScope": {
           "type": "string",
-          "enum": ["project", "user"],
+          "enum": [
+            "project",
+            "user"
+          ],
           "default": "project",
           "description": "Install scope for skill/agent trees (project = repo-local)."
         },
@@ -249,6 +260,9 @@
     "vsix": "vsce package --no-dependencies",
     "deploy": "vsce publish --no-dependencies",
     "publish:marketplace": "npm run deploy",
+    "publish:openvsx": "ovsx publish --no-dependencies",
+    "publish:openvsx:vsix": "ovsx publish --no-dependencies --packagePath",
+    "publish:all": "npm run publish:marketplace && npm run publish:openvsx",
     "publish:minor": "vsce publish minor --no-dependencies",
     "publish:patch": "vsce publish patch --no-dependencies"
   },
@@ -258,9 +272,10 @@
     "@types/vscode": "^1.85.0",
     "@vscode/test-electron": "^2.4.0",
     "@vscode/vsce": "^3.2.0",
-    "mocha": "^10.8.0",
     "esbuild": "^0.24.0",
+    "mocha": "^10.8.0",
     "npm-run-all": "^4.1.5",
+    "ovsx": "^0.10.12",
     "typescript": "^5.3.0"
   }
 }

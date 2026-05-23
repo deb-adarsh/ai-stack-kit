@@ -4,15 +4,23 @@ Manage **skills**, **subagents**, and **hooks** from your IDE (VS Code or Cursor
 
 ## Install
 
-**[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)** — use **Install** on that page (VS Code 1.85+ or Cursor).
+- **VS Code 1.85+** — [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)
+- **Cursor / VSCodium / Gitpod** — [Open VSX Registry](https://open-vsx.org/extension/deb-adarsh/ai-stack-kit) (open **Extensions** panel in Cursor and search for **"AI Stack Kit"**)
+- **Offline / pre-release** — grab the `.vsix` from a [GitHub release](https://github.com/deb-adarsh/ai-stack-kit/releases) and run `code --install-extension ai-stack-kit-*.vsix` (or `cursor --install-extension …`)
 
 ## Features
 
-- **Modules** tree — **Project** and **Profile** groups (`spec.yaml` and `~/.aistack/spec.yaml`)
+- **Modules** tree — **Project** (repo `spec.yaml`) and **Profile** (`~/.aistack/spec.yaml`) groups
 - **Outputs** tree — generated paths for project and profile specs
-- **Catalog** webview — **Add to project** or **Add to profile** from the bundled skill index
-- **Commands** — Initialize, Sync, Doctor, Search/Add, Switch Client
+- **Catalog** webview — two install targets:
+  - **Add to project** → writes to the open repo's `spec.yaml`; sync installs into `.cursor/`, `.github/`, `.claude/` **inside the repo** (shared via git).
+  - **Add to profile** → writes to `~/.aistack/spec.yaml` (your user account, **global**); sync installs into `~/.cursor`, `~/.copilot`, `~/.claude` so the module is available **across every project** on this machine, even without a folder open.
+- **Commands** — Initialize, Sync (both specs), Doctor, Search/Add, Switch Client
 - **Settings** — `aiStackKit.clientType`, `aiStackKit.githubToken`, `aiStackKit.dryRun`, `aiStackKit.autoSyncOnSave`
+
+> **Project vs Profile**
+> *Project* = scoped to this repo (versioned with your code).
+> *Profile* = user-global — like a personal dotfiles install that follows you across every folder.
 
 ## Quick start
 

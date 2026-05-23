@@ -286,7 +286,26 @@ function formatError(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
+/**
+ * Guards against overlapping Sync runs. When two sources fire close together
+ * (status bar click + autoSyncOnSave from the file watcher), the second call
+ * waits for the first to finish instead of racing on disk writes. Returning
+ * the same Promise also collapses duplicate clicks into a single run.
+ */
+let syncInFlight: Promise<void> | null = null;
+
 async function runSync(silent = false): Promise<void> {
+  if (syncInFlight) {
+    log('debug', 'Sync already in progress — joining existing run');
+    return syncInFlight;
+  }
+  syncInFlight = doRunSync(silent).finally(() => {
+    syncInFlight = null;
+  });
+  return syncInFlight;
+}
+
+async function doRunSync(silent: boolean): Promise<void> {
   try {
     applyGithubTokenFromSettings();
     const projectRoot = getProjectRoot();
@@ -329,6 +348,10 @@ async function runSync(silent = false): Promise<void> {
 
     const anyFailed =
       projectResult?.success === false || profileResult?.success === false;
+    const conflicts = [
+      ...(projectResult?.adapterReport?.conflicts ?? []),
+      ...(profileResult?.adapterReport?.conflicts ?? []),
+    ];
     if (!silent) {
       if (anyFailed) {
         const first =
@@ -338,6 +361,10 @@ async function runSync(silent = false): Promise<void> {
             ? `Sync failed: ${first.message}`
             : 'Sync failed — see AI Stack Kit output for details'
         );
+      } else if (conflicts.length) {
+        void vscode.window.showWarningMessage(
+          `Sync complete with ${conflicts.length} conflict${conflicts.length === 1 ? '' : 's'} — see AI Stack Kit output.`
+        );
       } else {
         void vscode.window.showInformationMessage(
           cfg.dryRun ? 'Dry run complete (see output)' : 'Sync complete'
@@ -345,7 +372,7 @@ async function runSync(silent = false): Promise<void> {
       }
     }
     refreshAll();
-    outputChannel.show(true);
+    if (!silent || anyFailed || conflicts.length) outputChannel.show(true);
   } catch (e) {
     void vscode.window.showErrorMessage(e instanceof Error ? e.message : String(e));
   }
@@ -353,16 +380,29 @@ async function runSync(silent = false): Promise<void> {
 
 function logScopeResult(
   scope: string,
-  result: { success: boolean; skillsResolved: number; errors: { skill?: string; phase?: string; message: string }[]; adapterReport?: { written: string[] } }
+  result: {
+    success: boolean;
+    skillsResolved: number;
+    errors: { skill?: string; phase?: string; message: string }[];
+    adapterReport?: {
+      written: string[];
+      merged?: string[];
+      skipped?: string[];
+      conflicts?: { path: string; message: string }[];
+    };
+  }
 ): void {
   log(
     result.success ? 'info' : 'error',
-    `[${scope}] Sync ${result.success ? 'complete' : 'failed'} — resolved: ${result.skillsResolved}, written: ${result.adapterReport?.written.length ?? 0}`
+    `[${scope}] Sync ${result.success ? 'complete' : 'failed'} — resolved: ${result.skillsResolved}, written: ${result.adapterReport?.written.length ?? 0}, merged: ${result.adapterReport?.merged?.length ?? 0}, skipped: ${result.adapterReport?.skipped?.length ?? 0}`
   );
   if (!result.success) {
     for (const err of result.errors) {
       log('error', `[${scope}] ${err.skill ?? err.phase}: ${err.message}`);
     }
+  }
+  for (const c of result.adapterReport?.conflicts ?? []) {
+    log('warn', `[${scope}] conflict: ${c.path} — ${c.message}`);
   }
 }
 

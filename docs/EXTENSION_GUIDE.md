@@ -8,15 +8,27 @@ Terminal-first? See **[CLI guide](./CLI_GUIDE.md)**. Overview and install option
 
 ## Install
 
-**[Visual Studio Marketplace → AI Stack Kit](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit)**
+| IDE | Registry | Link |
+|-----|----------|------|
+| **VS Code 1.85+** | Visual Studio Marketplace | [marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=deb-adarsh.ai-stack-kit) |
+| **Cursor** | Open VSX (Cursor's default registry) | [open-vsx.org](https://open-vsx.org/extension/deb-adarsh/ai-stack-kit) |
+| **VSCodium / Gitpod / Theia** | Open VSX | [open-vsx.org](https://open-vsx.org/extension/deb-adarsh/ai-stack-kit) |
 
-Quick Open (`Ctrl+P` / `Cmd+P`):
+**Cursor users** — Cursor does not query the Visual Studio Marketplace. Open the **Extensions** panel and search **"AI Stack Kit"**, or run the command below in a terminal:
+
+```bash
+cursor --install-extension deb-adarsh.ai-stack-kit
+```
+
+**VS Code users** — Quick Open (`Ctrl+P` / `Cmd+P`):
 
 ```text
 ext install deb-adarsh.ai-stack-kit
 ```
 
-Works in **VS Code** and **Cursor**. After updating, run **Developer: Reload Window** once.
+**Offline** — download the `.vsix` from the [GitHub release](https://github.com/deb-adarsh/ai-stack-kit/releases) and run `code --install-extension ai-stack-kit-*.vsix` (or `cursor --install-extension …`).
+
+After updating, run **Developer: Reload Window** once.
 
 ---
 
@@ -25,8 +37,8 @@ Works in **VS Code** and **Cursor**. After updating, run **Developer: Reload Win
 | Area | Purpose |
 |------|---------|
 | **Activity Bar → AI Stack Kit** | Sidebar container for all views |
-| **Modules** | **Project** and **Profile** groups — skills, subagents, hooks from repo **`spec.yaml`** and **`~/.aistack/spec.yaml`** |
-| **Catalog** | Bundled catalog snapshot — search, **Add to project** / **Add to profile**, copy id. **Globe** on the Catalog title bar opens the [hosted skill browser](https://deb-adarsh.github.io/ai-stack-kit/) in your browser. |
+| **Modules** | **Project** (repo `spec.yaml`) and **Profile** (`~/.aistack/spec.yaml`, user-global) groups — hover the group header for a full explanation |
+| **Catalog** | Bundled catalog snapshot — search, **Add to project** (this repo) or **Add to profile** (your user account, global across all projects), copy id. **Globe** on the Catalog title bar opens the [hosted skill browser](https://deb-adarsh.github.io/ai-stack-kit/) in your browser. |
 | **Outputs** | Generated paths for active **`client.type`** (open in editor) |
 
 Default view order: **Modules → Catalog → Outputs** (you can drag to reorder; that layout is saved per machine).
@@ -138,6 +150,8 @@ cd extension && code --install-extension ai-stack-kit-*.vsix   # optional
 ```
 
 Press **F5** in **`extension/`** for Extension Development Host. Tests: `npm run test:extension`.
+
+Publishing a new version to **both** the Visual Studio Marketplace and the Open VSX Registry (Cursor) is documented in **[docs/RELEASING.md](./RELEASING.md)**.
 
 ---
 

@@ -2,18 +2,39 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
-## [1.3.0] - 2026-05-18
+## [1.3.1] - 2026-05-23
+
+### Added
+
+- **Cursor / Open VSX distribution** — release workflow now publishes the same VSIX to the [Open VSX Registry](https://open-vsx.org/extension/deb-adarsh/ai-stack-kit) in addition to the Visual Studio Marketplace, so the extension is installable from Cursor's Extensions panel (and any VSCodium-family IDE) instead of requiring a manual VSIX install.
+- **`publish:openvsx` / `publish:all` npm scripts** for local publishing once the `OVSX_PAT` is in your environment.
+
+### Docs
+
+- Install instructions updated for Cursor users (search the Extensions panel, no `.vsix` download).
+- New `docs/RELEASING.md` documenting the one-time Open VSX namespace claim and token setup.
+
+## [1.3.0] - 2026-05-22
 
 ### Added
 
 - **Dual-scope catalog add** — **Add to project** (repo `spec.yaml`) and **Add to profile** (`~/.aistack/spec.yaml`) in the Catalog webview.
-- **Modules tree** — **Project** and **Profile** groups for modules from each spec.
+- **Modules tree** — **Project** and **Profile** groups for modules from each spec, with hover tooltips explaining repo-local vs user-global scope and where files land on disk.
+- **Catalog buttons** — hover tooltips clarify that **Add to project** writes inside the repo and **Add to profile** installs globally for your user account.
 - **Sync / Doctor / Outputs** — apply and health checks for both project and profile specs when present.
 - **Open spec.yaml** — choose project or profile spec when both exist.
 
 ### Changed
 
 - **Search Catalog…** — prompts for project vs profile target before adding.
+- **README / extension guide** — clarified that **Add to profile** installs at the user-global level (`~/.cursor`, `~/.copilot`, `~/.claude`) across every project on the machine.
+
+### Fixed
+
+- **Concurrent sync race** — overlapping sync triggers (status bar click + autoSyncOnSave from the spec watcher) now collapse into one run instead of racing on disk writes. Eliminates the "had to sync multiple times" symptom.
+- **`.vscode/settings.json` corruption** — JSON merge now understands JSONC (`//`, `/* */`, trailing commas) so syncs no longer write `<<<<<<< AISTACK_CONFLICT` markers into user settings. Existing keys are preserved on merge.
+- **Safer conflict handling for non-text files** — when an existing file differs and is not Markdown/text, sync now reports a conflict in the AI Stack Kit output channel instead of overwriting it with conflict markers.
+- **Conflict warnings surfaced** — Sync now shows a warning toast (and reveals the output channel) when the apply pipeline records conflicts, instead of silently succeeding.
 
 ## [1.2.2] - 2026-05-18
 

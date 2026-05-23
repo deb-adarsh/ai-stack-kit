@@ -37,7 +37,7 @@
     "package:extension": "npm run build:extension && cd extension && npm run vsix",
     "dev": "tsc --watch",
     "start": "node dist/cli/index.js",
-    "test": "npm run build && node --test dist/cli/__tests__/get-module-versions.test.js dist/pipeline/__tests__/spec-loader.test.js dist/pipeline/__tests__/apply-dry-run.test.js dist/client-adapters/__tests__/adapter-factory.test.js dist/api/__tests__/workspace-api.test.js dist/api/__tests__/profile-spec.test.js",
+    "test": "npm run build && node --test dist/cli/__tests__/get-module-versions.test.js dist/pipeline/__tests__/spec-loader.test.js dist/pipeline/__tests__/apply-dry-run.test.js dist/client-adapters/__tests__/adapter-factory.test.js dist/client-adapters/__tests__/merge-json.test.js dist/api/__tests__/workspace-api.test.js dist/api/__tests__/profile-spec.test.js",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\""
   },

@@ -28,7 +28,12 @@ declare module 'ai-stack-kit-core' {
     success: boolean;
     skillsResolved: number;
     errors: { phase?: string; skill?: string; message: string }[];
-    adapterReport?: { written: string[] };
+    adapterReport?: {
+      written: string[];
+      merged?: string[];
+      skipped?: string[];
+      conflicts?: { path: string; message: string }[];
+    };
   }
 
   export interface SpecModuleRow {

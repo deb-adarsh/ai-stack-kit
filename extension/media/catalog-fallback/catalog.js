@@ -29,12 +29,17 @@ function render() {
     div.innerHTML = `<strong>${s.skillFolder}</strong> <span class="muted">${s.moduleType || 'skill'}</span><p>${s.description || ''}</p>`;
     const addProject = document.createElement('button');
     addProject.textContent = 'Add to project';
+    addProject.title =
+      'Add to this repo\u2019s spec.yaml. Sync installs into .cursor / .github / .claude inside the open folder. Shared with the repo.';
     addProject.onclick = () => vscode.postMessage({ type: 'add', id: s.id, target: 'project' });
     const addProfile = document.createElement('button');
     addProfile.textContent = 'Add to profile';
+    addProfile.title =
+      'Add to ~/.aistack/spec.yaml (user-global). Sync installs into ~/.cursor, ~/.copilot, ~/.claude so the module is available across every project on this machine.';
     addProfile.onclick = () => vscode.postMessage({ type: 'add', id: s.id, target: 'profile' });
     const copy = document.createElement('button');
     copy.textContent = 'Copy id';
+    copy.title = 'Copy the catalog id to clipboard';
     copy.onclick = () => vscode.postMessage({ type: 'copy', text: s.id });
     div.appendChild(addProject);
     div.appendChild(addProfile);
