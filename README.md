@@ -6,7 +6,9 @@
 [![license](https://img.shields.io/github/license/deb-adarsh/ai-stack-kit)](https://github.com/deb-adarsh/ai-stack-kit/blob/main/LICENSE)
 [![Skill browser](https://img.shields.io/badge/skill%20browser-live-informational)](https://deb-adarsh.github.io/ai-stack-kit/)
 
+
 <img width="1600" height="983" alt="ChatGPT Image May 24, 2026, 10_03_37 AM" src="https://github.com/user-attachments/assets/cf497e3c-3fae-425a-99c9-639281a07921" />
+
 
 
 **Install AI skills, subagents, and hooks like npm packages - across Cursor, Claude, and Copilot.**
