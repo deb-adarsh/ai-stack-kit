@@ -1,5 +1,8 @@
 # AI Stack Kit
 
+<img width="1600" height="983" alt="ChatGPT Image May 24, 2026, 10_03_37 AM" src="https://github.com/user-attachments/assets/a7564158-d1ed-4b46-b0c5-556267ede891" />
+
+
 Install reusable AI workflows like packages, directly from your IDE.
 
 AI Stack Kit helps developers and AI engineers discover, install, and sync **skills**, **subagents**, and **hooks** across **Cursor**, **GitHub Copilot**, and **Claude**. Keep the workflows your team depends on in a repo-local `spec.yaml`, or add your personal toolkit once at the profile level and use it everywhere.
