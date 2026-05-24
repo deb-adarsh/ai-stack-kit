@@ -1,6 +1,6 @@
 # AI Stack Kit
 
-<img width="1600" height="983" alt="ChatGPT Image May 24, 2026, 10_03_37 AM" src="https://github.com/user-attachments/assets/a7564158-d1ed-4b46-b0c5-556267ede891" />
+<img width="1254" height="1254" alt="ChatGPT Image May 24, 2026, 01_04_20 PM" src="https://github.com/user-attachments/assets/9e04018d-1e1f-459b-97f7-eb725402f923" />
 
 
 Install reusable AI workflows like packages, directly from your IDE.
