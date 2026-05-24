@@ -2,11 +2,22 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
+## [1.3.3] - 2026-05-24
+
+### Changed
+
+- Version bump for the Open VSX / Marketplace package after `1.3.2` was already used.
+
 ## [1.3.2] - 2026-05-23
 
 ### Docs
 
 - Refreshed the extension README with clearer developer-focused positioning, tighter install copy, and a cleaner **Project vs Profile** explanation for Cursor / VS Code users.
+
+### Fixed
+
+- **First sync after adding a skill** — overlapping sync triggers now queue a follow-up run instead of collapsing into the already-running sync, so VS Code/Cursor creates the client skill folders on the first visible Sync action.
+- **Extension test runner on macOS** — fixed local integration test launch when the VS Code app path contains spaces.
 
 ## [1.3.1] - 2026-05-23
 

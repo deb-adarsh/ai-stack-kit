@@ -76,4 +76,56 @@ suite('AI Stack Kit extension', () => {
       'dry-run sync should not create .github/skills/ for copilot client'
     );
   });
+
+  test('overlapping sync requests apply the latest spec', async function () {
+    this.timeout(120_000);
+    const root = workspaceRoot();
+
+    await vscode.workspace
+      .getConfiguration('aiStackKit')
+      .update('dryRun', false, vscode.ConfigurationTarget.Workspace);
+
+    const specPath = path.join(root, 'spec.yaml');
+    const skillsDir = path.join(root, '.github', 'skills');
+    for (const p of [specPath, path.join(root, 'sources.config.yaml')]) {
+      if (fs.existsSync(p)) {
+        fs.unlinkSync(p);
+      }
+    }
+    for (const p of [skillsDir, path.join(root, '.aistack')]) {
+      if (fs.existsSync(p)) {
+        fs.rmSync(p, { recursive: true, force: true });
+      }
+    }
+
+    await vscode.commands.executeCommand('aistack.init');
+    const firstSync = vscode.commands.executeCommand('aistack.sync');
+
+    const specText = fs.readFileSync(specPath, 'utf-8');
+    fs.writeFileSync(
+      specPath,
+      specText.replace(
+        'skills: []',
+        [
+          'skills:',
+          '  - name: prompt-engineering',
+          '    version: latest',
+          '    source: github',
+          '    sourceConfig:',
+          '      owner: github',
+          '      repo: awesome-copilot',
+          '      path: skills/prompt-engineering',
+        ].join('\n')
+      ),
+      'utf-8'
+    );
+
+    const secondSync = vscode.commands.executeCommand('aistack.sync');
+    await Promise.all([firstSync, secondSync]);
+
+    assert.ok(
+      fs.existsSync(path.join(skillsDir, 'prompt-engineering', 'SKILL.md')),
+      'queued follow-up sync should materialize skill files from the latest spec'
+    );
+  });
 });

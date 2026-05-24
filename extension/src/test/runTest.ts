@@ -31,7 +31,6 @@ async function main(): Promise<void> {
 
   const result = spawnSync(cli, args, {
     stdio: 'inherit',
-    shell: true,
     env: process.env,
   });
 

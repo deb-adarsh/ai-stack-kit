@@ -288,21 +288,45 @@ function formatError(e: unknown): string {
 
 /**
  * Guards against overlapping Sync runs. When two sources fire close together
- * (status bar click + autoSyncOnSave from the file watcher), the second call
- * waits for the first to finish instead of racing on disk writes. Returning
- * the same Promise also collapses duplicate clicks into a single run.
+ * (status bar click + autoSyncOnSave from the file watcher), requests are
+ * serialized instead of racing on disk writes.
+ *
+ * If a sync is already running, remember that another pass is needed. This is
+ * important when a watcher fires on an older spec and the user adds a module
+ * while that sync is still resolving; the follow-up pass sees the latest
+ * spec.yaml and creates the client folders on the first visible Sync action.
  */
 let syncInFlight: Promise<void> | null = null;
+let syncQueued = false;
+let syncQueuedSilent = true;
 
 async function runSync(silent = false): Promise<void> {
   if (syncInFlight) {
-    log('debug', 'Sync already in progress — joining existing run');
+    syncQueued = true;
+    syncQueuedSilent = syncQueuedSilent && silent;
+    log(
+      'debug',
+      `Sync already in progress — queued follow-up run (${syncQueuedSilent ? 'silent' : 'visible'})`
+    );
     return syncInFlight;
   }
-  syncInFlight = doRunSync(silent).finally(() => {
+  syncQueuedSilent = silent;
+  syncInFlight = runSyncQueue(silent).finally(() => {
     syncInFlight = null;
+    syncQueued = false;
+    syncQueuedSilent = true;
   });
   return syncInFlight;
+}
+
+async function runSyncQueue(initialSilent: boolean): Promise<void> {
+  let nextSilent = initialSilent;
+  do {
+    syncQueued = false;
+    await doRunSync(nextSilent);
+    nextSilent = syncQueuedSilent;
+    syncQueuedSilent = true;
+  } while (syncQueued);
 }
 
 async function doRunSync(silent: boolean): Promise<void> {
