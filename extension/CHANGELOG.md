@@ -2,6 +2,12 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
+## [1.3.5] - 2026-05-24
+
+### Changed
+
+- Version bump for the Open VSX / Marketplace package after `1.3.4` was already used.
+
 ## [1.3.4] - 2026-05-24
 
 ### Changed
