@@ -1,10 +1,9 @@
 /**
- * Emit resolved skill folders (e.g. SKILL.md + assets) and agent markdown files
- * into client-specific directories.
+ * Partition resolved modules by `moduleType` for client-specific output dirs.
  */
 
 import type { AdapterOutputFile } from './adapter-output.js';
-import type { AgentDefinition, ResolvedSkill } from './normalized.js';
+import type { ResolvedSkill } from './normalized.js';
 import { resolvedModuleType } from './normalized.js';
 
 export function sanitizePathSegment(segment: string): string {
@@ -17,38 +16,66 @@ export function copilotAgentBasename(agentId: string): string {
   return s || 'agent';
 }
 
-export function skillInstallFolderName(skill: ResolvedSkill): string {
-  const raw = skill.manifest?.name ?? skill.name ?? skill.id;
+export function moduleInstallFolderName(module: ResolvedSkill): string {
+  const raw = module.manifest?.name ?? module.name ?? module.id;
   return sanitizePathSegment(raw);
 }
 
-/** Split hook modules from skills/subagents for client-specific hook directories. */
-export function partitionSkillsAndHooks(skills: ResolvedSkill[]): {
+/** @deprecated Use {@link partitionModulesByType}. */
+export function partitionSkillsAndHooks(modules: ResolvedSkill[]): {
   skillLike: ResolvedSkill[];
   hooks: ResolvedSkill[];
 } {
-  const skillLike: ResolvedSkill[] = [];
-  const hooks: ResolvedSkill[] = [];
-  for (const s of skills) {
-    if (resolvedModuleType(s) === 'hook') hooks.push(s);
-    else skillLike.push(s);
-  }
-  return { skillLike, hooks };
+  const { skills, subagents, hooks } = partitionModulesByType(modules);
+  return { skillLike: [...skills, ...subagents], hooks };
 }
 
-/** One folder per module under `skillsRelativeDir`, preserving package-relative paths. */
-export function emitSkillTreeFiles(
-  skills: ResolvedSkill[],
-  skillsRelativeDir: string
+/** Route each spec module to skills, subagents, or hooks output trees. */
+export function partitionModulesByType(modules: ResolvedSkill[]): {
+  skills: ResolvedSkill[];
+  subagents: ResolvedSkill[];
+  hooks: ResolvedSkill[];
+} {
+  const skills: ResolvedSkill[] = [];
+  const subagents: ResolvedSkill[] = [];
+  const hooks: ResolvedSkill[] = [];
+  for (const m of modules) {
+    switch (resolvedModuleType(m)) {
+      case 'hook':
+        hooks.push(m);
+        break;
+      case 'subagent':
+        subagents.push(m);
+        break;
+      default:
+        skills.push(m);
+        break;
+    }
+  }
+  return { skills, subagents, hooks };
+}
+
+/** @deprecated Use {@link moduleInstallFolderName}. */
+export const skillInstallFolderName = moduleInstallFolderName;
+
+/** Copy fetched package files into a client directory, one folder per module. */
+export function emitModuleTreeFiles(
+  modules: ResolvedSkill[],
+  relativeDir: string
 ): AdapterOutputFile[] {
   const out: AdapterOutputFile[] = [];
-  for (const skill of skills) {
-    const folder = skillInstallFolderName(skill);
-    for (const [relPath, content] of Object.entries(skill.files)) {
-      const safeRel = relPath.replace(/^[/\\]+/, '').replace(/\\/g, '/').split('/').filter((p) => p && p !== '..').join('/');
+  for (const mod of modules) {
+    const folder = moduleInstallFolderName(mod);
+    for (const [relPath, content] of Object.entries(mod.files)) {
+      const safeRel = relPath
+        .replace(/^[/\\]+/, '')
+        .replace(/\\/g, '/')
+        .split('/')
+        .filter((p) => p && p !== '..')
+        .join('/');
       if (!safeRel) continue;
       out.push({
-        path: `${skillsRelativeDir}/${folder}/${safeRel}`,
+        path: `${relativeDir}/${folder}/${safeRel}`,
         content,
         mergeStrategy: 'overwrite',
         managed: true,
@@ -58,9 +85,20 @@ export function emitSkillTreeFiles(
   return out;
 }
 
-/** Hook packs (`hook.json`, scripts, etc.) under `.cursor/hooks`, `.claude/hooks`, `.github/hooks`, … */
+/** @deprecated Use {@link emitModuleTreeFiles}. */
+export const emitSkillTreeFiles = emitModuleTreeFiles;
+
+/** Hook packs (`hook.json`, scripts, etc.) under client hooks directories. */
 export function emitHookTreeFiles(hooks: ResolvedSkill[], hooksRelativeDir: string): AdapterOutputFile[] {
-  return emitSkillTreeFiles(hooks, hooksRelativeDir);
+  return emitModuleTreeFiles(hooks, hooksRelativeDir);
+}
+
+/** Subagent packages under client agents directories (files preserved as authored). */
+export function emitSubagentTreeFiles(
+  subagents: ResolvedSkill[],
+  agentsRelativeDir: string
+): AdapterOutputFile[] {
+  return emitModuleTreeFiles(subagents, agentsRelativeDir);
 }
 
 export function cursorStyleAgentBasename(agentId: string): string {

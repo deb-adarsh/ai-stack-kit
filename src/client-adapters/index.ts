@@ -1,7 +1,7 @@
 /**
- * Multi-client adapter layer — normalized workspace → client files.
+ * Multi-client adapter layer — fetched modules → client files.
  *
- * Pipeline: `normalizeWorkspaceInput` → `ClientAdapter.generateConfig` → `applyAdapterOutput`.
+ * Pipeline: resolve/fetch modules → `normalizeWorkspaceInput` → `ClientAdapter.generateConfig` → `applyAdapterOutput`.
  */
 
 export type {
@@ -47,7 +47,11 @@ export {
   copilotAgentBasename,
   cursorStyleAgentBasename,
   emitHookTreeFiles,
+  emitModuleTreeFiles,
   emitSkillTreeFiles,
+  emitSubagentTreeFiles,
+  moduleInstallFolderName,
+  partitionModulesByType,
   partitionSkillsAndHooks,
   sanitizePathSegment,
   skillInstallFolderName,

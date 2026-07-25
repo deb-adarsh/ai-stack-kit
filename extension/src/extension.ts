@@ -124,6 +124,12 @@ function activateExtension(context: vscode.ExtensionContext): void {
   specWatcher.onDidCreate(() => void onSpecChanged());
   context.subscriptions.push(specWatcher);
 
+  const profileSpec = userSpecPath();
+  const profileSpecWatcher = vscode.workspace.createFileSystemWatcher(profileSpec);
+  profileSpecWatcher.onDidChange(() => void onSpecChanged());
+  profileSpecWatcher.onDidCreate(() => void onSpecChanged());
+  context.subscriptions.push(profileSpecWatcher);
+
   void updateStatusBar();
 
   vscode.workspace.onDidChangeWorkspaceFolders(() => {
@@ -356,16 +362,29 @@ async function doRunSync(silent: boolean): Promise<void> {
         cancellable: false,
       },
       async () => {
+        const syncTasks: Promise<ApplyPipelineResult | undefined>[] = [];
         if (hasProject && projectWs) {
           log('info', 'Syncing project spec…');
-          projectResult = await projectWs.syncWithLogger(syncOpts, log);
-          logScopeResult('project', projectResult);
+          syncTasks.push(projectWs.syncWithLogger(syncOpts, log).then((result) => {
+            logScopeResult('project', result);
+            return result;
+          }));
         }
         if (hasProfile) {
           log('info', 'Syncing profile spec…');
           const profileWs = getProfileWorkspace();
-          profileResult = await profileWs.syncWithLogger(syncOpts, log);
-          logScopeResult('profile', profileResult);
+          syncTasks.push(profileWs.syncWithLogger(syncOpts, log).then((result) => {
+            logScopeResult('profile', result);
+            return result;
+          }));
+        }
+        const results = await Promise.all(syncTasks);
+        let resultIndex = 0;
+        if (hasProject && projectWs) {
+          projectResult = results[resultIndex++];
+        }
+        if (hasProfile) {
+          profileResult = results[resultIndex++];
         }
       }
     );
@@ -539,6 +558,7 @@ async function runSearch(): Promise<void> {
       `Added ${picked.hit.name} to ${target} spec`
     );
     refreshAll();
+    void vscode.commands.executeCommand('aistack.sync');
   } catch (e) {
     void vscode.window.showErrorMessage(e instanceof Error ? e.message : String(e));
   }

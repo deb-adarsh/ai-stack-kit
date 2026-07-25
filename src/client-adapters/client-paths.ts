@@ -61,3 +61,16 @@ export function hooksDirRelative(clientType: string, scope: ClientInstallScope):
       return '.aistack/hooks';
   }
 }
+
+export function promptsDirRelative(clientType: string, scope: ClientInstallScope): string {
+  switch (clientType) {
+    case 'cursor':
+      return '.cursor/prompts';
+    case 'claude':
+      return '.claude/prompts';
+    case 'copilot':
+      return scope === 'project' ? '.github/prompts' : '.copilot/prompts';
+    default:
+      return '.aistack/prompts';
+  }
+}

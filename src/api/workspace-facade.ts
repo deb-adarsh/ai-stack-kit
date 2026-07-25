@@ -155,19 +155,29 @@ export async function syncAllScopes(
   options: SyncOptions = {}
 ): Promise<DualSyncResult> {
   const result: DualSyncResult = {};
+  const tasks: Promise<void>[] = [];
 
   if (projectRoot) {
     const projectWs = getProjectWorkspace(projectRoot);
     if (projectWs.hasSpec()) {
-      result.project = await projectWs.sync(options);
+      tasks.push(
+        projectWs.sync(options).then((syncResult) => {
+          result.project = syncResult;
+        })
+      );
     }
   }
 
   if (hasProfileSpec()) {
     const profileWs = getProfileWorkspace();
-    result.profile = await profileWs.sync(options);
+    tasks.push(
+      profileWs.sync(options).then((syncResult) => {
+        result.profile = syncResult;
+      })
+    );
   }
 
+  await Promise.all(tasks);
   return result;
 }
 

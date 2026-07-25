@@ -104,6 +104,8 @@ export type ClientInstallScope = 'project' | 'user';
  */
 export type ClientFeature =
   | 'skills'
+  | 'agents'
+  | 'prompts'
   | 'rules'
   | 'hooks'
   | 'settings'

@@ -39,7 +39,7 @@ export async function ensureProfileSpec(options: EnsureProfileSpecOptions = {}):
       client: {
         type: clientType,
         installScope: 'user',
-        features: ['skills', 'hooks'],
+        features: ['skills', 'agents', 'hooks'],
       },
       skills: [],
       modules: [],
