@@ -1,8 +1,7 @@
 /**
- * GitHub Copilot (VS Code): skills under `.github/skills/` (project) or `~/.copilot/skills/` (user);
- * hook packs under `.github/hooks/{hook}/` or `~/.copilot/hooks/` (aligned with layouts such as [awesome-copilot/hooks](https://github.com/github/awesome-copilot/tree/main/hooks));
- * subagents as `.github/agents/*.agent.md` or `~/.copilot/agents/*.agent.md` — **only Copilot** uses the
- * `*.agent.md` suffix. Merges snippets into `.vscode/settings.json` under `aistack` (project root only).
+ * GitHub Copilot: skills → `.github/skills/` (project) or `~/.copilot/skills/` (user);
+ * subagents → `.github/agents/` or `~/.copilot/agents/`; hooks → `.github/hooks/` or `~/.copilot/hooks/`.
+ * Module files are copied as authored (including `.agent.md` where present).
  */
 
 import type { AdapterOutput, AdapterOutputFile } from '../adapter-output.js';
@@ -14,32 +13,15 @@ import {
   skillsDirRelative,
 } from '../client-paths.js';
 import {
-  copilotAgentBasename,
   emitHookTreeFiles,
-  emitSkillTreeFiles,
-  partitionSkillsAndHooks,
-  skillInstallFolderName,
+  emitModuleTreeFiles,
+  emitSubagentTreeFiles,
+  moduleInstallFolderName,
+  partitionModulesByType,
 } from '../emit-skill-agent-files.js';
 import type { NormalizedWorkspaceInput } from '../normalized.js';
 import { loadBundledTemplate, renderTemplate } from '../template-loader.js';
 import { VSCODE_SETTINGS_ROOT_KEY, WORKSPACE_DOTDIR } from '../../branding.js';
-
-function copilotAgentBody(agent: {
-  name: string;
-  description?: string;
-  systemPrompt?: string;
-}): string {
-  return [
-    `# ${agent.name}`,
-    '',
-    agent.description ?? '',
-    '',
-    '## Instructions',
-    '',
-    agent.systemPrompt ?? '_No system prompt._',
-    '',
-  ].join('\n');
-}
 
 export class CopilotClientAdapter extends BaseClientAdapter {
   readonly name = 'copilot';
@@ -53,48 +35,43 @@ export class CopilotClientAdapter extends BaseClientAdapter {
     const skillsRel = skillsDirRelative(input.client.type, scope);
     const agentsRel = agentsDirRelative(input.client.type, scope);
     const hooksRel = hooksDirRelative(input.client.type, scope);
-    const { skillLike, hooks } = partitionSkillsAndHooks(input.skills);
-
-    const snippets: Record<string, string> = {};
-    for (const p of input.prompts) {
-      snippets[p.id] = p.body;
-    }
+    const { skills, subagents, hooks } = partitionModulesByType(input.modules);
 
     const patch = {
       [VSCODE_SETTINGS_ROOT_KEY]: {
         copilot: {
-          version: 2,
+          version: 3,
           generatedAt: input.metadata.generatedAt,
           installScope: scope,
           skillsDir: skillsRel,
           agentsDir: agentsRel,
           hooksDir: hooksRel,
-          skills: skillLike.map((s) => ({ id: s.id, name: s.name, version: s.version })),
+          skills: skills.map((s) => ({
+            id: s.id,
+            name: s.name,
+            version: s.version,
+            path: `${skillsRel}/${moduleInstallFolderName(s)}`,
+          })),
+          subagents: subagents.map((a) => ({
+            id: a.id,
+            name: a.name,
+            version: a.version,
+            path: `${agentsRel}/${moduleInstallFolderName(a)}`,
+          })),
           hooks: hooks.map((h) => ({
             id: h.id,
             name: h.name,
             version: h.version,
-            path: `${hooksRel}/${skillInstallFolderName(h)}`,
+            path: `${hooksRel}/${moduleInstallFolderName(h)}`,
           })),
-          agents: input.agents.map((a) => ({
-            id: a.id,
-            name: a.name,
-            path: `${agentsRel}/${copilotAgentBasename(a.id)}.agent.md`,
-          })),
-          promptSnippets: snippets,
         },
       },
     };
 
     const files: AdapterOutputFile[] = [
-      ...emitSkillTreeFiles(skillLike, skillsRel),
+      ...emitModuleTreeFiles(skills, skillsRel),
+      ...emitSubagentTreeFiles(subagents, agentsRel),
       ...emitHookTreeFiles(hooks, hooksRel),
-      ...input.agents.map((a) => ({
-        path: `${agentsRel}/${copilotAgentBasename(a.id)}.agent.md`,
-        content: copilotAgentBody(a),
-        mergeStrategy: 'overwrite' as const,
-        managed: true as const,
-      })),
       {
         path: '.vscode/settings.json',
         pathAnchor: 'project',
@@ -107,8 +84,8 @@ export class CopilotClientAdapter extends BaseClientAdapter {
     const tpl = loadBundledTemplate('copilot', 'instructions.md.tpl');
     const instructions = tpl
       ? renderTemplate(tpl, {
-          skillCount: String(skillLike.length),
-          agentCount: String(input.agents.length),
+          skillCount: String(skills.length),
+          agentCount: String(subagents.length),
           skillsDir: skillsRel,
           agentsDir: agentsRel,
           hooksDir: hooksRel,
@@ -116,11 +93,9 @@ export class CopilotClientAdapter extends BaseClientAdapter {
       : [
           '# GitHub Copilot + AI Stack Kit',
           '',
-          `Skills are synced under **${skillsRel}/** (each skill folder contains \`SKILL.md\` and assets).`,
-          `Agents use Copilot’s **\`.agent.md\`** convention under **${agentsRel}/**.`,
-          `Lifecycle hook packs (e.g. \`hook.json\` + scripts) sync under **${hooksRel}/**.`,
-          '',
-          'Snippet bodies are also mirrored under `aistack.copilot.promptSnippets` in `.vscode/settings.json`.',
+          `Skills sync under **${skillsRel}/** (each folder contains authored skill files such as \`SKILL.md\`).`,
+          `Subagents sync under **${agentsRel}/** (files preserved as authored, including \`.agent.md\` when present).`,
+          `Hook packs sync under **${hooksRel}/**.`,
           '',
         ].join('\n');
 

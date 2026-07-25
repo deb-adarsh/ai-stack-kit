@@ -32,6 +32,7 @@ client:
   # Features to enable
   features:
     - skills
+    - agents
     - hooks
   
   # Client-specific settings (optional)

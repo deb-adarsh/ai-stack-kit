@@ -22,6 +22,7 @@ export async function applyAdapterOutput(
   const merged: string[] = [];
   const conflicts: { path: string; message: string }[] = [];
   const adapterRoot = options.adapterFilesystemRoot ?? projectPath;
+  const directWrites: Promise<void>[] = [];
 
   for (const file of output.files) {
     const root = file.pathAnchor === 'project' ? projectPath : adapterRoot;
@@ -34,8 +35,11 @@ export async function applyAdapterOutput(
     }
 
     if (file.mergeStrategy === 'overwrite' || file.managed !== false) {
-      await writeFile(abs, file.content, 'utf-8');
-      written.push(file.path);
+      directWrites.push(
+        writeFile(abs, file.content, 'utf-8').then(() => {
+          written.push(file.path);
+        })
+      );
       continue;
     }
 
@@ -49,9 +53,6 @@ export async function applyAdapterOutput(
         const base = parseJsonSafe(existing);
         const patch = parseJsonSafe(file.content);
         if (!base || !patch) {
-          // Writing conflict markers into a .json file would break clients that
-          // parse it (e.g. VS Code's settings.json). Record as a conflict and
-          // skip the write instead so the user can resolve it manually.
           conflicts.push({
             path: file.path,
             message: !base
@@ -83,10 +84,15 @@ export async function applyAdapterOutput(
         }
       }
     } catch {
-      await writeFile(abs, file.content, 'utf-8');
-      written.push(file.path);
+      directWrites.push(
+        writeFile(abs, file.content, 'utf-8').then(() => {
+          written.push(file.path);
+        })
+      );
     }
   }
+
+  await Promise.all(directWrites);
 
   return { written, skipped, merged, conflicts: conflicts.length ? conflicts : undefined };
 }

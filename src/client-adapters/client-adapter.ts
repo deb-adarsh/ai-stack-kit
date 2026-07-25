@@ -1,7 +1,5 @@
 /**
- * ClientAdapter — transforms {@link NormalizedWorkspaceInput} → client-specific files.
- *
- * Pipeline (mandatory): Spec + resolved skills → **Normalizer** → NormalizedWorkspaceInput → **ClientAdapter** → disk
+ * ClientAdapter — transforms fetched modules → client-specific files on disk.
  */
 
 import type { NormalizedWorkspaceInput } from './normalized.js';

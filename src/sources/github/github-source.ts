@@ -3,7 +3,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import * as tar from 'tar';
@@ -49,10 +49,50 @@ interface TagRef {
   ref: string;
 }
 
+function tarballCacheKey(owner: string, repo: string, ref: string): string {
+  return `${owner}/${repo}@${ref}`;
+}
+
+function filesForSubPath(
+  repoFiles: Record<string, string>,
+  subPath: string
+): { files: Record<string, string>; manifest: SkillManifest | null } {
+  const normalized = subPath.replace(/^\/+|\/+$/g, '');
+  let files: Record<string, string>;
+
+  if (!normalized) {
+    files = { ...repoFiles };
+  } else if (
+    repoFiles[normalized] !== undefined &&
+    !Object.keys(repoFiles).some((key) => key.startsWith(`${normalized}/`))
+  ) {
+    files = { [path.basename(normalized)]: repoFiles[normalized] };
+  } else {
+    const prefix = `${normalized}/`;
+    files = {};
+    for (const [rel, content] of Object.entries(repoFiles)) {
+      if (rel.startsWith(prefix)) {
+        files[rel.slice(prefix.length)] = content;
+      }
+    }
+  }
+
+  let manifest: SkillManifest | null = null;
+  const mj = files['skill.json'] ?? files['skill.manifest.json'];
+  if (mj) {
+    manifest = JSON.parse(mj) as SkillManifest;
+  }
+
+  return { files, manifest };
+}
+
 export class GitHubSource implements SkillSource {
   readonly type = 'github' as const;
   private readonly token: string | undefined;
   private readonly fetchImpl: typeof fetch;
+  /** Reuse extracted repo trees when multiple skills share owner/repo/ref. */
+  private readonly tarballCache = new Map<string, Record<string, string>>();
+  private readonly tarballInflight = new Map<string, Promise<Record<string, string>>>();
 
   constructor(private readonly options: GitHubSourceOptions = {}) {
     this.token = options.token ?? process.env.GITHUB_TOKEN;
@@ -121,6 +161,43 @@ export class GitHubSource implements SkillSource {
     const subPath = meta?.subPath ?? '';
     if (!owner || !repo || !ref) throw new Error('Invalid GitHub metadata');
 
+    const repoFiles = await this.loadRepoFiles(owner, repo, ref);
+    const { files, manifest } = filesForSubPath(repoFiles, subPath);
+    return { files, manifest };
+  }
+
+  /** Clear in-memory tarball cache (e.g. between test runs). */
+  clearTarballCache(): void {
+    this.tarballCache.clear();
+    this.tarballInflight.clear();
+  }
+
+  private async loadRepoFiles(owner: string, repo: string, ref: string): Promise<Record<string, string>> {
+    const key = tarballCacheKey(owner, repo, ref);
+    const cached = this.tarballCache.get(key);
+    if (cached) return cached;
+
+    const inflight = this.tarballInflight.get(key);
+    if (inflight) return inflight;
+
+    const promise = this.downloadAndExtractRepo(owner, repo, ref)
+      .then((repoFiles) => {
+        this.tarballCache.set(key, repoFiles);
+        return repoFiles;
+      })
+      .finally(() => {
+        this.tarballInflight.delete(key);
+      });
+
+    this.tarballInflight.set(key, promise);
+    return promise;
+  }
+
+  private async downloadAndExtractRepo(
+    owner: string,
+    repo: string,
+    ref: string
+  ): Promise<Record<string, string>> {
     const url = tarballUrl(owner, repo, ref);
     const headers: Record<string, string> = {};
     if (this.token) headers.Authorization = `Bearer ${this.token}`;
@@ -131,39 +208,23 @@ export class GitHubSource implements SkillSource {
     }
 
     const tmp = await import('node:fs/promises').then((fs) => fs.mkdtemp(path.join(tmpdir(), 'se-gh-')));
-    const tarPath = path.join(tmp, 'src.tgz');
-    const buf = Buffer.from(await res.arrayBuffer());
-    await writeFile(tarPath, buf);
-
-    const extractDir = path.join(tmp, 'out');
-    await mkdir(extractDir, { recursive: true });
-    await tar.x({ file: tarPath, cwd: extractDir });
-
-    const top = await readdir(extractDir, { withFileTypes: true });
-    const rootDir = top.find((e) => e.isDirectory());
-    const root = rootDir ? path.join(extractDir, rootDir.name) : extractDir;
-    const skillRoot = subPath ? path.join(root, subPath) : root;
-
-    let files: Record<string, string>;
-    let manifest: SkillManifest | null = null;
-
     try {
-      const st = await stat(skillRoot);
-      if (st.isFile()) {
-        const text = await readFile(skillRoot, 'utf-8');
-        files = { [path.basename(subPath)]: text };
-      } else {
-        files = await readTextFilesRecursive(skillRoot, skillRoot);
-        const mj = files['skill.json'] ?? files['skill.manifest.json'];
-        if (mj) {
-          manifest = JSON.parse(mj) as SkillManifest;
-        }
-      }
+      const tarPath = path.join(tmp, 'src.tgz');
+      const buf = Buffer.from(await res.arrayBuffer());
+      await writeFile(tarPath, buf);
+
+      const extractDir = path.join(tmp, 'out');
+      await mkdir(extractDir, { recursive: true });
+      await tar.x({ file: tarPath, cwd: extractDir });
+
+      const top = await readdir(extractDir, { withFileTypes: true });
+      const rootDir = top.find((e) => e.isDirectory());
+      const root = rootDir ? path.join(extractDir, rootDir.name) : extractDir;
+      const repoFiles = await readTextFilesRecursive(root, root);
+      return repoFiles;
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }
-
-    return { files, manifest };
   }
 
   async install(

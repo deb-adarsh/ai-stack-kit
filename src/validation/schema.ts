@@ -101,6 +101,8 @@ export const ClientTypeSchema = z.union([
  */
 export const ClientFeatureSchema = z.union([
   z.literal('skills'),
+  z.literal('agents'),
+  z.literal('prompts'),
   z.literal('rules'),
   z.literal('hooks'),
   z.literal('settings'),

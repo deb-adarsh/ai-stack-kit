@@ -64,6 +64,7 @@ export class CatalogWebviewProvider implements vscode.WebviewViewProvider {
             text: `Added to ${target} spec`,
           });
           void vscode.commands.executeCommand('aistack.modules.refresh');
+          void vscode.commands.executeCommand('aistack.sync');
         } catch (e) {
           void vscode.window.showErrorMessage(e instanceof Error ? e.message : String(e));
         }

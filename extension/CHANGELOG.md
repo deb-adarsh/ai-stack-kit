@@ -2,6 +2,18 @@
 
 All notable changes to the **AI Stack Kit** VS Code extension are documented here.
 
+## [1.3.6] - 2026-07-03
+
+### Changed
+
+- **Pass-through module install** — skills, subagents, and hooks are copied from source as authored (no auto-generated prompts or agent stubs).
+- **Faster sync** — parallel module fetch/install, GitHub tarball caching for shared repos, parallel project + profile sync, and parallel adapter file writes.
+- **Profile installs** — auto-sync after catalog add, watcher on `~/.aistack/spec.yaml`, and proactive creation of client `skills/`, `agents/`, and `hooks/` directories on first user-scope sync.
+
+### Fixed
+
+- Profile-level skill installs now materialize under `~/.cursor/skills/` (and Claude/Copilot equivalents) even when those folders did not exist before.
+
 ## [1.3.5] - 2026-05-24
 
 ### Changed

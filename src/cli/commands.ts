@@ -638,7 +638,7 @@ export async function createSpecFile(
     },
     client: {
       type: data.client as any,
-      features: ['skills', 'hooks'],
+      features: ['skills', 'agents', 'hooks'],
     },
     skills: data.skills.map((name) => {
       const gh = resolveSuggestionGithubSource(name);

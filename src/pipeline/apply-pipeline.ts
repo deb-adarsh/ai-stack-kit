@@ -16,10 +16,12 @@ import { AdapterFactory } from '../client-adapters/adapter-factory.js';
 import { normalizeWorkspaceInput } from '../client-adapters/normalize.js';
 import type { AdapterApplyReport } from '../client-adapters/adapter-output.js';
 import { adapterFilesystemRoot, resolveInstallScope } from '../client-adapters/client-paths.js';
+import { ensureClientInstallDirs } from '../client-adapters/ensure-client-dirs.js';
 import { SkillSourceFactory } from '../sources/skill-source-factory.js';
 import { loadSpec } from './spec-loader.js';
 import type { Logger } from './logger.js';
 import { createConsoleLogger } from './logger.js';
+import { mapWithConcurrency } from './concurrency.js';
 
 export interface ApplyPipelineOptions {
   projectRoot: string;
@@ -132,7 +134,13 @@ export async function apply(options: ApplyPipelineOptions): Promise<ApplyPipelin
 
   logger.info('Resolving and installing skills', { count: enabledSkills.length, installRoot });
 
-  for (const skill of enabledSkills) {
+  const concurrency = Math.max(1, spec.settings?.concurrency ?? 5);
+
+  type SkillRunResult =
+    | { ok: true; payload: ResolvedSkillPayload; phase: ApplyPhaseResult; installPath?: string }
+    | { ok: false; phase: ApplyPhaseResult; error: ApplyPipelineError };
+
+  const skillRuns = await mapWithConcurrency(enabledSkills, concurrency, async (skill) => {
     const ref = skillToReference(skill);
     const label = `${skill.name} (${skill.source})`;
 
@@ -144,6 +152,7 @@ export async function apply(options: ApplyPipelineOptions): Promise<ApplyPipelin
       logger.debug('Fetch skill', { skill: label, version: metadata.version });
       const fetched = await source.fetch(metadata);
 
+      let installPath: string | undefined;
       if (!options.dryRun) {
         const installDir = path.join(installRoot, `${metadata.name}@${metadata.version}`);
         if (options.forceReinstall) {
@@ -159,37 +168,53 @@ export async function apply(options: ApplyPipelineOptions): Promise<ApplyPipelin
         }
         logger.debug('Install skill', { skill: label, installRoot });
         const installResult = await source.install(metadata, fetched, { installRoot });
-        installedPaths.push(installResult.installPath);
+        installPath = installResult.installPath;
       } else {
         logger.info('Dry-run: skip install', { skill: label });
       }
 
-      resolvedPayloads.push({
-        id: metadata.id,
-        name: skill.name,
-        version: metadata.version,
-        description: metadata.description ?? fetched.manifest?.description,
-        files: fetched.files,
-        manifest: fetched.manifest,
-        tags: metadata.tags ?? fetched.manifest?.tags,
-        supportedClients: metadata.supportedClients ?? fetched.manifest?.supportedClients,
-        metadata: {
-          ...metadata.metadata,
-          specConfig: skill.config,
-          moduleType: skill.moduleType,
+      return {
+        ok: true as const,
+        payload: {
+          id: metadata.id,
+          name: skill.name,
+          version: metadata.version,
+          description: metadata.description ?? fetched.manifest?.description,
+          files: fetched.files,
+          manifest: fetched.manifest,
+          tags: metadata.tags ?? fetched.manifest?.tags,
+          supportedClients: metadata.supportedClients ?? fetched.manifest?.supportedClients,
+          metadata: {
+            ...metadata.metadata,
+            specConfig: skill.config,
+            moduleType: skill.moduleType,
+          },
         },
-      });
-
-      phases.push({
-        name: `skill:${skill.name}`,
-        ok: true,
-        detail: options.dryRun ? 'resolved+fetched (dry-run)' : 'resolved+fetched+installed',
-      });
+        phase: {
+          name: `skill:${skill.name}`,
+          ok: true,
+          detail: options.dryRun ? 'resolved+fetched (dry-run)' : 'resolved+fetched+installed',
+        },
+        installPath,
+      };
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       logger.error('Skill pipeline failed', { skill: label, message });
-      errors.push({ phase: 'skill', skill: skill.name, message, cause: e });
-      phases.push({ name: `skill:${skill.name}`, ok: false, detail: message });
+      return {
+        ok: false as const,
+        phase: { name: `skill:${skill.name}`, ok: false, detail: message },
+        error: { phase: 'skill' as const, skill: skill.name, message, cause: e },
+      };
+    }
+  });
+
+  for (const run of skillRuns) {
+    phases.push(run.phase);
+    if (run.ok) {
+      resolvedPayloads.push(run.payload);
+      if (run.installPath) installedPaths.push(run.installPath);
+    } else {
+      errors.push(run.error);
       if (options.strict) {
         return {
           success: false,
@@ -217,7 +242,7 @@ export async function apply(options: ApplyPipelineOptions): Promise<ApplyPipelin
 
   let normalized;
   try {
-    logger.info('Normalizing workspace for adapter', { client: spec.client.type });
+    logger.info('Assembling modules for adapter', { client: spec.client.type });
     normalized = normalizeWorkspaceInput(spec, resolvedPayloads, {
       engineVersion: options.engineVersion,
     });
@@ -239,8 +264,12 @@ export async function apply(options: ApplyPipelineOptions): Promise<ApplyPipelin
   try {
     const adapter = AdapterFactory.getAdapter(spec.client.type);
     logger.info('Running client adapter', { adapter: adapter.name, client: spec.client.type });
-    const output = adapter.generateConfig(normalized);
     const adapterRoot = adapterFilesystemRoot(resolveInstallScope(spec.client), projectRoot);
+    if (!options.dryRun) {
+      const createdDirs = await ensureClientInstallDirs(spec.client, projectRoot);
+      logger.debug('Ensured client install directories', { dirs: createdDirs });
+    }
+    const output = adapter.generateConfig(normalized);
     adapterReport = await adapter.apply(output, projectRoot, {
       dryRun: options.dryRun,
       strictConflicts: false,
